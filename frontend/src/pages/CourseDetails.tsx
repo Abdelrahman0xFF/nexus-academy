@@ -1,0 +1,411 @@
+import { useParams } from "react-router-dom";
+import {
+    Star,
+    Clock,
+    BookOpen,
+    Users,
+    Globe,
+    Award,
+    PlayCircle,
+    CheckCircle,
+    ChevronDown,
+    ChevronUp,
+} from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import MainLayout from "@/layouts/MainLayout";
+import RatingStars from "@/components/RatingStars";
+import { courses, curriculum } from "@/lib/data";
+
+const CourseDetails = () => {
+    const { id } = useParams();
+    const course = courses.find((c) => c.id === id) || courses[0];
+    const [openSections, setOpenSections] = useState<number[]>([0]);
+
+    const toggleSection = (i: number) => {
+        setOpenSections((prev) =>
+            prev.includes(i) ? prev.filter((s) => s !== i) : [...prev, i],
+        );
+    };
+
+    const totalLessons = curriculum.reduce((a, s) => a + s.lessons.length, 0);
+    const completedLessons = curriculum.reduce(
+        (a, s) => a + s.lessons.filter((l) => l.completed).length,
+        0,
+    );
+
+    return (
+        <MainLayout>
+            {/* Hero */}
+            <section className="gradient-primary">
+                <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-16">
+                    <div className="grid lg:grid-cols-3 gap-10">
+                        <div className="lg:col-span-2 text-primary-foreground">
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="px-3 py-1 text-xs font-medium rounded-full bg-primary-foreground/20">
+                                    {course.category}
+                                </span>
+                                <span className="px-3 py-1 text-xs font-medium rounded-full bg-primary-foreground/20">
+                                    {course.level}
+                                </span>
+                            </div>
+                            <h1 className="text-h1 lg:text-4xl text-primary-foreground mb-4">
+                                {course.title}
+                            </h1>
+                            <p className="text-body text-primary-foreground/80 mb-6 max-w-2xl">
+                                Master the complete toolkit to become a
+                                professional developer. This comprehensive
+                                course covers everything from basics to advanced
+                                concepts with hands-on projects.
+                            </p>
+                            <div className="flex flex-wrap items-center gap-4 mb-6">
+                                <RatingStars
+                                    rating={course.rating}
+                                    reviewCount={course.reviewCount}
+                                    size={16}
+                                />
+                                <span className="flex items-center gap-1 text-small text-primary-foreground/70">
+                                    <Users size={14} />{" "}
+                                    {course.students.toLocaleString()} students
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center">
+                                    <span className="text-small font-bold">
+                                        {course.instructor
+                                            .split(" ")
+                                            .map((n) => n[0])
+                                            .join("")}
+                                    </span>
+                                </div>
+                                <div>
+                                    <div className="text-small font-medium text-primary-foreground">
+                                        {course.instructor}
+                                    </div>
+                                    <div className="text-xs text-primary-foreground/60">
+                                        Senior Instructor
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex flex-wrap gap-6 mt-6 text-small text-primary-foreground/70">
+                                <span className="flex items-center gap-1">
+                                    <Clock size={14} /> {course.duration}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <BookOpen size={14} /> {course.lessons}{" "}
+                                    lessons
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <Globe size={14} /> English
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <Award size={14} /> Certificate
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div className="container mx-auto px-4 lg:px-8 py-10">
+                <div className="grid lg:grid-cols-3 gap-10">
+                    {/* Main Content */}
+                    <div className="lg:col-span-2 space-y-10">
+                        {/* What you'll learn */}
+                        <div className="bg-card rounded-card card-shadow p-6">
+                            <h2 className="text-h3 text-card-foreground mb-4">
+                                What You'll Learn
+                            </h2>
+                            <div className="grid sm:grid-cols-2 gap-3">
+                                {[
+                                    "Build real-world applications from scratch",
+                                    "Master modern frameworks and tools",
+                                    "Deploy and scale applications",
+                                    "Write clean, maintainable code",
+                                    "Implement authentication and security",
+                                    "Work with databases and APIs",
+                                ].map((item) => (
+                                    <div
+                                        key={item}
+                                        className="flex items-start gap-2"
+                                    >
+                                        <CheckCircle
+                                            size={18}
+                                            className="text-secondary shrink-0 mt-0.5"
+                                        />
+                                        <span className="text-small text-muted-foreground">
+                                            {item}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Curriculum */}
+                        <div>
+                            <h2 className="text-h3 text-foreground mb-4">
+                                Course Curriculum
+                            </h2>
+                            <p className="text-small text-muted-foreground mb-6">
+                                {curriculum.length} sections • {totalLessons}{" "}
+                                lessons • {course.duration} total
+                            </p>
+                            <div className="space-y-3">
+                                {curriculum.map((section, i) => (
+                                    <div
+                                        key={i}
+                                        className="bg-card rounded-card card-shadow overflow-hidden"
+                                    >
+                                        <button
+                                            onClick={() => toggleSection(i)}
+                                            className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <BookOpen
+                                                    size={18}
+                                                    className="text-primary"
+                                                />
+                                                <span className="font-medium text-card-foreground text-small">
+                                                    {section.section}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-xs text-muted-foreground">
+                                                    {section.lessons.length}{" "}
+                                                    lessons
+                                                </span>
+                                                {openSections.includes(i) ? (
+                                                    <ChevronUp size={16} />
+                                                ) : (
+                                                    <ChevronDown size={16} />
+                                                )}
+                                            </div>
+                                        </button>
+                                        {openSections.includes(i) && (
+                                            <div className="border-t border-border">
+                                                {section.lessons.map(
+                                                    (lesson, j) => (
+                                                        <div
+                                                            key={j}
+                                                            className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                {lesson.completed ? (
+                                                                    <CheckCircle
+                                                                        size={
+                                                                            16
+                                                                        }
+                                                                        className="text-secondary"
+                                                                    />
+                                                                ) : (
+                                                                    <PlayCircle
+                                                                        size={
+                                                                            16
+                                                                        }
+                                                                        className="text-muted-foreground"
+                                                                    />
+                                                                )}
+                                                                <span
+                                                                    className={`text-small ${lesson.completed ? "text-muted-foreground" : "text-card-foreground"}`}
+                                                                >
+                                                                    {
+                                                                        lesson.title
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {
+                                                                    lesson.duration
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    ),
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Instructor */}
+                        <div className="bg-card rounded-card card-shadow p-6">
+                            <h2 className="text-h3 text-card-foreground mb-4">
+                                Your Instructor
+                            </h2>
+                            <div className="flex items-start gap-4">
+                                <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center shrink-0">
+                                    <span className="text-xl font-bold text-primary-foreground">
+                                        {course.instructor
+                                            .split(" ")
+                                            .map((n) => n[0])
+                                            .join("")}
+                                    </span>
+                                </div>
+                                <div>
+                                    <h3 className="text-body font-semibold text-card-foreground">
+                                        {course.instructor}
+                                    </h3>
+                                    <p className="text-small text-muted-foreground mb-3">
+                                        Senior Full-Stack Developer with 10+
+                                        years of experience
+                                    </p>
+                                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                        <span className="flex items-center gap-1">
+                                            <Star
+                                                size={12}
+                                                className="text-amber-400 fill-amber-400"
+                                            />{" "}
+                                            {course.rating} rating
+                                        </span>
+                                        <span className="flex items-center gap-1">
+                                            <Users size={12} />{" "}
+                                            {course.students.toLocaleString()}{" "}
+                                            students
+                                        </span>
+                                        <span className="flex items-center gap-1">
+                                            <BookOpen size={12} /> 12 courses
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Reviews */}
+                        <div>
+                            <h2 className="text-h3 text-foreground mb-4">
+                                Student Reviews
+                            </h2>
+                            <div className="space-y-4">
+                                {[
+                                    {
+                                        name: "John D.",
+                                        comment:
+                                            "Absolutely fantastic course! The projects are challenging and practical.",
+                                        rating: 5,
+                                        date: "2 weeks ago",
+                                    },
+                                    {
+                                        name: "Sarah M.",
+                                        comment:
+                                            "Great structure and the instructor explains complex topics simply.",
+                                        rating: 4,
+                                        date: "1 month ago",
+                                    },
+                                    {
+                                        name: "Alex K.",
+                                        comment:
+                                            "Best investment I've made in my career. Highly recommended for beginners.",
+                                        rating: 5,
+                                        date: "3 weeks ago",
+                                    },
+                                ].map((review, i) => (
+                                    <div
+                                        key={i}
+                                        className="bg-card rounded-card card-shadow p-5"
+                                    >
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                                                    <span className="text-xs font-bold text-muted-foreground">
+                                                        {review.name[0]}
+                                                    </span>
+                                                </div>
+                                                <span className="text-small font-medium text-card-foreground">
+                                                    {review.name}
+                                                </span>
+                                            </div>
+                                            <span className="text-xs text-muted-foreground">
+                                                {review.date}
+                                            </span>
+                                        </div>
+                                        <RatingStars
+                                            rating={review.rating}
+                                            size={14}
+                                            showValue={false}
+                                        />
+                                        <p className="text-small text-muted-foreground mt-2">
+                                            {review.comment}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Sticky Purchase Card */}
+                    <div className="lg:col-span-1">
+                        <div className="sticky top-20 bg-card rounded-card elevated-shadow p-6 space-y-5">
+                            <div className="aspect-video rounded-lg bg-muted gradient-primary opacity-80 flex items-center justify-center">
+                                <PlayCircle
+                                    size={56}
+                                    className="text-primary-foreground/90"
+                                />
+                            </div>
+                            <div className="flex items-baseline gap-3">
+                                <span className="text-3xl font-bold text-primary">
+                                    ${course.price}
+                                </span>
+                                {course.originalPrice && (
+                                    <>
+                                        <span className="text-body text-muted-foreground line-through">
+                                            ${course.originalPrice}
+                                        </span>
+                                        <span className="text-xs font-bold text-destructive bg-destructive/10 px-2 py-0.5 rounded-full">
+                                            {Math.round(
+                                                (1 -
+                                                    course.price /
+                                                        course.originalPrice) *
+                                                    100,
+                                            )}
+                                            % OFF
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+                            <Button className="w-full gradient-primary border-0 text-primary-foreground rounded-button py-3 font-semibold hover:opacity-90 transition-opacity">
+                                Enroll Now
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="w-full rounded-button py-3"
+                            >
+                                Add to Wishlist
+                            </Button>
+                            <div className="space-y-3 pt-2">
+                                {[
+                                    {
+                                        label: "Duration",
+                                        value: course.duration,
+                                    },
+                                    {
+                                        label: "Lessons",
+                                        value: `${course.lessons} lessons`,
+                                    },
+                                    { label: "Level", value: course.level },
+                                    { label: "Language", value: "English" },
+                                    { label: "Certificate", value: "Yes" },
+                                    { label: "Access", value: "Lifetime" },
+                                ].map((item) => (
+                                    <div
+                                        key={item.label}
+                                        className="flex justify-between text-small"
+                                    >
+                                        <span className="text-muted-foreground">
+                                            {item.label}
+                                        </span>
+                                        <span className="font-medium text-card-foreground">
+                                            {item.value}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </MainLayout>
+    );
+};
+
+export default CourseDetails;
