@@ -40,9 +40,10 @@ const CourseCard = ({ course, showProgress = false }: CourseCardProps) => {
           <h3 className="text-body font-semibold text-card-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
             {course.title}
           </h3>
-          <p className="text-small text-muted-foreground mb-3">{course.instructor}</p>
-
-          <RatingStars rating={course.rating} reviewCount={course.reviewCount} size={14} />
+          <span className="flex flex-row justify-start items-center">
+            <p className="text-small text-muted-foreground">{course.instructor}</p>
+            <RatingStars rating={course.rating} reviewCount={course.reviewCount} size={14} />
+          </span>
 
           <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">

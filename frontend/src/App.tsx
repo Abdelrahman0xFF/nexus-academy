@@ -22,6 +22,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import ScrollToTopOnNavigation from "./components/ScrollToTopOnNavigation";
+import PageTransition from "./components/PageTransition";
 
 const queryClient = new QueryClient();
 
@@ -34,8 +35,8 @@ const App = () => (
         <ScrollToTopOnNavigation />
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+          <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:id" element={<CourseDetails />} />
           {/* Student Dashboard */}
@@ -52,7 +53,7 @@ const App = () => (
           <Route path="/instructor/students" element={<InstructorStudents />} />
           <Route path="/instructor/revenue" element={<InstructorRevenue />} />
           <Route path="/instructor/settings" element={<InstructorSettings />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

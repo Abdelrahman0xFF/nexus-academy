@@ -14,8 +14,10 @@ import CourseCard from "@/components/CourseCard";
 import InstructorCard from "@/components/InstructorCard";
 import CategoryCard from "@/components/CategoryCard";
 import RatingStars from "@/components/RatingStars";
+import ScrollReveal from "@/components/ScrollReveal";
 import { courses, instructors, categories, testimonials } from "@/lib/data";
 import heroImage from "@/assets/landing-img.svg";
+import Marquee from "@/components/Marquee";
 
 const Landing = () => {
     return (
@@ -90,10 +92,7 @@ const Landing = () => {
                                 ))}
                             </div>
                         </div>
-                        <div
-                            className="hidden lg:block animate-fade-in-up"
-                            style={{ animationDelay: "0.2s" }}
-                        >
+                        <div className="hidden lg:block animate-fade-in-up">
                             <img
                                 src={heroImage}
                                 alt="Hero Illustration"
@@ -105,76 +104,82 @@ const Landing = () => {
             </section>
 
             {/* Stats Bar */}
-            <section className="border-y border-border bg-card">
-                <div className="container mx-auto px-4 lg:px-8 py-8">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        {[
-                            {
-                                icon: Users,
-                                label: "Students Enrolled",
-                                value: "100,000+",
-                            },
-                            {
-                                icon: BookOpen,
-                                label: "Total Courses",
-                                value: "1,200+",
-                            },
-                            {
-                                icon: Award,
-                                label: "Certificates Issued",
-                                value: "45,000+",
-                            },
-                            {
-                                icon: Star,
-                                label: "Average Rating",
-                                value: "4.8/5",
-                            },
-                        ].map((s) => (
-                            <div
-                                key={s.label}
-                                className="flex items-center gap-4"
-                            >
-                                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                                    <s.icon
-                                        size={24}
-                                        className="text-primary"
-                                    />
-                                </div>
-                                <div>
-                                    <div className="text-xl font-bold text-foreground">
-                                        {s.value}
+            <ScrollReveal className="animate-fade-in">
+                <section className="border-y border-border bg-card">
+                    <div className="container mx-auto px-4 lg:px-8 py-8">
+                        <Marquee pauseOnHover={false}>
+                            {[
+                                {
+                                    icon: Users,
+                                    label: "Students Enrolled",
+                                    value: "100,000+",
+                                },
+                                {
+                                    icon: BookOpen,
+                                    label: "Total Courses",
+                                    value: "1,200+",
+                                },
+                                {
+                                    icon: Award,
+                                    label: "Certificates Issued",
+                                    value: "45,000+",
+                                },
+                                {
+                                    icon: Star,
+                                    label: "Average Rating",
+                                    value: "4.8/5",
+                                },
+                            ].map((s) => (
+                                <div
+                                    key={s.label}
+                                    className="flex items-center gap-4 w-64 shrink-0 mx-4"
+                                >
+                                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                                        <s.icon
+                                            size={24}
+                                            className="text-primary"
+                                        />
                                     </div>
-                                    <div className="text-small text-muted-foreground">
-                                        {s.label}
+                                    <div>
+                                        <div className="text-xl font-bold text-foreground">
+                                            {s.value}
+                                        </div>
+                                        <div className="text-small text-muted-foreground">
+                                            {s.label}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </Marquee>
                     </div>
-                </div>
-            </section>
+                </section>
+            </ScrollReveal>
 
             {/* Featured Courses */}
             <section className="container mx-auto px-4 lg:px-8 py-16">
-                <div className="flex items-end justify-between mb-10">
-                    <div>
-                        <h2 className="text-h2 text-foreground">
-                            Featured Courses
-                        </h2>
-                        <p className="text-body text-muted-foreground mt-2">
-                            Learn from the best instructors in the industry
-                        </p>
+                <ScrollReveal>
+                    <div className="flex items-end justify-between mb-10">
+                        <div>
+                            <h2 className="text-h2 text-foreground">
+                                Featured Courses
+                            </h2>
+                            <p className="text-body text-muted-foreground mt-2">
+                                Learn from the best instructors in the industry
+                            </p>
+                        </div>
+                        <Link
+                            to="/courses"
+                            className="hidden sm:flex items-center gap-1 text-primary font-medium text-small hover:underline"
+                        >
+                            View All <ArrowRight size={16} />
+                        </Link>
                     </div>
-                    <Link
-                        to="/courses"
-                        className="hidden sm:flex items-center gap-1 text-primary font-medium text-small hover:underline"
-                    >
-                        View All <ArrowRight size={16} />
-                    </Link>
-                </div>
+                </ScrollReveal>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {courses.slice(0, 4).map((c) => (
-                        <CourseCard key={c.id} course={c} />
+                    {courses.slice(0, 4).map((c, index) => (
+                        <ScrollReveal key={c.id} delay={`${index * 0.1}s`}>
+                            <CourseCard course={c} />
+                        </ScrollReveal>
                     ))}
                 </div>
             </section>
@@ -182,17 +187,21 @@ const Landing = () => {
             {/* Categories */}
             <section className="bg-card border-y border-border">
                 <div className="container mx-auto px-4 lg:px-8 py-16">
-                    <div className="text-center mb-10">
-                        <h2 className="text-h2 text-foreground">
-                            Browse by Category
-                        </h2>
-                        <p className="text-body text-muted-foreground mt-2">
-                            Find courses in your area of interest
-                        </p>
-                    </div>
+                    <ScrollReveal>
+                        <div className="text-center mb-10">
+                            <h2 className="text-h2 text-foreground">
+                                Browse by Category
+                            </h2>
+                            <p className="text-body text-muted-foreground mt-2">
+                                Find courses in your area of interest
+                            </p>
+                        </div>
+                    </ScrollReveal>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {categories.map((c) => (
-                            <CategoryCard key={c.id} category={c} />
+                        {categories.map((c, index) => (
+                            <ScrollReveal key={c.id} delay={`${index * 0.1}s`}>
+                                <CategoryCard category={c} />
+                            </ScrollReveal>
                         ))}
                     </div>
                 </div>
@@ -200,15 +209,21 @@ const Landing = () => {
 
             {/* Top Instructors */}
             <section className="container mx-auto px-4 lg:px-8 py-16">
-                <div className="text-center mb-10">
-                    <h2 className="text-h2 text-foreground">Top Instructors</h2>
-                    <p className="text-body text-muted-foreground mt-2">
-                        Learn from industry-leading experts
-                    </p>
-                </div>
+                <ScrollReveal>
+                    <div className="text-center mb-10">
+                        <h2 className="text-h2 text-foreground">
+                            Top Instructors
+                        </h2>
+                        <p className="text-body text-muted-foreground mt-2">
+                            Learn from industry-leading experts
+                        </p>
+                    </div>
+                </ScrollReveal>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {instructors.map((i) => (
-                        <InstructorCard key={i.id} instructor={i} />
+                    {instructors.map((i, index) => (
+                        <ScrollReveal key={i.id} delay={`${index * 0.1}s`}>
+                            <InstructorCard instructor={i} />
+                        </ScrollReveal>
                     ))}
                 </div>
             </section>
@@ -216,53 +231,54 @@ const Landing = () => {
             {/* Testimonials */}
             <section className="bg-card border-y border-border">
                 <div className="container mx-auto px-4 lg:px-8 py-16">
-                    <div className="text-center mb-10">
-                        <h2 className="text-h2 text-foreground">
-                            What Our Students Say
-                        </h2>
-                        <p className="text-body text-muted-foreground mt-2">
-                            Success stories from learners worldwide
-                        </p>
-                    </div>
+                    <ScrollReveal>
+                        <div className="text-center mb-10">
+                            <h2 className="text-h2 text-foreground">
+                                What Our Students Say
+                            </h2>
+                            <p className="text-body text-muted-foreground mt-2">
+                                Success stories from learners worldwide
+                            </p>
+                        </div>
+                    </ScrollReveal>
                     <div className="grid md:grid-cols-3 gap-6">
-                        {testimonials.map((t) => (
-                            <div
-                                key={t.id}
-                                className="bg-background rounded-card card-shadow p-6 hover-lift"
-                            >
-                                <Quote
-                                    size={24}
-                                    className="text-primary/30 mb-4"
-                                />
-                                <p className="text-body text-muted-foreground leading-relaxed mb-6">
-                                    {t.content}
-                                </p>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
-                                        <span className="text-small font-bold text-primary-foreground">
-                                            {t.name
-                                                .split(" ")
-                                                .map((n) => n[0])
-                                                .join("")}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <div className="text-small font-semibold text-foreground">
-                                            {t.name}
+                        {testimonials.map((t, index) => (
+                            <ScrollReveal key={t.id} delay={`${index * 0.1}s`}>
+                                <div className="bg-background rounded-card card-shadow p-6 hover-lift h-full">
+                                    <Quote
+                                        size={24}
+                                        className="text-primary/30 mb-4"
+                                    />
+                                    <p className="text-body text-muted-foreground leading-relaxed mb-6">
+                                        {t.content}
+                                    </p>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
+                                            <span className="text-small font-bold text-primary-foreground">
+                                                {t.name
+                                                    .split(" ")
+                                                    .map((n) => n[0])
+                                                    .join("")}
+                                            </span>
                                         </div>
-                                        <div className="text-xs text-muted-foreground">
-                                            {t.role}
+                                        <div>
+                                            <div className="text-small font-semibold text-foreground">
+                                                {t.name}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground">
+                                                {t.role}
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="ml-auto">
-                                        <RatingStars
-                                            rating={t.rating}
-                                            size={12}
-                                            showValue={false}
-                                        />
+                                        <div className="ml-auto">
+                                            <RatingStars
+                                                rating={t.rating}
+                                                size={12}
+                                                showValue={false}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </ScrollReveal>
                         ))}
                     </div>
                 </div>
@@ -270,24 +286,26 @@ const Landing = () => {
 
             {/* CTA */}
             <section className="container mx-auto px-4 lg:px-8 py-16">
-                <div className="gradient-primary rounded-card p-10 md:p-16 text-center">
-                    <h2 className="text-h2 text-primary-foreground mb-4">
-                        Ready to Start Learning?
-                    </h2>
-                    <p className="text-body text-primary-foreground/80 max-w-lg mx-auto mb-8">
-                        Join thousands of students already transforming their
-                        careers. Start your journey today.
-                    </p>
-                    <Link to="/signup">
-                        <Button
-                            size="lg"
-                            className="bg-card text-primary hover:bg-card/90 rounded-button px-10 font-semibold"
-                        >
-                            Get Started Free{" "}
-                            <ArrowRight size={18} className="ml-2" />
-                        </Button>
-                    </Link>
-                </div>
+                <ScrollReveal>
+                    <div className="gradient-primary rounded-card p-10 md:p-16 text-center">
+                        <h2 className="text-h2 text-primary-foreground mb-4">
+                            Ready to Start Learning?
+                        </h2>
+                        <p className="text-body text-primary-foreground/80 max-w-lg mx-auto mb-8">
+                            Join thousands of students already transforming
+                            their careers. Start your journey today.
+                        </p>
+                        <Link to="/signup">
+                            <Button
+                                size="lg"
+                                className="bg-card text-primary hover:bg-card/90 rounded-button px-10 font-semibold"
+                            >
+                                Get Started Free{" "}
+                                <ArrowRight size={18} className="ml-2" />
+                            </Button>
+                        </Link>
+                    </div>
+                </ScrollReveal>
             </section>
         </MainLayout>
     );

@@ -62,7 +62,7 @@ export const courses: Course[] = [
   },
   {
     id: "2",
-    title: "Machine Learning & AI Masterclass",
+    title: "Machine Learning & AI Masterclass Supervised & Unsupervised",
     instructor: "Dr. Michael Chen",
     instructorAvatar: "",
     rating: 4.9,
