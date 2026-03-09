@@ -9,25 +9,21 @@ import {
     PlayCircle,
     CheckCircle,
     ChevronDown,
-    ChevronUp,
 } from "lucide-react";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import MainLayout from "@/layouts/MainLayout";
 import RatingStars from "@/components/RatingStars";
 import { courses, curriculum } from "@/lib/data";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const CourseDetails = () => {
     const { id } = useParams();
     const course = courses.find((c) => c.id === id) || courses[0];
-    const [openSections, setOpenSections] = useState<number[]>([0]);
-
-    const toggleSection = (i: number) => {
-        setOpenSections((prev) =>
-            prev.includes(i) ? prev.filter((s) => s !== i) : [...prev, i],
-        );
-    };
-
     const totalLessons = curriculum.reduce((a, s) => a + s.lessons.length, 0);
     const completedLessons = curriculum.reduce(
         (a, s) => a + s.lessons.filter((l) => l.completed).length,
@@ -37,8 +33,8 @@ const CourseDetails = () => {
     return (
         <MainLayout>
             {/* Hero */}
-            <section className="gradient-primary">
-                <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-16">
+            <section className="gradient-primary min-h-[calc(100vh-65px)] flex justify-center items-center">
+                <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-16 h-full">
                     <div className="grid lg:grid-cols-3 gap-10">
                         <div className="lg:col-span-2 text-primary-foreground">
                             <div className="flex items-center gap-2 mb-4">
@@ -150,16 +146,14 @@ const CourseDetails = () => {
                                 {curriculum.length} sections • {totalLessons}{" "}
                                 lessons • {course.duration} total
                             </p>
-                            <div className="space-y-3">
+                            <Accordion type="multiple" defaultValue={["item-0"]} className="space-y-3">
                                 {curriculum.map((section, i) => (
-                                    <div
+                                    <AccordionItem
                                         key={i}
-                                        className="bg-card rounded-card card-shadow overflow-hidden"
+                                        value={`item-${i}`}
+                                        className="bg-card rounded-card card-shadow overflow-hidden border-0"
                                     >
-                                        <button
-                                            onClick={() => toggleSection(i)}
-                                            className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
-                                        >
+                                        <AccordionTrigger className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors hover:no-underline [&>svg]:hidden">
                                             <div className="flex items-center gap-3">
                                                 <BookOpen
                                                     size={18}
@@ -174,58 +168,52 @@ const CourseDetails = () => {
                                                     {section.lessons.length}{" "}
                                                     lessons
                                                 </span>
-                                                {openSections.includes(i) ? (
-                                                    <ChevronUp size={16} />
-                                                ) : (
-                                                    <ChevronDown size={16} />
-                                                )}
+                                                <ChevronDown size={16} className="shrink-0 transition-transform duration-200" />
                                             </div>
-                                        </button>
-                                        {openSections.includes(i) && (
-                                            <div className="border-t border-border">
-                                                {section.lessons.map(
-                                                    (lesson, j) => (
-                                                        <div
-                                                            key={j}
-                                                            className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors"
-                                                        >
-                                                            <div className="flex items-center gap-3">
-                                                                {lesson.completed ? (
-                                                                    <CheckCircle
-                                                                        size={
-                                                                            16
-                                                                        }
-                                                                        className="text-secondary"
-                                                                    />
-                                                                ) : (
-                                                                    <PlayCircle
-                                                                        size={
-                                                                            16
-                                                                        }
-                                                                        className="text-muted-foreground"
-                                                                    />
-                                                                )}
-                                                                <span
-                                                                    className={`text-small ${lesson.completed ? "text-muted-foreground" : "text-card-foreground"}`}
-                                                                >
-                                                                    {
-                                                                        lesson.title
+                                        </AccordionTrigger>
+                                        <AccordionContent className="pb-0 border-t border-border">
+                                            {section.lessons.map(
+                                                (lesson, j) => (
+                                                    <div
+                                                        key={j}
+                                                        className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            {lesson.completed ? (
+                                                                <CheckCircle
+                                                                    size={
+                                                                        16
                                                                     }
-                                                                </span>
-                                                            </div>
-                                                            <span className="text-xs text-muted-foreground">
+                                                                    className="text-secondary"
+                                                                />
+                                                            ) : (
+                                                                <PlayCircle
+                                                                    size={
+                                                                        16
+                                                                    }
+                                                                    className="text-muted-foreground"
+                                                                />
+                                                            )}
+                                                            <span
+                                                                className={`text-small ${lesson.completed ? "text-muted-foreground" : "text-card-foreground"}`}
+                                                            >
                                                                 {
-                                                                    lesson.duration
+                                                                    lesson.title
                                                                 }
                                                             </span>
                                                         </div>
-                                                    ),
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {
+                                                                lesson.duration
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                ),
+                                            )}
+                                        </AccordionContent>
+                                    </AccordionItem>
                                 ))}
-                            </div>
+                            </Accordion>
                         </div>
 
                         {/* Instructor */}
@@ -335,7 +323,7 @@ const CourseDetails = () => {
 
                     {/* Sticky Purchase Card */}
                     <div className="lg:col-span-1">
-                        <div className="sticky top-20 bg-card rounded-card elevated-shadow p-6 space-y-5">
+                        <div className="sticky top-24 bg-card rounded-card elevated-shadow p-6 space-y-5">
                             <div className="aspect-video rounded-lg bg-muted gradient-primary opacity-80 flex items-center justify-center">
                                 <PlayCircle
                                     size={56}
@@ -385,7 +373,6 @@ const CourseDetails = () => {
                                     { label: "Level", value: course.level },
                                     { label: "Language", value: "English" },
                                     { label: "Certificate", value: "Yes" },
-                                    { label: "Access", value: "Lifetime" },
                                 ].map((item) => (
                                     <div
                                         key={item.label}

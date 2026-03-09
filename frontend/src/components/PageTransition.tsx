@@ -12,7 +12,7 @@ const PageTransition = ({ children, className = "" }: PageTransitionProps) => {
   return (
     <div
       key={location.key}
-      className={`animate-fade-in w-full overflow-hidden ${className}`}
+      className={`animate-fade-in w-full ${className}`}
     >
       {children}
     </div>
