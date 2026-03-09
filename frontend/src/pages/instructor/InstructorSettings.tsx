@@ -1,6 +1,7 @@
 import { Save, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DashboardLayout from "@/layouts/DashboardLayout";
+import { AppSelect } from "@/components/ui/app-select";
 
 const InstructorSettings = () => {
   return (
@@ -30,28 +31,28 @@ const InstructorSettings = () => {
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-small font-medium text-foreground block mb-1.5">First Name</label>
-                <input type="text" defaultValue="Sarah" className="w-full px-4 py-2.5 text-small bg-muted rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20" />
+                <input type="text" defaultValue="Sarah"                   className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20" />
               </div>
               <div>
                 <label className="text-small font-medium text-foreground block mb-1.5">Last Name</label>
-                <input type="text" defaultValue="Johnson" className="w-full px-4 py-2.5 text-small bg-muted rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20" />
+                <input type="text" defaultValue="Johnson" className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20" />
               </div>
             </div>
             <div>
               <label className="text-small font-medium text-foreground block mb-1.5">Email</label>
-              <input type="email" defaultValue="sarah@nexusacademy.com" className="w-full px-4 py-2.5 text-small bg-muted rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20" />
+              <input type="email" defaultValue="sarah@nexusacademy.com" className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20" />
             </div>
             <div>
               <label className="text-small font-medium text-foreground block mb-1.5">Bio</label>
               <textarea
                 rows={3}
                 defaultValue="Senior Full-Stack Developer with 10+ years of experience building scalable web applications."
-                className="w-full px-4 py-2.5 text-small bg-muted rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20 resize-none"
               />
             </div>
             <div>
               <label className="text-small font-medium text-foreground block mb-1.5">Website</label>
-              <input type="url" defaultValue="https://sarahjohnson.dev" className="w-full px-4 py-2.5 text-small bg-muted rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20" />
+              <input type="url" defaultValue="https://sarahjohnson.dev" className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20" />
             </div>
           </div>
         </div>
@@ -62,19 +63,19 @@ const InstructorSettings = () => {
           <div className="space-y-4">
             <div>
               <label className="text-small font-medium text-foreground block mb-1.5">Payout Method</label>
-              <select className="w-full px-4 py-2.5 text-small bg-muted rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20 text-foreground">
-                <option>Bank Transfer (ACH)</option>
-                <option>PayPal</option>
-                <option>Stripe</option>
-              </select>
+              <AppSelect
+                options={["Bank Transfer (ACH)", "PayPal", "Stripe"]}
+                defaultValue="Bank Transfer (ACH)"
+                triggerClassName="px-4 py-2.5"
+              />
             </div>
             <div>
               <label className="text-small font-medium text-foreground block mb-1.5">Payout Schedule</label>
-              <select className="w-full px-4 py-2.5 text-small bg-muted rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20 text-foreground">
-                <option>Monthly (1st of each month)</option>
-                <option>Bi-weekly</option>
-                <option>Weekly</option>
-              </select>
+              <AppSelect
+                options={["Monthly (1st of each month)", "Bi-weekly", "Weekly"]}
+                defaultValue="Monthly (1st of each month)"
+                triggerClassName="px-4 py-2.5"
+              />
             </div>
           </div>
         </div>

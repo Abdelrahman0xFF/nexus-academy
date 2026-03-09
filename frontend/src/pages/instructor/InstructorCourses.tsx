@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import RatingStars from "@/components/RatingStars";
 import { courses } from "@/lib/data";
+import { AppSelect } from "@/components/ui/app-select";
 
 const InstructorCourses = () => {
   const myCourses = courses.slice(0, 4);
@@ -29,12 +30,12 @@ const InstructorCourses = () => {
             className="w-full pl-10 pr-4 py-2.5 text-small bg-card rounded-button border border-border outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
-        <select className="text-small bg-card rounded-button px-4 py-2.5 border border-border outline-none text-foreground">
-          <option>All Status</option>
-          <option>Published</option>
-          <option>Draft</option>
-          <option>Under Review</option>
-        </select>
+        <div>
+          <AppSelect
+            options={["All Status", "Published", "Draft", "Under Review"]}
+            defaultValue="All Status"
+          />
+        </div>
       </div>
 
       {/* Course Grid */}

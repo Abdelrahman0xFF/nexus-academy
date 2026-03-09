@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import RatingStars from "@/components/RatingStars";
 import { courses } from "@/lib/data";
+import { AppSelect } from "@/components/ui/app-select";
 
 const InstructorDashboard = () => {
   const myCourses = courses.slice(0, 4);
@@ -57,11 +58,11 @@ const InstructorDashboard = () => {
         <div className="lg:col-span-2 bg-card rounded-card card-shadow p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-h3 text-card-foreground">Revenue Overview</h2>
-            <select className="text-small bg-muted rounded-button px-3 py-1.5 border-0 outline-none text-foreground">
-              <option>Last 7 days</option>
-              <option>Last 30 days</option>
-              <option>Last 90 days</option>
-            </select>
+            <AppSelect
+              options={["Last 7 days", "Last 30 days", "Last 90 days"]}
+              defaultValue="Last 7 days"
+              className="w-auto"
+            />
           </div>
           <div className="flex items-end gap-2 h-48">
             {[35, 52, 41, 68, 45, 72, 58, 82, 65, 90, 78, 95].map((h, i) => (
@@ -137,7 +138,7 @@ const InstructorDashboard = () => {
                     <span className="text-small text-card-foreground">{c.students.toLocaleString()}</span>
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell">
-                    <RatingStars rating={c.rating} size={12} />
+                    <RatingStars showValue={false} rating={c.rating} size={12} />
                   </td>
                   <td className="px-6 py-4 hidden lg:table-cell">
                     <span className="text-small font-semibold text-card-foreground">

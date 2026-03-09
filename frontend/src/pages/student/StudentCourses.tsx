@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import ProgressBar from "@/components/ProgressBar";
 import { studentCourses } from "@/lib/data";
+import { AppSelect } from "@/components/ui/app-select";
 
 const StudentCourses = () => {
   return (
@@ -14,7 +15,7 @@ const StudentCourses = () => {
 
       {/* Search & Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
@@ -22,12 +23,12 @@ const StudentCourses = () => {
             className="w-full pl-10 pr-4 py-2.5 text-small bg-card rounded-button border border-border outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
-        <select className="text-small bg-card rounded-button px-4 py-2.5 border border-border outline-none text-foreground">
-          <option>All Courses</option>
-          <option>In Progress</option>
-          <option>Completed</option>
-          <option>Not Started</option>
-        </select>
+        <div>
+          <AppSelect
+            options={["All Status", "Completed", "In Progress", "Not Started"]}
+            defaultValue="All Status"
+          />
+        </div>
       </div>
 
       {/* Course List */}

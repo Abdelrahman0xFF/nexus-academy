@@ -2,6 +2,7 @@ import { Upload, Image, Video, FileText, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import DashboardLayout from "@/layouts/DashboardLayout";
+import { AppSelect } from "@/components/ui/app-select";
 
 const UploadCourse = () => {
   const [sections, setSections] = useState([
@@ -41,7 +42,7 @@ const UploadCourse = () => {
                 <input
                   type="text"
                   placeholder="e.g. Complete Web Development Bootcamp"
-                  className="w-full px-4 py-2.5 text-small bg-muted rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div>
@@ -49,43 +50,39 @@ const UploadCourse = () => {
                 <textarea
                   placeholder="Brief overview of your course..."
                   rows={3}
-                  className="w-full px-4 py-2.5 text-small bg-muted rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                  className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20 resize-none"
                 />
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-small font-medium text-foreground block mb-1.5">Category</label>
-                  <select className="w-full px-4 py-2.5 text-small bg-muted rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20 text-foreground">
-                    <option>Select category</option>
-                    <option>Web Development</option>
-                    <option>Data Science</option>
-                    <option>Design</option>
-                    <option>Mobile Development</option>
-                    <option>Marketing</option>
-                  </select>
+                  <AppSelect
+                    options={["Web Development", "Data Science", "Design", "Mobile Development", "Marketing"]}
+                    placeholder="Select category"
+                    triggerClassName="px-4 py-2.5"
+                  />
                 </div>
                 <div>
                   <label className="text-small font-medium text-foreground block mb-1.5">Level</label>
-                  <select className="w-full px-4 py-2.5 text-small bg-muted rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20 text-foreground">
-                    <option>Select level</option>
-                    <option>Beginner</option>
-                    <option>Intermediate</option>
-                    <option>Advanced</option>
-                  </select>
+                  <AppSelect
+                    options={["Beginner", "Intermediate", "Advanced"]}
+                    placeholder="Select level"
+                    triggerClassName="px-4 py-2.5"
+                  />
                 </div>
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-small font-medium text-foreground block mb-1.5">Price ($)</label>
-                  <input type="number" placeholder="49.99" className="w-full px-4 py-2.5 text-small bg-muted rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20" />
+                  <input type="number" placeholder="49.99" className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20" />
                 </div>
                 <div>
                   <label className="text-small font-medium text-foreground block mb-1.5">Language</label>
-                  <select className="w-full px-4 py-2.5 text-small bg-muted rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20 text-foreground">
-                    <option>English</option>
-                    <option>Spanish</option>
-                    <option>French</option>
-                  </select>
+                  <AppSelect
+                    options={["English", "Spanish", "French"]}
+                    defaultValue="English"
+                    triggerClassName="px-4 py-2.5"
+                  />
                 </div>
               </div>
             </div>
