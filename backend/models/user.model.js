@@ -67,6 +67,53 @@ class User {
             throw err;
         }
     }
+
+    static async update(user_id, updatedUser) {
+        try {
+            const pool = await poolPromise;
+            const request = pool.request();
+
+            request.input("user_id", sql.Int, user_id);
+
+            let query = "UPDATE users SET ";
+            const updates = [];
+            for (const [key, value] of Object.entries(updatedUser)) {
+                if (value !== undefined && key !== "user_id") {
+                    request.input(key, sql.NVarChar, value);
+                    updates.push(`${key} = @${key}`);
+                }
+            }
+
+            if (updates.length === 0)
+                return { message: "No data provided to update" };
+
+            query += updates.join(", ");
+            query += " WHERE user_id = @user_id";
+
+            const result = await request.query(query);
+
+            return result.rowsAffected[0] > 0
+                ? { message: "User updated successfully" }
+                : null;
+        } catch (err) {
+            console.error("Error updating user: ", err);
+            throw err;
+        }
+    }
+
+    static async delete(user_id) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool
+                .request()
+                .input("user_id", sql.Int, user_id)
+                .query("DELETE FROM users WHERE user_id = @user_id");
+            return result.rowsAffected[0] > 0;
+        } catch (err) {
+            console.error("Error deleting user: ", err);
+            throw err;
+        }
+    }
 }
 
 export default User;
