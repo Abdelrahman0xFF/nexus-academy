@@ -1,8 +1,7 @@
 import { uploadMedia, streamMedia } from "../controllers/media.controller.js";
-import multer from "multer";
 import { Router } from "express";
+import upload from "../middleware/multer.js";
 
-const upload = multer({ dest: "temp_uploads/" });
 const router = Router();
 
 router.post("/upload", upload.single("file"), uploadMedia);

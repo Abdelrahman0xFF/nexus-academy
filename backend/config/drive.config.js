@@ -18,6 +18,6 @@ oauth2Client.setCredentials({
     refresh_token: REFRESH_TOKEN,
 });
 
-const driveService = google.drive({ version: "v3", auth: oauth2Client });
+const driveConfig = google.drive({ version: "v3", auth: oauth2Client });
 
-export { driveService, PARENT_FOLDER_ID };
+export { driveConfig, PARENT_FOLDER_ID };
