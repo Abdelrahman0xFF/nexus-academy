@@ -25,3 +25,6 @@ dist-ssr
 
 #env files
 *.env
+
+#Temporary files
+temp_uploads
