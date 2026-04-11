@@ -10,6 +10,9 @@ class User {
         this.role = user.role;
         this.title = user.title;
         this.bio = user.bio;
+        this.is_verified = user.is_verified ?? false;
+        this.otp = user.otp ?? null;
+        this.otp_expires = user.otp_expires ?? null;
     }
 
     static async create(newUser) {
@@ -23,10 +26,18 @@ class User {
                 .input("hashed_password", sql.NVarChar, newUser.hashed_password)
                 .input("avatar_url", sql.NVarChar, newUser.avatar_url)
                 .input("title", sql.NVarChar, newUser.title)
-                .input("bio", sql.NVarChar, newUser.bio).query(`
-                    INSERT INTO users (first_name, last_name, email, hashed_password, avatar_url, title, bio)
-                    VALUES (@first_name, @last_name, @email, @hashed_password, @avatar_url, @title, @bio);
-                    
+                .input("bio", sql.NVarChar, newUser.bio)
+                .input("otp", sql.NVarChar, newUser.otp)
+                .input("otp_expires", sql.BigInt, newUser.otp_expires).query(`
+                    INSERT INTO users (
+                        first_name, last_name, email, hashed_password,
+                        avatar_url, title, bio, otp, otp_expires
+                    )
+                    VALUES (
+                        @first_name, @last_name, @email, @hashed_password,
+                        @avatar_url, @title, @bio, @otp, @otp_expires
+                    );
+
                     SELECT user_id, role FROM users WHERE user_id = SCOPE_IDENTITY();
                 `);
             return {
@@ -129,6 +140,54 @@ class User {
             return result.rowsAffected[0] > 0;
         } catch (err) {
             console.error("Error deleting user: ", err);
+            throw err;
+        }
+    }
+
+    static async updateOTP(email, hashedOtp, otpExpires) {
+        try {
+            const pool = await poolPromise;
+            await pool
+                .request()
+                .input("email", sql.NVarChar, email)
+                .input("otp", sql.NVarChar, hashedOtp)
+                .input("otp_expires", sql.BigInt, otpExpires).query(`
+                    UPDATE users 
+                    SET otp = @otp, otp_expires = @otp_expires 
+                    WHERE email = @email
+                `);
+        } catch (err) {
+            console.error("Error updating OTP: ", err);
+            throw err;
+        }
+    }
+
+    static async verify(email) {
+        try {
+            const pool = await poolPromise;
+            await pool.request().input("email", sql.NVarChar, email).query(`
+                    UPDATE users 
+                    SET is_verified = 1, otp = NULL, otp_expires = NULL 
+                    WHERE email = @email
+                `);
+        } catch (err) {
+            console.error("Error verifying user: ", err);
+            throw err;
+        }
+    }
+
+    static async deleteUnverified(email) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool
+                .request()
+                .input("email", sql.NVarChar, email).query(`
+                    DELETE FROM users 
+                    WHERE email = @email AND is_verified = 0
+                `);
+            return result.rowsAffected[0] > 0;
+        } catch (err) {
+            console.error("Error deleting unverified user: ", err);
             throw err;
         }
     }
