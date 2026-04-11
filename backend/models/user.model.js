@@ -22,14 +22,18 @@ class User {
                 .input("email", sql.NVarChar, newUser.email)
                 .input("hashed_password", sql.NVarChar, newUser.hashed_password)
                 .input("avatar_url", sql.NVarChar, newUser.avatar_url)
-                .input("role", sql.NVarChar, newUser.role)
                 .input("title", sql.NVarChar, newUser.title)
                 .input("bio", sql.NVarChar, newUser.bio).query(`
-                    INSERT INTO users (first_name, last_name, email, hashed_password, avatar_url, role, title, bio)
-                    VALUES (@first_name, @last_name, @email, @hashed_password, @avatar_url, @role, @title, @bio);
-                    SELECT SCOPE_IDENTITY() AS user_id;
+                    INSERT INTO users (first_name, last_name, email, hashed_password, avatar_url, title, bio)
+                    VALUES (@first_name, @last_name, @email, @hashed_password, @avatar_url, @title, @bio);
+                    
+                    SELECT user_id, role FROM users WHERE user_id = SCOPE_IDENTITY();
                 `);
-            return { user_id: result.recordset[0].user_id, ...newUser };
+            return {
+                ...newUser,
+                user_id: result.recordset[0].user_id,
+                role: result.recordset[0].role,
+            };
         } catch (err) {
             console.error("Error creating user: ", err);
             throw err;
@@ -46,6 +50,20 @@ class User {
             return result.recordset[0];
         } catch (err) {
             console.error("Error finding user by ID: ", err);
+            throw err;
+        }
+    }
+
+    static async findByEmail(email) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool
+                .request()
+                .input("email", sql.NVarChar, email)
+                .query("SELECT * FROM users WHERE email = @email");
+            return result.recordset[0];
+        } catch (err) {
+            console.error("Error finding user by email: ", err);
             throw err;
         }
     }
