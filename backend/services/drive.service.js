@@ -65,3 +65,15 @@ export const getDriveStream = async (fileId, rangeHeader = null) => {
         requestConfig,
     };
 };
+
+export const deleteFromDrive = async (fileId) => {
+    try {
+        await driveConfig.files.delete({
+            fileId: fileId,
+        });
+        return { message: "File deleted successfully" };
+    } catch (error) {
+        console.error("Error deleting file from drive: ", error);
+        throw error;
+    }
+};

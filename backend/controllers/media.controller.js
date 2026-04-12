@@ -1,4 +1,8 @@
-import { uploadToDrive, getDriveStream } from "../services/drive.service.js";
+import {
+    uploadToDrive,
+    getDriveStream,
+    deleteFromDrive,
+} from "../services/drive.service.js";
 import { driveConfig } from "../config/drive.config.js";
 
 export const uploadMedia = async (req, res) => {
@@ -47,5 +51,16 @@ export const streamMedia = async (req, res) => {
             .pipe(res);
     } catch (error) {
         if (!res.headersSent) res.status(500).send("Stream failed.");
+    }
+};
+
+export const deleteMedia = async (req, res) => {
+    try {
+        const { fileId } = req.params;
+        const result = await deleteFromDrive(fileId);
+        res.status(200).json(result);
+    } catch (error) {
+        console.error("Delete Error:", error);
+        res.status(500).send("Deletion failed.");
     }
 };
