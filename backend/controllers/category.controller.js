@@ -72,11 +72,13 @@ const deleteCategory = async (req, res) => {
 const getCoursesByCategory = async (req, res) => {
     try {
         const { id } = req.params;
+        const { page = 1, limit = 10 } = req.query;
+
         const category = await Category.findById(id);
         if (!category) {
             return res.status(404).json({ message: "Category not found" });
         }
-        const courses = await Category.findCoursesByCategoryId(id);
+        const courses = await Category.findCoursesByCategoryId(id, page, limit);
         res.json(courses);
     } catch (err) {
         res.status(500).json({ message: "Server error", error: err.message });

@@ -84,13 +84,21 @@ class Category {
         }
     }
 
-    static async findCoursesByCategoryId(category_id) {
+    static async findCoursesByCategoryId(category_id, page = 1, limit = 10) {
         try {
+            const offset = (page - 1) * limit;
             const pool = await poolPromise;
             const result = await pool
                 .request()
                 .input("category_id", sql.Int, category_id)
-                .query("SELECT * FROM courses WHERE category_id = @category_id");
+                .input("limit", sql.Int, limit)
+                .input("offset", sql.Int, offset)
+                .query(`
+                    SELECT * FROM courses 
+                    WHERE category_id = @category_id
+                    ORDER BY course_id 
+                    OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
+                `);
             return result.recordset;
         } catch (err) {
             console.error("Error finding courses by category ID: ", err);
