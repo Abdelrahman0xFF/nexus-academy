@@ -1,10 +1,20 @@
 import express from "express";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 import router from "./routes/router.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+    cors({
+        origin: process.env.FRONTEND_BASE_URL || "http://localhost:8080",
+        credentials: true,
+    }),
+);
 
 app.use("/api", router);
 
