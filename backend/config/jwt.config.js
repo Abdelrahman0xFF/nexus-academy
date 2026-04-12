@@ -6,4 +6,12 @@ const generateJWTToken = (payload) => {
     });
 };
 
-export { generateJWTToken };
+const verifyJWTToken = (token) => {
+    try {
+        return jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+        return null;
+    }
+};
+
+export { generateJWTToken, verifyJWTToken };

@@ -4,11 +4,10 @@
 
 | Method | Endpoint                    | Description                    | Done |
 | ------ | --------------------------- | ------------------------------ | ---- |
-| POST   | `/api/auth/register`        | Register a new user            |
-| POST   | `/api/auth/login`           | Login and receive token        |
-| POST   | `/api/auth/logout`          | Logout current user            |
-| GET    | `/api/auth/me`              | Get current authenticated user |
-| PUT    | `/api/auth/change-password` | Change user password           |
+| POST   | `/api/auth/register`        | Register a new user            | ✅   |
+| POST   | `/api/auth/login`           | Login and receive token        | ✅   |
+| GET    | `/api/auth/me`              | Get current authenticated user | ✅   |
+| PUT    | `/api/auth/change-password` | Change user password           | ✅   |
 
 ## 👤 Users
 

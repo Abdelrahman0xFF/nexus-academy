@@ -38,12 +38,13 @@ class User {
                         @avatar_url, @title, @bio, @otp, @otp_expires
                     );
 
-                    SELECT user_id, role FROM users WHERE user_id = SCOPE_IDENTITY();
+                    SELECT user_id, role, is_verified FROM users WHERE user_id = SCOPE_IDENTITY();
                 `);
             return {
                 ...newUser,
                 user_id: result.recordset[0].user_id,
                 role: result.recordset[0].role,
+                is_verified: result.recordset[0].is_verified,
             };
         } catch (err) {
             console.error("Error creating user: ", err);
@@ -108,7 +109,13 @@ class User {
             const updates = [];
             for (const [key, value] of Object.entries(updatedUser)) {
                 if (value !== undefined && key !== "user_id") {
-                    request.input(key, sql.NVarChar, value);
+                    if (key === "is_verified") {
+                        request.input(key, sql.Bit, value ? 1 : 0);
+                    } else if (key === "otp_expires") {
+                        request.input(key, sql.BigInt, value);
+                    } else {
+                        request.input(key, sql.NVarChar, value);
+                    }
                     updates.push(`${key} = @${key}`);
                 }
             }

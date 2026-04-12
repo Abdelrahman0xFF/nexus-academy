@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import { updateUserSchema } from "../validators/user.validator.js";
 
 const createUser = async (req, res) => {
     try {
@@ -15,10 +16,16 @@ const createUser = async (req, res) => {
 
 const getUserById = async (req, res) => {
     try {
-        const user_id = req.params.user_id;
+        const { user_id } = req.params;
+
+        if (req.user.role !== "admin" && req.user.user_id.toString() !== user_id) {
+            return res.status(403).json({ message: "Forbidden: You can only access your own profile" });
+        }
+
         const user = await User.findById(user_id);
         if (user) {
-            res.status(200).json(user);
+            const { user_id: _, hashed_password, otp, otp_expires, is_verified, ...userData } = user;
+            res.status(200).json({ user: userData });
         } else {
             res.status(404).json({ message: "User not found" });
         }
@@ -46,7 +53,20 @@ const getAllUsers = async (req, res) => {
 const updateUser = async (req, res) => {
     try {
         const { user_id } = req.params;
-        const result = await User.update(user_id, req.body);
+
+        if (req.user.role !== "admin" && req.user.user_id.toString() !== user_id) {
+            return res.status(403).json({ message: "Forbidden: You can only update your own profile" });
+        }
+
+        if (req.user.role !== "admin" && req.body.role) {
+            delete req.body.role;
+        }
+
+        const { error, value } = updateUserSchema.validate(req.body);
+        if (error)
+            return res.status(400).json({ message: error.details[0].message });
+
+        const result = await User.update(user_id, value);
 
         if (result) {
             res.status(200).json(result);

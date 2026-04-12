@@ -1,5 +1,9 @@
 import User from "../models/user.model.js";
-import { registerSchema, loginSchema } from "../validators/user.validator.js";
+import {
+    registerSchema,
+    loginSchema,
+    changePasswordSchema,
+} from "../validators/user.validator.js";
 import { hashPassword, comparePassword } from "../utils/hash.js";
 import { generateJWTToken } from "../config/jwt.config.js";
 import { uploadToDrive } from "../services/drive.service.js";
@@ -75,7 +79,7 @@ const verifyOtp = async (req, res) => {
                 .status(400)
                 .json({ message: "OTP expired. Please register again." });
         }
-        
+
         const isOtpValid = await comparePassword(otp, user.otp);
         if (!isOtpValid)
             return res.status(400).json({ message: "Invalid OTP" });
@@ -118,10 +122,14 @@ const login = async (req, res) => {
 
         res.json({
             user: {
-                id: user.user_id,
+                first_name: user.first_name,
+                last_name: user.last_name,
                 email: user.email,
                 role: user.role,
                 avatar_url: user.avatar_url,
+                title: user.title,
+                bio: user.bio,
+                created_at: user.created_at,
             },
         });
     } catch (err) {
@@ -129,4 +137,51 @@ const login = async (req, res) => {
     }
 };
 
-export { register, login, verifyOtp };
+const logout = async (req, res) => {
+    res.clearCookie("token");
+    res.json({ message: "Logged out successfully" });
+};
+
+const me = async (req, res) => {
+    try {
+        const {
+            user_id,
+            hashed_password,
+            otp,
+            otp_expires,
+            is_verified,
+            ...userData
+        } = req.user;
+        res.json({ user: userData });
+    } catch (err) {
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+};
+
+const changePassword = async (req, res) => {
+    try {
+        if (!req.body) {
+            return res.status(400).json({ message: "Request body is missing" });
+        }
+
+        const { error } = changePasswordSchema.validate(req.body);
+        if (error)
+            return res.status(400).json({ message: error.details[0].message });
+
+        const { old_password, new_password } = req.body;
+        const user = req.user;
+
+        const match = await comparePassword(old_password, user.hashed_password);
+        if (!match)
+            return res.status(401).json({ message: "Invalid old password" });
+
+        const hashedPassword = await hashPassword(new_password);
+        await User.update(user.user_id, { hashed_password: hashedPassword });
+
+        res.json({ message: "Password updated successfully" });
+    } catch (err) {
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+};
+
+export { register, login, verifyOtp, logout, me, changePassword };
