@@ -1,7 +1,4 @@
 import sql from "mssql/msnodesqlv8.js";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const config = {
     server: process.env.DB_SERVER,
