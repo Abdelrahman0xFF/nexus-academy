@@ -18,6 +18,17 @@
 | PUT    | `/api/users/:id` | Update user profile     | ✅   |
 | DELETE | `/api/users/:id` | Delete user _(admin)_   | ✅   |
 
+## 🗂️ Categories
+
+| Method | Endpoint                      | Description                  | Done |
+| ------ | ----------------------------- | ---------------------------- | ---- |
+| GET    | `/api/categories`             | Get all categories           | ✅   |
+| GET    | `/api/categories/:id/courses` | Get courses under a category | ✅   |
+| POST   | `/api/categories`             | Create a category _(admin)_  | ✅   |
+| PUT    | `/api/categories/:id`         | Update a category _(admin)_  | ✅   |
+| DELETE | `/api/categories/:id`         | Delete a category _(admin)_  | ✅   |
+
+
 ## 📚 Courses
 
 | Method | Endpoint                       | Description                                 | Done |
@@ -30,16 +41,6 @@
 | GET    | `/api/courses/:id/sections`    | Get all sections of a course                |
 | GET    | `/api/courses/:id/reviews`     | Get reviews for a course                    |
 | GET    | `/api/courses/:id/enrollments` | Get enrollments for a course _(instructor)_ |
-
-## 🗂️ Categories
-
-| Method | Endpoint                      | Description                  | Done |
-| ------ | ----------------------------- | ---------------------------- | ---- |
-| GET    | `/api/categories`             | Get all categories           |
-| GET    | `/api/categories/:id/courses` | Get courses under a category |
-| POST   | `/api/categories`             | Create a category _(admin)_  |
-| PUT    | `/api/categories/:id`         | Update a category _(admin)_  |
-| DELETE | `/api/categories/:id`         | Delete a category _(admin)_  |
 
 ## 📦 Sections
 
