@@ -1,21 +1,24 @@
-import { Globe, BarChart3, Palette, Smartphone, Megaphone, Cloud, Shield, Briefcase } from "lucide-react";
 import type { Category } from "@/lib/data";
 
-const iconMap: Record<string, React.ElementType> = {
-  Globe, BarChart3, Palette, Smartphone, Megaphone, Cloud, Shield, Briefcase,
-};
-
 const CategoryCard = ({ category }: { category: Category }) => {
-  const Icon = iconMap[category.icon] || Globe;
-  return (
-    <div className="bg-card rounded-card card-shadow hover-lift p-6 text-center group cursor-pointer">
-      <div className="w-14 h-14 mx-auto rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:scale-110 transition-all duration-300">
-        <Icon size={28} className="text-primary group-hover:text-primary-foreground transition-colors" />
-      </div>
-      <h3 className="text-body font-semibold text-card-foreground">{category.name}</h3>
-      <p className="text-small text-muted-foreground mt-1">{category.courseCount} Courses</p>
-    </div>
-  );
+    return (
+        <div className="group relative overflow-hidden bg-card p-8 rounded-2xl border border-border hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+            <div className="absolute -right-4 -top-4 w-16 h-16 bg-primary/5 rounded-full group-hover:bg-primary/10 transition-colors" />
+
+            <div className="relative z-10">
+                <h3 className="text-xl font-bold text-card-foreground group-hover:text-primary transition-colors">
+                    {category.name}
+                </h3>
+
+                <div className="mt-4 flex items-center gap-2">
+                    <span className="h-px w-8 bg-primary/30 group-hover:w-12 transition-all duration-300" />
+                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                        {category.courseCount} Courses
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default CategoryCard;
