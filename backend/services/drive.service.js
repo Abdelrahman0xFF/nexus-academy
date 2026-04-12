@@ -22,11 +22,7 @@ export const uploadToDrive = async (file) => {
             requestBody: { role: "reader", type: "anyone" },
         });
 
-        const embedLink = file.mimetype.includes("video")
-            ? `https://drive.google.com/file/d/${fileId}/preview`
-            : `https://drive.google.com/uc?export=view&id=${fileId}`;
-
-        return { fileId, embedLink };
+        return { fileId };
     } finally {
         if (file.path && fs.existsSync(file.path)) {
             fs.unlinkSync(file.path);
