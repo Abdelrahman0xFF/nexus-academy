@@ -29,8 +29,10 @@ import AdminReviews from "./pages/admin/AdminReviews";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
+import HelpCenter from "./pages/HelpCenter";
 import ScrollToTopOnNavigation from "./components/ScrollToTopOnNavigation";
 import PageTransition from "./components/PageTransition";
+import MainLayout from "./layouts/MainLayout";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +49,7 @@ const App = () => (
           <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:id" element={<CourseDetails />} />
+          <Route path="/help" element={<MainLayout><HelpCenter /></MainLayout>} />
           {/* Student Dashboard */}
           <Route path="/dashboard" element={<StudentDashboard />} />
           <Route path="/dashboard/courses" element={<StudentCourses />} />
