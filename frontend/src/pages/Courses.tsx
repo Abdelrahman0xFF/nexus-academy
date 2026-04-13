@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
     Search,
     SlidersHorizontal,
@@ -23,11 +24,20 @@ const allCategories = [
 const levels = ["All Levels", "Beginner", "Intermediate", "Advanced"];
 
 const Courses = () => {
+    const [searchParams] = useSearchParams();
     const [search, setSearch] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("All");
+    const [selectedCategory, setSelectedCategory] = useState(
+        () => searchParams.get("category") ?? "All",
+    );
     const [selectedLevel, setSelectedLevel] = useState("All Levels");
     const [page, setPage] = useState(1);
     const perPage = 8;
+
+    useEffect(() => {
+        const categoryFromQuery = searchParams.get("category") ?? "All";
+        setSelectedCategory(categoryFromQuery);
+        setPage(1);
+    }, [searchParams]);
 
     const filtered = courses.filter((c) => {
         const matchSearch =
