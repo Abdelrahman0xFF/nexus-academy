@@ -11,6 +11,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import RatingStars from "@/components/RatingStars";
 import { courses } from "@/lib/data";
@@ -25,28 +26,63 @@ const InstructorDashboard = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-h1 text-foreground">Instructor Dashboard</h1>
-          <p className="text-body text-muted-foreground mt-1">Manage your courses and track performance</p>
+          <p className="text-body text-muted-foreground mt-1">
+            Manage your courses and track performance
+          </p>
         </div>
-        <Button className="gradient-primary border-0 text-primary-foreground rounded-button hover:opacity-90 transition-opacity">
-          <Plus size={18} className="mr-2" /> Create Course
+        <Button
+          asChild
+          className="gradient-primary border-0 text-primary-foreground rounded-button hover:opacity-90 transition-opacity"
+        >
+          <Link to="/instructor/upload">
+            <Plus size={18} className="mr-2" /> Create Course
+          </Link>
         </Button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
-          { icon: BookOpen, label: "Total Courses", value: "4", change: "+1 this month", color: "bg-primary/10 text-primary" },
-          { icon: Users, label: "Total Students", value: "45,820", change: "+2.4k this month", color: "bg-secondary/10 text-secondary" },
-          { icon: DollarSign, label: "Revenue", value: "$12,480", change: "+18% vs last month", color: "bg-emerald-500/10 text-emerald-600" },
-          { icon: TrendingUp, label: "Avg. Rating", value: "4.85", change: "Top 5% instructor", color: "bg-amber-500/10 text-amber-600" },
+          {
+            icon: BookOpen,
+            label: "Total Courses",
+            value: "4",
+            change: "+1 this month",
+            color: "bg-primary/10 text-primary",
+          },
+          {
+            icon: Users,
+            label: "Total Students",
+            value: "45,820",
+            change: "+2.4k this month",
+            color: "bg-secondary/10 text-secondary",
+          },
+          {
+            icon: DollarSign,
+            label: "Revenue",
+            value: "$12,480",
+            change: "+18% vs last month",
+            color: "bg-emerald-500/10 text-emerald-600",
+          },
+          {
+            icon: TrendingUp,
+            label: "Avg. Rating",
+            value: "4.85",
+            change: "Top 5% instructor",
+            color: "bg-amber-500/10 text-amber-600",
+          },
         ].map((s) => (
           <div key={s.label} className="bg-card rounded-card card-shadow p-5">
             <div className="flex items-center justify-between mb-3">
-              <div className={`w-10 h-10 rounded-lg ${s.color} flex items-center justify-center`}>
+              <div
+                className={`w-10 h-10 rounded-lg ${s.color} flex items-center justify-center`}
+              >
                 <s.icon size={20} />
               </div>
             </div>
-            <div className="text-2xl font-bold text-card-foreground">{s.value}</div>
+            <div className="text-2xl font-bold text-card-foreground">
+              {s.value}
+            </div>
             <div className="text-small text-muted-foreground">{s.label}</div>
             <div className="text-xs text-secondary mt-1">{s.change}</div>
           </div>
@@ -72,7 +108,22 @@ const InstructorDashboard = () => {
                   style={{ height: `${h}%` }}
                 />
                 <span className="text-[10px] text-muted-foreground">
-                  {["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"][i]}
+                  {
+                    [
+                      "J",
+                      "F",
+                      "M",
+                      "A",
+                      "M",
+                      "J",
+                      "J",
+                      "A",
+                      "S",
+                      "O",
+                      "N",
+                      "D",
+                    ][i]
+                  }
                 </span>
               </div>
             ))}
@@ -80,7 +131,9 @@ const InstructorDashboard = () => {
         </div>
 
         <div className="bg-card rounded-card card-shadow p-6">
-          <h2 className="text-h3 text-card-foreground mb-4">Student Analytics</h2>
+          <h2 className="text-h3 text-card-foreground mb-4">
+            Student Analytics
+          </h2>
           <div className="space-y-4">
             {[
               { label: "New enrollments", value: "234", trend: "+12%" },
@@ -88,10 +141,17 @@ const InstructorDashboard = () => {
               { label: "Active learners", value: "1,240", trend: "+5%" },
               { label: "Reviews received", value: "56", trend: "+15%" },
             ].map((item) => (
-              <div key={item.label} className="flex items-center justify-between py-2 border-b border-border last:border-b-0">
-                <span className="text-small text-muted-foreground">{item.label}</span>
+              <div
+                key={item.label}
+                className="flex items-center justify-between py-2 border-b border-border last:border-b-0"
+              >
+                <span className="text-small text-muted-foreground">
+                  {item.label}
+                </span>
                 <div className="flex items-center gap-2">
-                  <span className="text-small font-semibold text-card-foreground">{item.value}</span>
+                  <span className="text-small font-semibold text-card-foreground">
+                    {item.value}
+                  </span>
                   <span className="text-xs text-secondary">{item.trend}</span>
                 </div>
               </div>
@@ -112,37 +172,68 @@ const InstructorDashboard = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">Course</th>
-                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell">Students</th>
-                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell">Rating</th>
-                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">Revenue</th>
-                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">Status</th>
-                <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">Actions</th>
+                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                  Course
+                </th>
+                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell">
+                  Students
+                </th>
+                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell">
+                  Rating
+                </th>
+                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
+                  Revenue
+                </th>
+                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                  Status
+                </th>
+                <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {myCourses.map((c) => (
-                <tr key={c.id} className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors">
+                <tr
+                  key={c.id}
+                  className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors"
+                >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center shrink-0">
-                        <BookOpen size={16} className="text-primary-foreground" />
+                        <BookOpen
+                          size={16}
+                          className="text-primary-foreground"
+                        />
                       </div>
                       <div className="min-w-0">
-                        <div className="text-small font-medium text-card-foreground truncate max-w-[200px]">{c.title}</div>
-                        <div className="text-xs text-muted-foreground">{c.category}</div>
+                        <div className="text-small font-medium text-card-foreground truncate max-w-[200px]">
+                          {c.title}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {c.category}
+                        </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell">
-                    <span className="text-small text-card-foreground">{c.students.toLocaleString()}</span>
+                    <span className="text-small text-card-foreground">
+                      {c.students.toLocaleString()}
+                    </span>
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell">
-                    <RatingStars showValue={false} rating={c.rating} size={12} />
+                    <RatingStars
+                      showValue={false}
+                      rating={c.rating}
+                      size={12}
+                    />
                   </td>
                   <td className="px-6 py-4 hidden lg:table-cell">
                     <span className="text-small font-semibold text-card-foreground">
-                      ${(c.price * c.students * 0.7).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      $
+                      {(c.price * c.students * 0.7).toLocaleString(undefined, {
+                        maximumFractionDigits: 0,
+                      })}
                     </span>
                   </td>
                   <td className="px-6 py-4">

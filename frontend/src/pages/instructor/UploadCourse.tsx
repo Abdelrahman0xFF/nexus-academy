@@ -1,10 +1,31 @@
 import { Upload, Image, Video, FileText, Plus, X } from "lucide-react";
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { AppSelect } from "@/components/ui/app-select";
 
 const UploadCourse = () => {
+  const location = useLocation();
+  const editCourse = location.state as {
+    id?: string;
+    title?: string;
+    description?: string;
+    category?: string;
+    level?: "Beginner" | "Intermediate" | "Advanced";
+    price?: number;
+    duration?: string;
+    lessons?: number;
+  } | null;
+
+  const isEditMode = !!editCourse?.id;
+
+  const [title, setTitle] = useState(editCourse?.title || "");
+  const [description, setDescription] = useState(editCourse?.description || "");
+  const [category, setCategory] = useState(editCourse?.category || "");
+  const [level, setLevel] = useState(editCourse?.level || "");
+  const [price, setPrice] = useState<number | "">(editCourse?.price || "");
+
   const [sections, setSections] = useState([
     { title: "Introduction", lessons: [{ title: "Welcome", duration: "" }] },
   ]);
@@ -26,8 +47,8 @@ const UploadCourse = () => {
   return (
     <DashboardLayout type="instructor">
       <div className="mb-8">
-        <h1 className="text-h1 text-foreground">Upload Course</h1>
-        <p className="text-body text-muted-foreground mt-1">Create and publish a new course</p>
+        <h1 className="text-h1 text-foreground">{isEditMode ? "Edit Course" : "Upload Course"}</h1>
+        <p className="text-body text-muted-foreground mt-1">{isEditMode ? "Update your course details" : "Create and publish a new course"}</p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
@@ -41,6 +62,8 @@ const UploadCourse = () => {
                 <label className="text-small font-medium text-foreground block mb-1.5">Course Title</label>
                 <input
                   type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Complete Web Development Bootcamp"
                   className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20"
                 />
@@ -48,6 +71,8 @@ const UploadCourse = () => {
               <div>
                 <label className="text-small font-medium text-foreground block mb-1.5">Short Description</label>
                 <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   placeholder="Brief overview of your course..."
                   rows={3}
                   className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20 resize-none"
@@ -58,6 +83,8 @@ const UploadCourse = () => {
                   <label className="text-small font-medium text-foreground block mb-1.5">Category</label>
                   <AppSelect
                     options={["Web Development", "Data Science", "Design", "Mobile Development", "Marketing"]}
+                    value={category}
+                    onValueChange={setCategory}
                     placeholder="Select category"
                     triggerClassName="px-4 py-2.5"
                   />
@@ -66,6 +93,8 @@ const UploadCourse = () => {
                   <label className="text-small font-medium text-foreground block mb-1.5">Level</label>
                   <AppSelect
                     options={["Beginner", "Intermediate", "Advanced"]}
+                    value={level}
+                    onValueChange={setLevel}
                     placeholder="Select level"
                     triggerClassName="px-4 py-2.5"
                   />
@@ -74,7 +103,13 @@ const UploadCourse = () => {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-small font-medium text-foreground block mb-1.5">Price ($)</label>
-                  <input type="number" placeholder="49.99" className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20" />
+                  <input
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value ? Number(e.target.value) : "")}
+                  placeholder="49.99"
+                  className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20"
+                />
                 </div>
                 <div>
                   <label className="text-small font-medium text-foreground block mb-1.5">Language</label>
