@@ -36,7 +36,7 @@ const StudentCourses = () => {
         {studentCourses.map((c) => (
           <Link
             key={c.id}
-            to={`/courses/${c.id}`}
+            to={`/learn/${c.id}`}
             className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-card rounded-card card-shadow p-5 hover-lift group"
           >
             <div className="w-full sm:w-24 h-20 sm:h-16 rounded-lg gradient-primary flex items-center justify-center shrink-0">

@@ -6,7 +6,7 @@ import PageTransition from "@/components/PageTransition";
 
 const MainLayout = ({ children }: { children: ReactNode }) => {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="h-screen w-full flex flex-col bg-background overflow-y-auto overflow-x-hidden custom-scrollbar">
       <Navbar />
       <main className="flex-1">
         <PageTransition>{children}</PageTransition>

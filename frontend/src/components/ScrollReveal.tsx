@@ -10,7 +10,7 @@ interface ScrollRevealProps {
 
 const ScrollReveal = ({
   children,
-  animation = "animate-fade-in-up",
+  animation = "animate-reveal",
   delay = "0s",
   className = "",
   once = true,

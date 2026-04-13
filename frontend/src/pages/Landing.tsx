@@ -26,7 +26,7 @@ const Landing = () => {
             <section className="relative overflow-hidden h-[calc(100vh_-_65px)] flex items-center">
                 <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-24">
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <div className="animate-fade-in">
+                        <div className="animate-reveal">
                             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-small font-medium mb-6">
                                 <TrendingUp size={14} /> #1 Learning Platform in
                                 2025
@@ -92,7 +92,7 @@ const Landing = () => {
                                 ))}
                             </div>
                         </div>
-                        <div className="hidden lg:block animate-fade-in-up">
+                        <div className="hidden lg:block animate-reveal-up">
                             <img
                                 src={heroImage}
                                 alt="Hero Illustration"
@@ -104,7 +104,7 @@ const Landing = () => {
             </section>
 
             {/* Stats Bar */}
-            <ScrollReveal className="animate-fade-in">
+            <ScrollReveal className="animate-reveal">
                 <section className="border-y border-border bg-card">
                     <div className="container mx-auto px-4 lg:px-8 py-8">
                         <Marquee pauseOnHover={false}>

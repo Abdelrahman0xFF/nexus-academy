@@ -1,4 +1,5 @@
-import { useParams } from "react-router-dom";
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
     Star,
     Clock,
@@ -9,21 +10,74 @@ import {
     PlayCircle,
     CheckCircle,
     ChevronDown,
+    CreditCard,
+    ShieldCheck,
+    Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MainLayout from "@/layouts/MainLayout";
 import RatingStars from "@/components/RatingStars";
-import { courses, curriculum } from "@/lib/data";
+import { courses, curriculum, initialReviews, Review } from "@/lib/data";
 import {
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 const CourseDetails = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
+    const [isEnrolling, setIsEnrolling] = useState(false);
+    const [showReviewForm, setShowReviewForm] = useState(false);
+    const [userRating, setUserRating] = useState(5);
+    const [reviewComment, setReviewComment] = useState("");
+    const [reviews, setReviews] = useState<Review[]>(
+        initialReviews.filter(r => r.courseId === id || (id === undefined && r.courseId === "1"))
+    );
+    
     const course = courses.find((c) => c.id === id) || courses[0];
+
+    const handleEnroll = () => {
+        setIsEnrolling(true);
+        // Simulate payment process
+        setTimeout(() => {
+            setIsEnrolling(false);
+            toast.success("Successfully enrolled in " + course.title);
+            navigate(`/learn/${course.id}`);
+        }, 2000);
+    };
+
+    const handleSubmitReview = () => {
+        if (!reviewComment.trim()) {
+            toast.error("Please enter a comment");
+            return;
+        }
+
+        const newReview: Review = {
+            id: `r${Date.now()}`,
+            courseId: course.id,
+            userName: "Current User", // Mock user
+            rating: userRating,
+            comment: reviewComment,
+            date: "Just now",
+        };
+
+        setReviews([newReview, ...reviews]);
+        setReviewComment("");
+        setShowReviewForm(false);
+        toast.success("Review submitted successfully!");
+    };
     const totalLessons = curriculum.reduce((a, s) => a + s.lessons.length, 0);
     const completedLessons = curriculum.reduce(
         (a, s) => a + s.lessons.filter((l) => l.completed).length,
@@ -260,47 +314,77 @@ const CourseDetails = () => {
                         </div>
 
                         {/* Reviews */}
-                        <div>
-                            <h2 className="text-h3 text-foreground mb-4">
-                                Student Reviews
-                            </h2>
+                        <div id="reviews">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-h3 text-foreground">
+                                    Student Reviews
+                                </h2>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="rounded-button"
+                                    onClick={() => setShowReviewForm(!showReviewForm)}
+                                >
+                                    {showReviewForm ? "Cancel" : "Write a Review"}
+                                </Button>
+                            </div>
+
+                            {showReviewForm && (
+                                <div className="bg-card rounded-card card-shadow p-6 mb-8 border border-primary/20 animate-in fade-in slide-in-from-top-4">
+                                    <h3 className="text-body font-bold mb-4">Share your experience</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-xs font-medium text-muted-foreground block mb-2">Rating</label>
+                                            <div className="flex gap-1">
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                    <button 
+                                                        key={star} 
+                                                        onClick={() => setUserRating(star)}
+                                                        className="focus:outline-none"
+                                                    >
+                                                        <Star 
+                                                            size={24} 
+                                                            className={`${star <= userRating ? "text-amber-400 fill-amber-400" : "text-muted border-muted"} transition-colors`} 
+                                                        />
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-medium text-muted-foreground block mb-2">Your Review</label>
+                                            <textarea 
+                                                rows={4}
+                                                value={reviewComment}
+                                                onChange={(e) => setReviewComment(e.target.value)}
+                                                placeholder="What did you like or dislike about this course?"
+                                                className="w-full px-4 py-3 text-small border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary/20 bg-muted/30 resize-none"
+                                            />
+                                        </div>
+                                        <Button 
+                                            onClick={handleSubmitReview}
+                                            className="gradient-primary border-0 text-primary-foreground font-bold rounded-button"
+                                        >
+                                            Submit Review
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="space-y-4">
-                                {[
-                                    {
-                                        name: "John D.",
-                                        comment:
-                                            "Absolutely fantastic course! The projects are challenging and practical.",
-                                        rating: 5,
-                                        date: "2 weeks ago",
-                                    },
-                                    {
-                                        name: "Sarah M.",
-                                        comment:
-                                            "Great structure and the instructor explains complex topics simply.",
-                                        rating: 4,
-                                        date: "1 month ago",
-                                    },
-                                    {
-                                        name: "Alex K.",
-                                        comment:
-                                            "Best investment I've made in my career. Highly recommended for beginners.",
-                                        rating: 5,
-                                        date: "3 weeks ago",
-                                    },
-                                ].map((review, i) => (
+                                {reviews.map((review) => (
                                     <div
-                                        key={i}
+                                        key={review.id}
                                         className="bg-card rounded-card card-shadow p-5"
                                     >
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                                                     <span className="text-xs font-bold text-muted-foreground">
-                                                        {review.name[0]}
+                                                        {review.userName[0]}
                                                     </span>
                                                 </div>
                                                 <span className="text-small font-medium text-card-foreground">
-                                                    {review.name}
+                                                    {review.userName}
                                                 </span>
                                             </div>
                                             <span className="text-xs text-muted-foreground">
@@ -317,6 +401,9 @@ const CourseDetails = () => {
                                         </p>
                                     </div>
                                 ))}
+                                {reviews.length === 0 && (
+                                    <p className="text-center py-10 text-muted-foreground text-small">No reviews yet. Be the first to review this course!</p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -351,9 +438,72 @@ const CourseDetails = () => {
                                     </>
                                 )}
                             </div>
-                            <Button className="w-full gradient-primary border-0 text-primary-foreground rounded-button py-3 font-semibold hover:opacity-90 transition-opacity">
-                                Enroll Now
-                            </Button>
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button className="w-full gradient-primary border-0 text-primary-foreground rounded-button py-3 font-semibold hover:opacity-90 transition-opacity">
+                                        Enroll Now
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-md">
+                                    <DialogHeader>
+                                        <DialogTitle>Complete Enrollment</DialogTitle>
+                                        <DialogDescription>
+                                            You are about to enroll in <strong>{course.title}</strong>
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-4">
+                                        <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                                            <div className="flex justify-between text-small">
+                                                <span>Course Price</span>
+                                                <span className="font-bold">${course.price}</span>
+                                            </div>
+                                            <div className="flex justify-between text-small text-muted-foreground">
+                                                <span>Tax</span>
+                                                <span>$0.00</span>
+                                            </div>
+                                            <div className="border-t border-border pt-2 flex justify-between font-bold">
+                                                <span>Total</span>
+                                                <span className="text-primary">${course.price}</span>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="relative">
+                                                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Card Number" 
+                                                    className="w-full pl-10 pr-4 py-2 text-small border border-border rounded-md outline-none focus:ring-2 focus:ring-primary/20"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="MM/YY" 
+                                                    className="w-full px-4 py-2 text-small border border-border rounded-md outline-none focus:ring-2 focus:ring-primary/20"
+                                                />
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="CVC" 
+                                                    className="w-full px-4 py-2 text-small border border-border rounded-md outline-none focus:ring-2 focus:ring-primary/20"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground justify-center">
+                                            <Lock size={10} /> Secure SSL Encrypted Payment
+                                            <ShieldCheck size={10} /> 30-Day Money Back Guarantee
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button 
+                                            className="w-full gradient-primary border-0 text-primary-foreground font-bold" 
+                                            onClick={handleEnroll}
+                                            disabled={isEnrolling}
+                                        >
+                                            {isEnrolling ? "Processing..." : `Pay $${course.price} & Enroll`}
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
                             <Button
                                 variant="outline"
                                 className="w-full rounded-button py-3"

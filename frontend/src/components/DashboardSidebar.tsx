@@ -14,10 +14,11 @@ import {
   Upload,
   Users,
   DollarSign,
+  MessageSquare,
 } from "lucide-react";
 
 interface DashboardSidebarProps {
-  type: "student" | "instructor";
+  type: "student" | "instructor" | "admin";
 }
 
 const studentLinks = [
@@ -38,14 +39,27 @@ const instructorLinks = [
   { label: "Settings", path: "/instructor/settings", icon: Settings },
 ];
 
+const adminLinks = [
+  { label: "Overview", path: "/admin", icon: LayoutDashboard },
+  { label: "Courses", path: "/admin/courses", icon: BookOpen },
+  { label: "Users", path: "/admin/users", icon: Users },
+  { label: "Categories", path: "/admin/categories", icon: LayoutDashboard },
+  { label: "Payments", path: "/admin/payments", icon: DollarSign },
+  { label: "Reviews", path: "/admin/reviews", icon: MessageSquare },
+  { label: "Settings", path: "/admin/settings", icon: Settings },
+];
+
 const DashboardSidebar = ({ type }: DashboardSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const links = type === "student" ? studentLinks : instructorLinks;
+  
+  let links = studentLinks;
+  if (type === "instructor") links = instructorLinks;
+  if (type === "admin") links = adminLinks;
 
   return (
     <aside
-      className={`hidden lg:flex flex-col bg-card border-r border-border transition-all duration-300 ${
+      className={`hidden lg:flex flex-col bg-card border-r border-border transition-all duration-300 h-screen sticky top-0 overflow-hidden ${
         collapsed ? "w-20" : "w-64"
       }`}
     >

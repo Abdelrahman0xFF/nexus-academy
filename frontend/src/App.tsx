@@ -11,6 +11,7 @@ import StudentCourses from "./pages/student/StudentCourses";
 import StudentProgress from "./pages/student/StudentProgress";
 import StudentCertificates from "./pages/student/StudentCertificates";
 import StudentSettings from "./pages/student/StudentSettings";
+import LessonPlayer from "./pages/student/LessonPlayer";
 import InstructorDashboard from "./pages/InstructorDashboard";
 import InstructorCourses from "./pages/instructor/InstructorCourses";
 import UploadCourse from "./pages/instructor/UploadCourse";
@@ -18,6 +19,13 @@ import InstructorAnalytics from "./pages/instructor/InstructorAnalytics";
 import InstructorStudents from "./pages/instructor/InstructorStudents";
 import InstructorRevenue from "./pages/instructor/InstructorRevenue";
 import InstructorSettings from "./pages/instructor/InstructorSettings";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminCourses from "./pages/admin/AdminCourses";
+import AdminPayments from "./pages/admin/AdminPayments";
+import AdminSettings from "./pages/admin/AdminSettings";
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminReviews from "./pages/admin/AdminReviews";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -45,6 +53,7 @@ const App = () => (
           <Route path="/dashboard/progress" element={<StudentProgress />} />
           <Route path="/dashboard/certificates" element={<StudentCertificates />} />
           <Route path="/dashboard/settings" element={<StudentSettings />} />
+          <Route path="/learn/:id" element={<PageTransition><LessonPlayer /></PageTransition>} />
           {/* Instructor Dashboard */}
           <Route path="/instructor" element={<InstructorDashboard />} />
           <Route path="/instructor/courses" element={<InstructorCourses />} />
@@ -53,6 +62,14 @@ const App = () => (
           <Route path="/instructor/students" element={<InstructorStudents />} />
           <Route path="/instructor/revenue" element={<InstructorRevenue />} />
           <Route path="/instructor/settings" element={<InstructorSettings />} />
+          {/* Admin Dashboard */}
+          <Route path="/admin" element={<AdminOverview />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/categories" element={<AdminCategories />} />
+          <Route path="/admin/courses" element={<AdminCourses />} />
+          <Route path="/admin/payments" element={<AdminPayments />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/reviews" element={<AdminReviews />} />
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </BrowserRouter>

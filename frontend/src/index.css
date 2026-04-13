@@ -52,6 +52,18 @@
 
   html {
     scroll-behavior: smooth;
+    height: 100%;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    height: 100%;
+    overflow: hidden; /* Lock the body */
+    overscroll-behavior: none;
+  }
+
+  #root {
+    height: 100%;
   }
 
   .dark {
@@ -89,6 +101,22 @@
   * {
     @apply border-border;
   }
+
+  /* Global Catchy Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
@@ -119,5 +147,19 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
   }
 }

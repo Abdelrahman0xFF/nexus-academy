@@ -230,35 +230,72 @@ export const curriculum = [
   {
     section: "Getting Started",
     lessons: [
-      { title: "Welcome & Course Overview", duration: "5:30", completed: true },
-      { title: "Setting Up Your Environment", duration: "12:45", completed: true },
-      { title: "Understanding the Basics", duration: "18:20", completed: true },
+      { title: "Welcome & Course Overview", duration: "5:30", completed: true, videoId: "1O5NiFn8G0JZfOIOVULfS4T1nybG_N_YG" },
+      { title: "Setting Up Your Environment", duration: "12:45", completed: true, videoId: "1O5NiFn8G0JZfOIOVULfS4T1nybG_N_YG" },
+      { title: "Understanding the Basics", duration: "18:20", completed: true, videoId: "1O5NiFn8G0JZfOIOVULfS4T1nybG_N_YG" },
     ],
   },
   {
     section: "Core Fundamentals",
     lessons: [
-      { title: "HTML Structure & Semantics", duration: "22:10", completed: true },
-      { title: "CSS Styling & Layouts", duration: "28:35", completed: false },
-      { title: "JavaScript Essentials", duration: "35:00", completed: false },
-      { title: "Responsive Design Principles", duration: "20:15", completed: false },
+      { title: "HTML Structure & Semantics", duration: "22:10", completed: true, videoId: "1O5NiFn8G0JZfOIOVULfS4T1nybG_N_YG" },
+      { title: "CSS Styling & Layouts", duration: "28:35", completed: false, videoId: "1O5NiFn8G0JZfOIOVULfS4T1nybG_N_YG" },
+      { title: "JavaScript Essentials", duration: "35:00", completed: false, videoId: "1O5NiFn8G0JZfOIOVULfS4T1nybG_N_YG" },
+      { title: "Responsive Design Principles", duration: "20:15", completed: false, videoId: "1O5NiFn8G0JZfOIOVULfS4T1nybG_N_YG" },
     ],
   },
   {
     section: "Advanced Topics",
     lessons: [
-      { title: "React Fundamentals", duration: "30:00", completed: false },
-      { title: "State Management", duration: "25:40", completed: false },
-      { title: "API Integration", duration: "28:15", completed: false },
-      { title: "Testing & Deployment", duration: "22:50", completed: false },
+      { title: "React Fundamentals", duration: "30:00", completed: false, videoId: "1O5NiFn8G0JZfOIOVULfS4T1nybG_N_YG" },
+      { title: "State Management", duration: "25:40", completed: false, videoId: "1O5NiFn8G0JZfOIOVULfS4T1nybG_N_YG" },
+      { title: "API Integration", duration: "28:15", completed: false, videoId: "1O5NiFn8G0JZfOIOVULfS4T1nybG_N_YG" },
+      { title: "Testing & Deployment", duration: "22:50", completed: false, videoId: "1O5NiFn8G0JZfOIOVULfS4T1nybG_N_YG" },
     ],
   },
   {
     section: "Final Project",
     lessons: [
-      { title: "Project Planning", duration: "15:00", completed: false },
-      { title: "Building the Application", duration: "45:00", completed: false },
-      { title: "Code Review & Optimization", duration: "20:00", completed: false },
+      { title: "Project Planning", duration: "15:00", completed: false, videoId: "1O5NiFn8G0JZfOIOVULfS4T1nybG_N_YG" },
+      { title: "Building the Application", duration: "45:00", completed: false, videoId: "1O5NiFn8G0JZfOIOVULfS4T1nybG_N_YG" },
+      { title: "Code Review & Optimization", duration: "20:00", completed: false, videoId: "1O5NiFn8G0JZfOIOVULfS4T1nybG_N_YG" },
     ],
+  },
+];
+
+export interface Review {
+  id: string;
+  courseId: string;
+  userName: string;
+  userAvatar?: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
+export const initialReviews: Review[] = [
+  {
+    id: "r1",
+    courseId: "1",
+    userName: "John Doe",
+    rating: 5,
+    comment: "Absolutely fantastic course! The projects are challenging and practical.",
+    date: "2 weeks ago",
+  },
+  {
+    id: "r2",
+    courseId: "1",
+    userName: "Sarah Miller",
+    rating: 4,
+    comment: "Great structure and the instructor explains complex topics simply.",
+    date: "1 month ago",
+  },
+  {
+    id: "r3",
+    courseId: "2",
+    userName: "Alex Kumar",
+    rating: 5,
+    comment: "Best investment I've made in my career. Highly recommended for beginners.",
+    date: "3 weeks ago",
   },
 ];

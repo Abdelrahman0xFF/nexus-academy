@@ -5,14 +5,14 @@ import PageTransition from "@/components/PageTransition";
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  type: "student" | "instructor";
+  type: "student" | "instructor" | "admin";
 }
 
 const DashboardLayout = ({ children, type }: DashboardLayoutProps) => {
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="h-screen w-full flex bg-background overflow-hidden">
       <DashboardSidebar type={type} />
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 h-full overflow-y-auto">
         <PageTransition>
           <div className="p-6 lg:p-8 max-w-7xl mx-auto">{children}</div>
         </PageTransition>
