@@ -1,8 +1,12 @@
 import type { Category } from "@/lib/data";
+import { Link } from "react-router-dom";
 
 const CategoryCard = ({ category }: { category: Category }) => {
     return (
-        <div className="group relative overflow-hidden bg-card p-8 rounded-2xl border border-border hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+        <Link
+            to={`/courses?category=${encodeURIComponent(category.name)}`}
+            className="group relative overflow-hidden bg-card p-8 rounded-2xl border border-border hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+        >
             <div className="absolute -right-4 -top-4 w-16 h-16 bg-primary/5 rounded-full group-hover:bg-primary/10 transition-colors" />
 
             <div className="relative z-10">
@@ -17,7 +21,7 @@ const CategoryCard = ({ category }: { category: Category }) => {
                     </p>
                 </div>
             </div>
-        </div>
+        </Link>
     );
 };
 
