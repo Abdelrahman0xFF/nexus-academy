@@ -131,7 +131,9 @@ const HelpCenter = () => {
             <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
               <GraduationCap size={22} className="text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold italic">NexusAcademy</span>
+            <span className="text-xl font-bold bold">
+              Nexus<span className="gradient-text">Academy</span>
+            </span>
           </Link>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             How can we <span className="gradient-text">help you?</span>
@@ -158,6 +160,7 @@ const HelpCenter = () => {
             title="AI Assistant"
             isAi
             onClick={() => alert("Coming Soon!")}
+            count={undefined}
           />
           {helpCategories.map((cat) => (
             <CategoryCard
