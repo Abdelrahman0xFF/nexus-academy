@@ -1,0 +1,752 @@
+import { useState, useRef, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import {
+    CheckCircle,
+    ChevronLeft,
+    ChevronRight,
+    LayoutList,
+    BookOpen,
+    Menu,
+    X,
+    Star,
+    Play,
+    Pause,
+    Volume2,
+    VolumeX,
+    Maximize,
+    RotateCcw,
+    RotateCw,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { curriculum, courses } from "@/lib/data";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Slider } from "@/components/ui/slider";
+import { toast } from "sonner";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+} from "@/components/ui/dialog";
+
+const LessonPlayer = () => {
+    const { id } = useParams();
+    const course = courses.find((c) => c.id === id) || courses[0];
+
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
+    const [currentLessonIdx, setCurrentLessonIdx] = useState(0);
+    const [completedLessons, setCompletedLessons] = useState<string[]>([]);
+
+    // Custom Video State
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [playing, setPlaying] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const [buffered, setBuffered] = useState(0);
+    const [volume, setVolume] = useState(1);
+    const [isMuted, setIsMuted] = useState(false);
+    const [showControls, setShowControls] = useState(true);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [activeRate, setActiveRate] = useState(1);
+    const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+
+    const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Review State
+    const [reviewOpen, setReviewOpen] = useState(false);
+    const [userRating, setUserRating] = useState(5);
+    const [reviewComment, setReviewComment] = useState("");
+
+    const currentSection = curriculum[currentSectionIdx];
+    const currentLesson = currentSection.lessons[currentLessonIdx];
+    const currentLessonKey = `${currentSectionIdx}-${currentLessonIdx}`;
+
+    useEffect(() => {
+        const initialCompleted: string[] = [];
+        curriculum.forEach((section, sIdx) => {
+            section.lessons.forEach((lesson, lIdx) => {
+                if (lesson.completed) initialCompleted.push(`${sIdx}-${lIdx}`);
+            });
+        });
+        setCompletedLessons(initialCompleted);
+    }, []);
+
+    const backendUrl = "http://localhost:4000";
+    const videoUrl = currentLesson.videoId
+        ? `${backendUrl}/api/media/${currentLesson.videoId}`
+        : "https://vjs.zencdn.net/v/oceans.mp4";
+
+    const triggerFeedback = (type: string) => {
+        setActionFeedback(type);
+        if (feedbackTimeoutRef.current)
+            clearTimeout(feedbackTimeoutRef.current);
+        feedbackTimeoutRef.current = setTimeout(
+            () => setActionFeedback(null),
+            500,
+        );
+    };
+
+    const togglePlay = () => {
+        if (videoRef.current) {
+            if (playing) {
+                videoRef.current.pause();
+                triggerFeedback("pause");
+            } else {
+                videoRef.current.play();
+                triggerFeedback("play");
+            }
+            setPlaying(!playing);
+        }
+    };
+
+    const handlePlaybackRateChange = (rate: number) => {
+        setActiveRate(rate);
+        if (videoRef.current) {
+            videoRef.current.playbackRate = rate;
+        }
+    };
+
+    const handleCompleteLesson = (key: string) => {
+        if (!completedLessons.includes(key)) {
+            setCompletedLessons((prev) => [...prev, key]);
+            toast.success("Lesson completed! 🎉", {
+                description: `You've finished: ${currentLesson.title}`,
+            });
+        }
+    };
+
+    const handleTimeUpdate = () => {
+        if (videoRef.current) {
+            const current = videoRef.current.currentTime;
+            const total = videoRef.current.duration;
+            setCurrentTime(current);
+            if (videoRef.current.buffered.length > 0) {
+                const bufferedEnd = videoRef.current.buffered.end(
+                    videoRef.current.buffered.length - 1,
+                );
+                setBuffered(bufferedEnd);
+            }
+            const progress = current / total;
+            if (
+                total > 0 &&
+                progress >= 0.95 &&
+                !completedLessons.includes(currentLessonKey)
+            ) {
+                handleCompleteLesson(currentLessonKey);
+            }
+        }
+    };
+
+    const handleLoadedMetadata = () => {
+        if (videoRef.current) {
+            setDuration(videoRef.current.duration);
+            videoRef.current.playbackRate = activeRate;
+        }
+    };
+
+    const handleSeek = (value: number[]) => {
+        if (videoRef.current) {
+            videoRef.current.currentTime = value[0];
+            setCurrentTime(value[0]);
+        }
+    };
+
+    const handleVolumeChange = (value: number[]) => {
+        const newVolume = value[0];
+        setVolume(newVolume);
+        if (videoRef.current) {
+            videoRef.current.volume = newVolume;
+            setIsMuted(newVolume === 0);
+        }
+    };
+
+    const toggleMute = () => {
+        if (videoRef.current) {
+            const newMuted = !isMuted;
+            setIsMuted(newMuted);
+            videoRef.current.muted = newMuted;
+            triggerFeedback(newMuted ? "muted" : "volume");
+        }
+    };
+
+    const skip = (amount: number) => {
+        if (videoRef.current) {
+            videoRef.current.currentTime += amount;
+            triggerFeedback(amount > 0 ? "forward" : "backward");
+        }
+    };
+
+    const toggleFullscreen = () => {
+        if (!containerRef.current) return;
+        if (!document.fullscreenElement) {
+            containerRef.current
+                .requestFullscreen()
+                .catch((err) => toast.error(err.message));
+        } else {
+            document.exitFullscreen();
+        }
+    };
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (
+                document.activeElement instanceof HTMLTextAreaElement ||
+                document.activeElement instanceof HTMLInputElement
+            )
+                return;
+            switch (e.code) {
+                case "Space":
+                    e.preventDefault();
+                    togglePlay();
+                    break;
+                case "KeyF":
+                    e.preventDefault();
+                    toggleFullscreen();
+                    break;
+                case "KeyM":
+                    toggleMute();
+                    break;
+                case "KeyJ":
+                    skip(-10);
+                    break;
+                case "KeyL":
+                    skip(10);
+                    break;
+                case "ArrowRight":
+                    skip(5);
+                    break;
+                case "ArrowLeft":
+                    skip(-5);
+                    break;
+                case "ArrowUp":
+                    e.preventDefault();
+                    handleVolumeChange([Math.min(volume + 0.1, 1)]);
+                    break;
+                case "ArrowDown":
+                    e.preventDefault();
+                    handleVolumeChange([Math.max(volume - 0.1, 0)]);
+                    break;
+            }
+            if (e.key >= "0" && e.key <= "9") {
+                if (videoRef.current && duration) {
+                    videoRef.current.currentTime =
+                        duration * (parseInt(e.key) / 10);
+                }
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [playing, isFullscreen, volume, duration, isMuted, activeRate]);
+
+    useEffect(() => {
+        const handleFullscreenChange = () =>
+            setIsFullscreen(!!document.fullscreenElement);
+        document.addEventListener("fullscreenchange", handleFullscreenChange);
+        return () =>
+            document.removeEventListener(
+                "fullscreenchange",
+                handleFullscreenChange,
+            );
+    }, []);
+
+    const handleMouseMove = () => {
+        setShowControls(true);
+        if (controlsTimeoutRef.current)
+            clearTimeout(controlsTimeoutRef.current);
+        controlsTimeoutRef.current = setTimeout(() => {
+            if (playing) setShowControls(false);
+        }, 2500);
+    };
+
+    const formatTime = (time: number) => {
+        if (!time) return "00:00";
+        const minutes = Math.floor(time / 60);
+        const seconds = Math.floor(time % 60);
+        return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+    };
+
+    const handleNextLesson = () => {
+        if (currentLessonIdx < currentSection.lessons.length - 1) {
+            setCurrentLessonIdx(currentLessonIdx + 1);
+        } else if (currentSectionIdx < curriculum.length - 1) {
+            setCurrentSectionIdx(currentSectionIdx + 1);
+            setCurrentLessonIdx(0);
+        } else {
+            toast.info("Course Completed!");
+        }
+    };
+
+    const handlePrev = () => {
+        if (currentLessonIdx > 0) {
+            setCurrentLessonIdx(currentLessonIdx - 1);
+        } else if (currentSectionIdx > 0) {
+            const prevSectionIdx = currentSectionIdx - 1;
+            setCurrentSectionIdx(prevSectionIdx);
+            setCurrentLessonIdx(curriculum[prevSectionIdx].lessons.length - 1);
+        }
+    };
+
+    const handleVideoEnded = () => {
+        handleCompleteLesson(currentLessonKey);
+        setTimeout(() => handleNextLesson(), 1500);
+    };
+
+    const handleSubmitReview = () => {
+        if (!reviewComment.trim()) {
+            toast.error("Please enter a comment");
+            return;
+        }
+        toast.success("Thank you! Your review has been submitted.");
+        setReviewOpen(false);
+        setReviewComment("");
+    };
+
+    const totalLessons = curriculum.reduce((a, s) => a + s.lessons.length, 0);
+    const progressPercent = (completedLessons.length / totalLessons) * 100;
+
+    return (
+        <div
+            className="flex h-screen bg-background font-sans overflow-hidden relative"
+            onMouseMove={handleMouseMove}
+        >
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 lg:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside
+                className={`fixed inset-y-0 left-0 z-40 w-full sm:w-[320px] lg:w-[380px] bg-card border-r border-border transform transition-transform duration-500 ease-in-out lg:translate-x-0 lg:static flex flex-col ${sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"}`}
+            >
+                <div className="p-6 border-b border-border shrink-0">
+                    <div className="flex items-center justify-between mb-4">
+                        <Link
+                            to="/dashboard/courses"
+                            className="inline-flex items-center text-xs font-bold text-muted-foreground hover:text-primary transition-colors group uppercase tracking-widest"
+                        >
+                            <ChevronLeft
+                                size={14}
+                                className="mr-1 group-hover:-translate-x-0.5 transition-transform"
+                            />{" "}
+                            Back to Dashboard
+                        </Link>
+                        <button
+                            onClick={() => setSidebarOpen(false)}
+                            className="lg:hidden p-2 text-muted-foreground"
+                        >
+                            <X size={18} />
+                        </button>
+                    </div>
+
+                    <h2 className="text-base font-bold text-foreground leading-tight mb-4 line-clamp-1 uppercase tracking-tight">
+                        {course.title}
+                    </h2>
+
+                    <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
+                        <DialogTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className="w-full mb-6 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary font-bold text-[10px] h-9 transition-all tracking-widest"
+                            >
+                                <Star size={12} className="mr-2 fill-primary" />{" "}
+                                LEAVE A REVIEW
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[400px]">
+                            <DialogHeader>
+                                <DialogTitle>Rate this Course</DialogTitle>
+                                <DialogDescription>
+                                    Share your thoughts about this course.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="py-4 space-y-4">
+                                <div className="flex justify-center gap-2">
+                                    {[1, 2, 3, 4, 5].map((s) => (
+                                        <button
+                                            key={s}
+                                            onClick={() => setUserRating(s)}
+                                            className="transition-transform hover:scale-110"
+                                        >
+                                            <Star
+                                                size={28}
+                                                className={
+                                                    s <= userRating
+                                                        ? "text-amber-400 fill-amber-400"
+                                                        : "text-muted"
+                                                }
+                                            />
+                                        </button>
+                                    ))}
+                                </div>
+                                <textarea
+                                    value={reviewComment}
+                                    onChange={(e) =>
+                                        setReviewComment(e.target.value)
+                                    }
+                                    placeholder="Your feedback..."
+                                    className="w-full p-3 text-sm border border-border rounded-xl outline-none bg-muted/30 min-h-[100px]"
+                                />
+                            </div>
+                            <DialogFooter>
+                                <Button
+                                    onClick={handleSubmitReview}
+                                    className="w-full gradient-primary border-0 text-primary-foreground font-bold h-11 rounded-xl"
+                                >
+                                    Submit
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    <div className="space-y-1.5">
+                        <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            <span>Your Progress</span>
+                            <span className="text-primary">
+                                {Math.round(progressPercent)}%
+                            </span>
+                        </div>
+                        <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                            <div
+                                className="h-full gradient-primary transition-all duration-1000"
+                                style={{ width: `${progressPercent}%` }}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <ScrollArea className="flex-1 px-4 py-4">
+                    {curriculum.map((section, sIdx) => (
+                        <div key={sIdx} className="mb-6 last:mb-0">
+                            <div className="flex items-center gap-2 px-3 mb-2 opacity-50">
+                                <span className="text-[10px] font-bold text-foreground uppercase tracking-widest">
+                                    {section.section}
+                                </span>
+                            </div>
+                            <div className="space-y-1">
+                                {section.lessons.map((lesson, lIdx) => {
+                                    const key = `${sIdx}-${lIdx}`;
+                                    const isActive =
+                                        sIdx === currentSectionIdx &&
+                                        lIdx === currentLessonIdx;
+                                    const isFinished =
+                                        completedLessons.includes(key);
+                                    return (
+                                        <button
+                                            key={lIdx}
+                                            onClick={() => {
+                                                setCurrentSectionIdx(sIdx);
+                                                setCurrentLessonIdx(lIdx);
+                                                if (window.innerWidth < 1024)
+                                                    setSidebarOpen(false);
+                                            }}
+                                            className={`w-full group flex items-start gap-3 p-2.5 rounded-lg transition-all ${isActive ? "bg-muted shadow-sm" : "hover:bg-muted/50"}`}
+                                        >
+                                            <div
+                                                className={`mt-0.5 shrink-0 flex items-center justify-center w-5 h-5 rounded-full border-2 transition-all ${isFinished ? "bg-primary border-primary text-primary-foreground" : isActive ? "border-primary" : "border-muted-foreground/30"}`}
+                                            >
+                                                {isFinished ? (
+                                                    <CheckCircle
+                                                        size={10}
+                                                        strokeWidth={4}
+                                                        className="shrink-0"
+                                                    />
+                                                ) : isActive ? (
+                                                    <div className="w-1.5 h-1.5 bg-primary rounded-full shrink-0" />
+                                                ) : (
+                                                    <span className="text-[9px] font-bold text-muted-foreground leading-none flex items-center justify-center">
+                                                        {lIdx + 1}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 text-left min-w-0">
+                                                <p
+                                                    className={`text-[13px] font-bold leading-snug ${isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
+                                                >
+                                                    {lesson.title}
+                                                </p>
+                                                <span className="text-[10px] font-bold text-muted-foreground mt-0.5 block">
+                                                    {lesson.duration}
+                                                </span>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
+                </ScrollArea>
+            </aside>
+
+            <main className="flex-1 flex flex-col relative overflow-hidden bg-background">
+                <header className="lg:hidden h-14 bg-card border-b border-border px-4 flex items-center justify-between shrink-0 z-20">
+                    <button
+                        onClick={() => setSidebarOpen(true)}
+                        className="flex items-center gap-2 text-muted-foreground font-bold uppercase text-[10px] tracking-widest"
+                    >
+                        <Menu size={18} /> Menu
+                    </button>
+                    <div className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full uppercase tracking-widest">
+                        Lesson {currentLessonIdx + 1}
+                    </div>
+                </header>
+
+                <div className="flex-1 overflow-y-auto relative z-10 custom-scrollbar">
+                    <div className="p-4 sm:p-6 lg:p-10">
+                        <div className="max-w-[1000px] mx-auto">
+                            <div
+                                ref={containerRef}
+                                className={`relative aspect-video ${isFullscreen ? "rounded-none" : "rounded-2xl sm:rounded-3xl shadow-elevated"} overflow-hidden bg-black ring-1 ring-border group transition-all duration-500`}
+                            >
+                                <video
+                                    ref={videoRef}
+                                    src={videoUrl}
+                                    className="w-full h-full object-contain cursor-pointer"
+                                    onTimeUpdate={handleTimeUpdate}
+                                    onLoadedMetadata={handleLoadedMetadata}
+                                    onEnded={handleVideoEnded}
+                                    onClick={(e) => {
+                                        if (e.detail === 1) togglePlay();
+                                    }}
+                                    onDoubleClick={toggleFullscreen}
+                                    onPlay={() => setPlaying(true)}
+                                    onPause={() => setPlaying(false)}
+                                />
+                                {!playing && !actionFeedback && (
+                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                        <div className="w-20 h-20 rounded-full bg-primary/90 text-primary-foreground flex items-center justify-center shadow-2xl scale-110 animate-in zoom-in duration-300">
+                                            <Play
+                                                size={32}
+                                                fill="currentColor"
+                                                className="ml-1"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                                {actionFeedback && (
+                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                                        <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white flex items-center justify-center animate-out fade-out zoom-out duration-500">
+                                            {actionFeedback === "play" && (
+                                                <Play
+                                                    size={32}
+                                                    fill="currentColor"
+                                                />
+                                            )}
+                                            {actionFeedback === "pause" && (
+                                                <Pause
+                                                    size={32}
+                                                    fill="currentColor"
+                                                />
+                                            )}
+                                            {actionFeedback === "forward" && (
+                                                <RotateCw size={32} />
+                                            )}
+                                            {actionFeedback === "backward" && (
+                                                <RotateCcw size={32} />
+                                            )}
+                                            {actionFeedback === "volume" && (
+                                                <Volume2 size={32} />
+                                            )}
+                                            {actionFeedback === "muted" && (
+                                                <VolumeX size={32} />
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                                <div
+                                    className={`absolute bottom-0 inset-x-0 p-4 sm:p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-all duration-500 flex flex-col gap-4 ${showControls || !playing ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+                                >
+                                    <div className="relative group/seekbar px-2">
+                                        <div className="relative h-1 w-full bg-white/20 rounded-full overflow-hidden transition-all group-hover/seekbar:h-2">
+                                            <div
+                                                className="absolute inset-y-0 left-0 bg-white/30"
+                                                style={{
+                                                    width: `${(buffered / duration) * 100}%`,
+                                                }}
+                                            />
+                                            <div
+                                                className="absolute inset-y-0 left-0 bg-primary"
+                                                style={{
+                                                    width: `${(currentTime / duration) * 100}%`,
+                                                }}
+                                            />
+                                        </div>
+                                        <Slider
+                                            value={[currentTime]}
+                                            max={duration}
+                                            step={0.1}
+                                            onValueChange={handleSeek}
+                                            className="absolute inset-0 h-full opacity-0 cursor-pointer z-10"
+                                        />
+                                    </div>
+                                    <div className="flex items-center justify-between text-white">
+                                        <div className="flex items-center gap-4 sm:gap-6">
+                                            <button
+                                                onClick={togglePlay}
+                                                className="text-white hover:text-primary transition-colors"
+                                            >
+                                                {playing ? (
+                                                    <Pause
+                                                        size={22}
+                                                        fill="currentColor"
+                                                    />
+                                                ) : (
+                                                    <Play
+                                                        size={22}
+                                                        fill="currentColor"
+                                                    />
+                                                )}
+                                            </button>
+                                            <div className="flex items-center gap-2 group/vol">
+                                                <button
+                                                    onClick={toggleMute}
+                                                    className="text-white/70 hover:text-white transition-colors"
+                                                >
+                                                    {isMuted || volume === 0 ? (
+                                                        <VolumeX size={20} />
+                                                    ) : (
+                                                        <Volume2 size={20} />
+                                                    )}
+                                                </button>
+                                                <div className="w-0 group-hover/vol:w-20 transition-all duration-300 overflow-hidden">
+                                                    <Slider
+                                                        value={[
+                                                            isMuted
+                                                                ? 0
+                                                                : volume,
+                                                        ]}
+                                                        max={1}
+                                                        step={0.01}
+                                                        onValueChange={
+                                                            handleVolumeChange
+                                                        }
+                                                        className="w-20"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <span className="text-[11px] font-bold tabular-nums">
+                                                {formatTime(currentTime)} /{" "}
+                                                {formatTime(duration)}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="relative group/speed">
+                                                {/* Hover Bridge */}
+                                                <div className="absolute bottom-full right-0 w-full h-4 bg-transparent pointer-events-auto" />
+                                                <button className="text-[10px] font-bold text-white/70 hover:text-white px-2 py-1 rounded bg-white/10 transition-all relative z-10">
+                                                    {activeRate}x
+                                                </button>
+                                                <div className="absolute bottom-[calc(100%+8px)] right-0 w-24 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl opacity-0 translate-y-2 pointer-events-none group-hover/speed:opacity-100 group-hover/speed:translate-y-0 group-hover/speed:pointer-events-auto transition-all z-30">
+                                                    <div className="p-1.5 flex flex-col gap-0.5">
+                                                        {[0.5, 1, 1.5, 2].map(
+                                                            (rate) => (
+                                                                <button
+                                                                    key={rate}
+                                                                    onClick={() =>
+                                                                        handlePlaybackRateChange(
+                                                                            rate,
+                                                                        )
+                                                                    }
+                                                                    className={`w-full text-left px-3 py-2 rounded-lg text-[10px] font-bold transition-colors ${activeRate === rate ? "bg-primary text-white" : "text-white/60 hover:bg-white/5 hover:text-white"}`}
+                                                                >
+                                                                    {rate === 1
+                                                                        ? "Normal"
+                                                                        : `${rate}x`}
+                                                                </button>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={toggleFullscreen}
+                                                className="text-white/70 hover:text-white transition-colors"
+                                            >
+                                                <Maximize size={20} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 bg-card p-6 sm:p-10 rounded-card card-shadow border border-border">
+                                <div className="flex flex-col md:flex-row items-start justify-between gap-8 mb-10">
+                                    <div className="flex-1">
+                                        <div className="inline-flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-widest mb-3 bg-primary/10 px-3 py-1 rounded-full">
+                                            <BookOpen
+                                                size={12}
+                                                strokeWidth={3}
+                                            />{" "}
+                                            {currentSection.section}
+                                        </div>
+                                        <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight tracking-tight">
+                                            {currentLesson.title}
+                                        </h1>
+                                        <p className="mt-4 text-muted-foreground ">
+                                            {currentLesson.description ||
+                                                "No description provided for this lesson."}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="h-px bg-border w-full mb-10" />
+                                <div className="flex items-center justify-between bg-muted/30 p-4 rounded-2xl border border-border">
+                                    <Button
+                                        variant="ghost"
+                                        onClick={handlePrev}
+                                        disabled={
+                                            currentSectionIdx === 0 &&
+                                            currentLessonIdx === 0
+                                        }
+                                        className="font-bold text-muted-foreground text-xs h-10 px-4 rounded-lg hover:bg-card hover:text-primary transition-all uppercase tracking-widest"
+                                    >
+                                        <ChevronLeft
+                                            size={16}
+                                            className="mr-1"
+                                        />{" "}
+                                        Prev
+                                    </Button>
+                                    <div className="hidden sm:block text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] opacity-50">
+                                        Next:{" "}
+                                        {currentLessonIdx <
+                                        currentSection.lessons.length - 1
+                                            ? currentSection.lessons[
+                                                  currentLessonIdx + 1
+                                              ].title
+                                            : "End"}
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        onClick={handleNextLesson}
+                                        disabled={
+                                            currentSectionIdx ===
+                                                curriculum.length - 1 &&
+                                            currentLessonIdx ===
+                                                currentSection.lessons.length -
+                                                    1
+                                        }
+                                        className="font-bold hover:text-primary text-xs h-10 px-4 rounded-lg hover:bg-card transition-all uppercase tracking-widest"
+                                    >
+                                        Next{" "}
+                                        <ChevronRight
+                                            size={16}
+                                            className="ml-1"
+                                        />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+};
+
+export default LessonPlayer;

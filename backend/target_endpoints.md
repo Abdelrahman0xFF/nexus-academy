@@ -1,0 +1,111 @@
+# LMS API Endpoints
+
+## 🔐 Auth
+
+| Method | Endpoint                    | Description                    | Done |
+| ------ | --------------------------- | ------------------------------ | ---- |
+| POST   | `/api/auth/register`        | Register a new user            | ✅   |
+| POST   | `/api/auth/login`           | Login and receive token        | ✅   |
+| GET    | `/api/auth/me`              | Get current authenticated user | ✅   |
+| PUT    | `/api/auth/change-password` | Change user password           | ✅   |
+
+## 👤 Users
+
+| Method | Endpoint         | Description             | Done |
+| ------ | ---------------- | ----------------------- | ---- |
+| GET    | `/api/users`     | Get all users _(admin)_ | ✅   |
+| GET    | `/api/users/:id` | Get user by ID          | ✅   |
+| PUT    | `/api/users/:id` | Update user profile     | ✅   |
+| DELETE | `/api/users/:id` | Delete user _(admin)_   | ✅   |
+
+## 🗂️ Categories
+
+| Method | Endpoint                      | Description                  | Done |
+| ------ | ----------------------------- | ---------------------------- | ---- |
+| GET    | `/api/categories`             | Get all categories           | ✅   |
+| GET    | `/api/categories/:id/courses` | Get courses under a category | ✅   |
+| POST   | `/api/categories`             | Create a category _(admin)_  | ✅   |
+| PUT    | `/api/categories/:id`         | Update a category _(admin)_  | ✅   |
+| DELETE | `/api/categories/:id`         | Delete a category _(admin)_  | ✅   |
+
+
+## 📚 Courses
+
+| Method | Endpoint                       | Description                                 | Done |
+| ------ | ------------------------------ | ------------------------------------------- | ---- |
+| GET    | `/api/courses`                 | Browse / search / filter courses            |
+| GET    | `/api/courses/:id`             | Get course details                          |
+| POST   | `/api/courses`                 | Create a new course _(instructor)_          |
+| PUT    | `/api/courses/:id`             | Update a course _(instructor)_              |
+| DELETE | `/api/courses/:id`             | Delete a course _(instructor / admin)_      |
+| GET    | `/api/courses/:id/sections`    | Get all sections of a course                |
+| GET    | `/api/courses/:id/reviews`     | Get reviews for a course                    |
+| GET    | `/api/courses/:id/enrollments` | Get enrollments for a course _(instructor)_ |
+
+## 📦 Sections
+
+| Method | Endpoint                    | Description                     | Done |
+| ------ | --------------------------- | ------------------------------- | ---- |
+| POST   | `/api/courses/:id/sections` | Create a section under a course |
+| PUT    | `/api/sections/:id`         | Update a section                |
+| DELETE | `/api/sections/:id`         | Delete a section                |
+| GET    | `/api/sections/:id/lessons` | Get all lessons in a section    |
+
+## 🎬 Lessons
+
+| Method | Endpoint                    | Description                     | Done |
+| ------ | --------------------------- | ------------------------------- | ---- |
+| POST   | `/api/sections/:id/lessons` | Create a lesson under a section |
+| GET    | `/api/lessons/:id`          | Get lesson details              |
+| PUT    | `/api/lessons/:id`          | Update a lesson                 |
+| DELETE | `/api/lessons/:id`          | Delete a lesson                 |
+
+## 🎓 Enrollments
+
+| Method | Endpoint               | Description                       | Done |
+| ------ | ---------------------- | --------------------------------- | ---- |
+| POST   | `/api/enrollments`     | Enroll in a course                |
+| GET    | `/api/enrollments/my`  | Get current student's enrollments |
+| GET    | `/api/enrollments/:id` | Get enrollment details            |
+| DELETE | `/api/enrollments/:id` | Unenroll from a course            |
+
+## 📈 Progress
+
+| Method | Endpoint                        | Description                    | Done |
+| ------ | ------------------------------- | ------------------------------ | ---- |
+| GET    | `/api/enrollments/:id/progress` | Get progress for an enrollment |
+| POST   | `/api/progress`                 | Mark a lesson as complete      |
+| PUT    | `/api/progress/:id`             | Update progress record         |
+
+## ⭐ Reviews
+
+| Method | Endpoint           | Description                            | Done |
+| ------ | ------------------ | -------------------------------------- | ---- |
+| POST   | `/api/reviews`     | Create a review _(tied to enrollment)_ |
+| GET    | `/api/reviews/:id` | Get review by ID                       |
+| PUT    | `/api/reviews/:id` | Update a review                        |
+| DELETE | `/api/reviews/:id` | Delete a review                        |
+
+## 💳 Payments
+
+| Method | Endpoint            | Description                 | Done |
+| ------ | ------------------- | --------------------------- | ---- |
+| POST   | `/api/payments`     | Initiate a payment          |
+| GET    | `/api/payments/my`  | Get current user's payments |
+| GET    | `/api/payments/:id` | Get payment details         |
+| GET    | `/api/payments`     | Get all payments _(admin)_  |
+
+## 🏆 Certificates
+
+| Method | Endpoint                     | Description                               | Done |
+| ------ | ---------------------------- | ----------------------------------------- | ---- |
+| GET    | `/api/certificates/my`       | Get current user's certificates           |
+| GET    | `/api/certificates/:id`      | Get certificate by ID                     |
+| POST   | `/api/certificates/generate` | Generate certificate on course completion |
+
+## 💰 Earnings
+
+| Method | Endpoint           | Description                | Done |
+| ------ | ------------------ | -------------------------- | ---- |
+| GET    | `/api/earnings/my` | Get instructor's earnings  |
+| GET    | `/api/earnings`    | Get all earnings _(admin)_ |
