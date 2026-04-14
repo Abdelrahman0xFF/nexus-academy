@@ -15,12 +15,13 @@ const CategoryCard = ({ category, to }: CategoryCardProps) => {
                 <h3 className="text-xl font-bold text-card-foreground group-hover:text-primary transition-colors">
                     {category.name}
                 </h3>
-
                 <div className="mt-4 flex items-center gap-2">
                     <span className="h-px w-8 bg-primary/30 group-hover:w-12 transition-all duration-300" />
-                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                        {category.courseCount} Courses
-                    </p>
+                    {category.course_count && (
+                        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                            {category.course_count} Courses
+                        </p>
+                    )}
                 </div>
             </div>
         </>

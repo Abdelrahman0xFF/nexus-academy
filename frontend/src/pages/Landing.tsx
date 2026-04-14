@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   ArrowRight,
   Users,
@@ -15,11 +16,28 @@ import InstructorCard from "@/components/InstructorCard";
 import CategoryCard from "@/components/CategoryCard";
 import RatingStars from "@/components/RatingStars";
 import ScrollReveal from "@/components/ScrollReveal";
-import { courses, instructors, categories, testimonials } from "@/lib/data";
+import { courses, instructors, categories as mockCategories, testimonials } from "@/lib/data";
+import { categoryApi, type Category } from "@/lib/categories-api";
 import heroImage from "@/assets/landing-img.svg";
 import Marquee from "@/components/Marquee";
 
 const Landing = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await categoryApi.getAll();
+        console.log(data)
+        setCategories(data);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   return (
     <MainLayout>
       {/* Hero */}
@@ -184,7 +202,7 @@ const Landing = () => {
           </ScrollReveal>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {categories.map((c, index) => (
-              <ScrollReveal key={c.id} delay={`${index * 0.1}s`}>
+              <ScrollReveal key={c.category_id} delay={`${index * 0.1}s`}>
                 <CategoryCard
                   category={c}
                   to={`/courses?category=${encodeURIComponent(c.name)}`}

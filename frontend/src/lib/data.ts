@@ -28,10 +28,9 @@ export interface Instructor {
 }
 
 export interface Category {
-  id: string;
+  category_id: number;
   name: string;
-  icon: string;
-  courseCount: number;
+  course_count?: number;
 }
 
 export interface Testimonial {
@@ -182,14 +181,14 @@ export const instructors: Instructor[] = [
 ];
 
 export const categories: Category[] = [
-  { id: "1", name: "Web Development", icon: "Globe", courseCount: 120 },
-  { id: "2", name: "Data Science", icon: "BarChart3", courseCount: 85 },
-  { id: "3", name: "Design", icon: "Palette", courseCount: 64 },
-  { id: "4", name: "Mobile Development", icon: "Smartphone", courseCount: 52 },
-  { id: "5", name: "Marketing", icon: "Megaphone", courseCount: 78 },
-  { id: "6", name: "Cloud Computing", icon: "Cloud", courseCount: 45 },
-  { id: "7", name: "Cybersecurity", icon: "Shield", courseCount: 38 },
-  { id: "8", name: "Business", icon: "Briefcase", courseCount: 92 },
+  { category_id: 1, name: "Web Development", course_count: 120 },
+  { category_id: 2, name: "Data Science", course_count: 85 },
+  { category_id: 3, name: "Design", course_count: 64 },
+  { category_id: 4, name: "Mobile Development", course_count: 52 },
+  { category_id: 5, name: "Marketing", course_count: 78 },
+  { category_id: 6, name: "Cloud Computing", course_count: 45 },
+  { category_id: 7, name: "Cybersecurity", course_count: 38 },
+  { category_id: 8, name: "Business", course_count: 92 },
 ];
 
 export const testimonials: Testimonial[] = [
