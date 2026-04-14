@@ -185,7 +185,10 @@ const Landing = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {categories.map((c, index) => (
               <ScrollReveal key={c.id} delay={`${index * 0.1}s`}>
-                <CategoryCard category={c} />
+                <CategoryCard
+                  category={c}
+                  to={`/courses?category=${encodeURIComponent(c.name)}`}
+                />
               </ScrollReveal>
             ))}
           </div>
