@@ -33,7 +33,12 @@ class Category {
             const result = await pool
                 .request()
                 .input("category_id", sql.Int, category_id)
-                .query("SELECT * FROM categories WHERE category_id = @category_id");
+                .query(`
+                    SELECT *, 
+                    (SELECT COUNT(*) FROM courses WHERE category_id = categories.category_id) AS course_count
+                    FROM categories 
+                    WHERE category_id = @category_id
+                `);
             return result.recordset[0];
         } catch (err) {
             console.error("Error finding category by ID: ", err);
@@ -44,7 +49,11 @@ class Category {
     static async findAll() {
         try {
             const pool = await poolPromise;
-            const result = await pool.query("SELECT * FROM categories");
+            const result = await pool.query(`
+                SELECT *, 
+                (SELECT COUNT(*) FROM courses WHERE category_id = categories.category_id) AS course_count
+                FROM categories
+            `);
             return result.recordset;
         } catch (err) {
             console.error("Error finding categories: ", err);
