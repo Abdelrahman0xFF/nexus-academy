@@ -2,6 +2,7 @@ import Lesson from "../models/lesson.model.js";
 import Section from "../models/section.model.js";
 import Course from "../models/course.model.js";
 import { uploadToDrive, deleteFromDrive } from "../services/drive.service.js";
+import { getVideoDuration } from "../utils/video.js";
 import {
     lessonSchema,
     updateLessonSchema,
@@ -45,8 +46,12 @@ const createLesson = async (req, res, next) => {
             );
 
         if (req.file) {
+            const duration = await getVideoDuration(req.file.path);
+
             const uploadResult = await uploadToDrive(req.file);
             videoUrl = uploadResult.fileId;
+
+            req.body.duration = duration;
         } else {
             return errorResponse(res, "Video file is required", 400);
         }
@@ -140,9 +145,12 @@ const updateLesson = async (req, res, next) => {
         const updateData = { ...req.body };
 
         if (req.file) {
+            const duration = await getVideoDuration(req.file.path);
+
             const uploadResult = await uploadToDrive(req.file);
-            newVideoUrl = uploadResult.fileId;
-            updateData.video_url = newVideoUrl;
+            videoUrl = uploadResult.fileId;
+
+            req.body.duration = duration;
         }
 
         const result = await Lesson.update(

@@ -5,16 +5,22 @@ import {
 } from "../services/drive.service.js";
 import { driveConfig } from "../config/drive.config.js";
 import { successResponse, errorResponse } from "../utils/response.js";
+import fs from "fs";
 
 export const uploadMedia = async (req, res, next) => {
     req.setTimeout(0);
     if (!req.file) return errorResponse(res, "No file uploaded.", 400);
 
     try {
+        req.setTimeout(0);
         const result = await uploadToDrive(req.file);
         return successResponse(res, result, "Media uploaded successfully", 201);
     } catch (error) {
         next(error);
+    } finally {
+        if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
     }
 };
 

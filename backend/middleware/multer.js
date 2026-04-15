@@ -31,10 +31,7 @@ const upload = multer({
         if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            throw new Error(
-                "Unsupported file type. Only images and videos are allowed.",
-                false,
-            );
+            cb(new Error("Unsupported file type. Only images and videos are allowed."), false);
         }
     },
 });

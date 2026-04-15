@@ -6,7 +6,6 @@ const lessonSchema = Joi.object({
     lesson_order: Joi.number().integer().required(),
     title: Joi.string().max(255).required(),
     description: Joi.string().allow(""),
-    duration: Joi.string().required(),
 });
 
 const updateLessonSchema = Joi.object({
