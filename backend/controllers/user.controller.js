@@ -40,7 +40,7 @@ const getUserById = async (req, res) => {
 const getAllUsers = async (req, res) => {
     try {
         const { page = 1, limit = 10 } = req.query;
-        const users = await User.find(page, limit);
+        const users = await User.find(Number(page), Number(limit));
         res.status(200).json(users);
     } catch (err) {
         res.status(500).json({

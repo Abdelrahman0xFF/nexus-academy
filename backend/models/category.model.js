@@ -94,9 +94,11 @@ class Category {
                 .input("limit", sql.Int, limit)
                 .input("offset", sql.Int, offset)
                 .query(`
-                    SELECT * FROM courses 
-                    WHERE category_id = @category_id
-                    ORDER BY course_id 
+                    SELECT c.*, 
+                    (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating
+                    FROM courses c
+                    WHERE c.category_id = @category_id
+                    ORDER BY c.course_id 
                     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
                 `);
             return result.recordset;

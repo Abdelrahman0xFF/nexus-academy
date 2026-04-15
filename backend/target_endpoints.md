@@ -28,16 +28,15 @@
 | PUT    | `/api/categories/:id`         | Update a category _(admin)_  | ✅   |
 | DELETE | `/api/categories/:id`         | Delete a category _(admin)_  | ✅   |
 
-
 ## 📚 Courses
 
 | Method | Endpoint                       | Description                                 | Done |
 | ------ | ------------------------------ | ------------------------------------------- | ---- |
-| GET    | `/api/courses`                 | Browse / search / filter courses            |
-| GET    | `/api/courses/:id`             | Get course details                          |
-| POST   | `/api/courses`                 | Create a new course _(instructor)_          |
-| PUT    | `/api/courses/:id`             | Update a course _(instructor)_              |
-| DELETE | `/api/courses/:id`             | Delete a course _(instructor / admin)_      |
+| GET    | `/api/courses`                 | Browse / search / filter courses            | ✅   |
+| GET    | `/api/courses/:id`             | Get course details                          | ✅   |
+| POST   | `/api/courses`                 | Create a new course _(instructor)_          | ✅   |
+| PUT    | `/api/courses/:id`             | Update a course _(instructor)_              | ✅   |
+| DELETE | `/api/courses/:id`             | Delete a course _(instructor / admin)_      | ✅   |
 | GET    | `/api/courses/:id/sections`    | Get all sections of a course                |
 | GET    | `/api/courses/:id/reviews`     | Get reviews for a course                    |
 | GET    | `/api/courses/:id/enrollments` | Get enrollments for a course _(instructor)_ |

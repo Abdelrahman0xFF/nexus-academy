@@ -1,0 +1,159 @@
+import { sql, poolPromise } from "../config/db.config.js";
+
+class Course {
+    constructor(course) {
+        this.course_id = course.course_id;
+        this.category_id = course.category_id;
+        this.instructor_id = course.instructor_id;
+        this.title = course.title;
+        this.description = course.description;
+        this.price = course.price;
+        this.original_price = course.original_price;
+        this.thumbnail_url = course.thumbnail_url;
+        this.level = course.level;
+        this.duration = course.duration;
+        this.is_available = course.is_available ?? true;
+        this.rating = course.rating ?? 0;
+    }
+
+    static async create(newCourse) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool
+                .request()
+                .input("category_id", sql.Int, newCourse.category_id)
+                .input("instructor_id", sql.Int, newCourse.instructor_id)
+                .input("title", sql.NVarChar, newCourse.title)
+                .input("description", sql.NVarChar, newCourse.description)
+                .input("price", sql.Decimal(10, 2), newCourse.price)
+                .input(
+                    "original_price",
+                    sql.Decimal(10, 2),
+                    newCourse.original_price,
+                )
+                .input("thumbnail_url", sql.NVarChar, newCourse.thumbnail_url)
+                .input("level", sql.NVarChar, newCourse.level)
+                .input("duration", sql.NVarChar, newCourse.duration)
+                .input("is_available", sql.Bit, newCourse.is_available ?? 1)
+                .query(`
+                    INSERT INTO courses (
+                        category_id, instructor_id, title, description,
+                        price, original_price, thumbnail_url, level, duration, is_available
+                    )
+                    VALUES (
+                        @category_id, @instructor_id, @title, @description,
+                        @price, @original_price, @thumbnail_url, @level, @duration, @is_available
+                    );
+
+                    SELECT course_id FROM courses WHERE course_id = SCOPE_IDENTITY();
+                `);
+            return {
+                ...newCourse,
+                course_id: result.recordset[0].course_id,
+            };
+        } catch (err) {
+            console.error("Error creating course: ", err);
+            throw err;
+        }
+    }
+
+    static async findById(course_id) {
+        try {
+            const pool = await poolPromise;
+            const result =
+                // appends rating from reviews table that will be implemented
+                await pool.request().input("course_id", sql.Int, course_id)
+                    .query(`
+                    SELECT c.*, 
+                    (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating
+                    FROM courses c
+                    WHERE c.course_id = @course_id
+                `);
+            return result.recordset[0];
+        } catch (err) {
+            console.error("Error finding course by ID: ", err);
+            throw err;
+        }
+    }
+
+    static async find(page, limit) {
+        try {
+            const offset = (page - 1) * limit;
+            const pool = await poolPromise;
+            const result = await pool
+                .request()
+                .input("limit", sql.Int, limit)
+                .input("offset", sql.Int, offset).query(`
+                    SELECT c.*, 
+                    (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating
+                    FROM courses c
+                    ORDER BY c.course_id 
+                    OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
+                `);
+            return result.recordset;
+        } catch (err) {
+            console.error("Error finding courses: ", err);
+            throw err;
+        }
+    }
+
+    static async update(course_id, updatedCourse) {
+        try {
+            const pool = await poolPromise;
+            const request = pool.request();
+
+            request.input("course_id", sql.Int, course_id);
+
+            let query = "UPDATE courses SET ";
+            const updates = [];
+            for (const [key, value] of Object.entries(updatedCourse)) {
+                if (value !== undefined && key !== "course_id") {
+                    if (key === "price" || key === "original_price") {
+                        request.input(key, sql.Decimal(10, 2), value);
+                    } else if (
+                        key === "category_id" ||
+                        key === "instructor_id"
+                    ) {
+                        request.input(key, sql.Int, value);
+                    } else if (key === "is_available") {
+                        request.input(key, sql.Bit, value ? 1 : 0);
+                    } else {
+                        request.input(key, sql.NVarChar, value);
+                    }
+                    updates.push(`${key} = @${key}`);
+                }
+            }
+
+            if (updates.length === 0)
+                return { message: "No data provided to update" };
+
+            query += updates.join(", ");
+            query += " WHERE course_id = @course_id";
+
+            const result = await request.query(query);
+
+            return result.rowsAffected[0] > 0
+                ? { message: "Course updated successfully" }
+                : null;
+        } catch (err) {
+            console.error("Error updating course: ", err);
+            throw err;
+        }
+    }
+
+    static async delete(course_id) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool
+                .request()
+                .input("course_id", sql.Int, course_id)
+                .query("DELETE FROM courses WHERE course_id = @course_id");
+            return result.rowsAffected[0] > 0;
+        } catch (err) {
+            console.error("Error deleting course: ", err);
+            throw err;
+        }
+    }
+}
+
+export default Course;
