@@ -30,34 +30,35 @@
 
 ## 📚 Courses
 
-| Method | Endpoint                       | Description                                 | Done |
-| ------ | ------------------------------ | ------------------------------------------- | ---- |
-| GET    | `/api/courses`                 | Browse / search / filter courses            | ✅   |
-| GET    | `/api/courses/:id`             | Get course details                          | ✅   |
-| POST   | `/api/courses`                 | Create a new course _(instructor)_          | ✅   |
-| PUT    | `/api/courses/:id`             | Update a course _(instructor)_              | ✅   |
-| DELETE | `/api/courses/:id`             | Delete a course _(instructor / admin)_      | ✅   |
-| GET    | `/api/courses/:id/sections`    | Get all sections of a course                |
-| GET    | `/api/courses/:id/reviews`     | Get reviews for a course                    |
-| GET    | `/api/courses/:id/enrollments` | Get enrollments for a course _(instructor)_ |
+| Method | Endpoint                       | Description                                   | Done |
+| ------ | ------------------------------ | --------------------------------------------- | ---- |
+| GET    | `/api/courses`                 | Browse / search / filter courses              | ✅   |
+| GET    | `/api/courses/:id`             | Get course details                            | ✅   |
+| POST   | `/api/courses`                 | Create a new course _(instructor)_            | ✅   |
+| PUT    | `/api/courses/:id`             | Update a course _(instructor)_                | ✅   |
+| DELETE | `/api/courses/:id`             | Delete a course _(instructor / admin)_        | ✅   |
+| GET    | `/api/courses/:id/content`     | Get data used in side panel                   | ✅   |
+| GET    | `/api/courses/:id/sections`    | Get all sections of a course                  | ✅   |
+| GET    | `/api/courses/:id/reviews`     | Get reviews for a course                      |
+| GET    | `/api/courses/:id/enrollments` | Get enrollments for a course _(instructor)_   |
 
 ## 📦 Sections
 
-| Method | Endpoint                    | Description                     | Done |
-| ------ | --------------------------- | ------------------------------- | ---- |
-| POST   | `/api/courses/:id/sections` | Create a section under a course |
-| PUT    | `/api/sections/:id`         | Update a section                |
-| DELETE | `/api/sections/:id`         | Delete a section                |
-| GET    | `/api/sections/:id/lessons` | Get all lessons in a section    |
+| Method | Endpoint                             | Description                     | Done |
+| ------ | ------------------------------------ | ------------------------------- | ---- |
+| POST   | `/api/sections`                      | Create a section under a course | ✅   |
+| PUT    | `/api/sections/:course_id/:order`    | Update a section                | ✅   |
+| DELETE | `/api/sections/:course_id/:order`    | Delete a section                | ✅   |
 
 ## 🎬 Lessons
 
-| Method | Endpoint                    | Description                     | Done |
-| ------ | --------------------------- | ------------------------------- | ---- |
-| POST   | `/api/sections/:id/lessons` | Create a lesson under a section |
-| GET    | `/api/lessons/:id`          | Get lesson details              |
-| PUT    | `/api/lessons/:id`          | Update a lesson                 |
-| DELETE | `/api/lessons/:id`          | Delete a lesson                 |
+| Method | Endpoint                                 | Description                     | Done |
+| ------ | ---------------------------------------- | ------------------------------- | ---- |
+| POST   | `/api/lessons`                           | Create a lesson under a section | ✅   |
+| GET    | `/api/lessons/:course_id/:sec_o/:les_o`  | Get lesson details              | ✅   |
+| PUT    | `/api/lessons/:course_id/:sec_o/:les_o`  | Update a lesson                 | ✅   |
+| DELETE | `/api/lessons/:course_id/:sec_o/:les_o`  | Delete a lesson                 | ✅   |
+| POST   | `/api/lessons/:course_id/:s_o/:l_o/comp` | Mark a lesson as complete       | ✅   |
 
 ## 🎓 Enrollments
 
@@ -73,7 +74,7 @@
 | Method | Endpoint                        | Description                    | Done |
 | ------ | ------------------------------- | ------------------------------ | ---- |
 | GET    | `/api/enrollments/:id/progress` | Get progress for an enrollment |
-| POST   | `/api/progress`                 | Mark a lesson as complete      |
+| POST   | `/api/progress`                 | Mark a lesson as complete      | ✅   |
 | PUT    | `/api/progress/:id`             | Update progress record         |
 
 ## ⭐ Reviews
