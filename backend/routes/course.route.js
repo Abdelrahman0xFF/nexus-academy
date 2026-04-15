@@ -13,15 +13,23 @@ import {
     authorize,
     optionalAuthenticate,
 } from "../middleware/auth.middleware.js";
+import { verifyEnrollment } from "../middleware/enrollment.middleware.js";
 import upload from "../middleware/multer.js";
 
 const router = Router();
 
 router.get("/", optionalAuthenticate, getAllCourses);
 router.get("/:course_id", optionalAuthenticate, getCourseById);
-router.get("/:course_id/content", optionalAuthenticate, getCourseContent);
 
-router.get("/:course_id/sections", getSectionsByCourseId);
+router.get("/:course_id/sections", optionalAuthenticate, getSectionsByCourseId);
+
+router.get(
+    "/:course_id/content",
+    authenticate,
+    verifyEnrollment,
+    getCourseContent,
+);
+
 router.post(
     "/",
     authenticate,
