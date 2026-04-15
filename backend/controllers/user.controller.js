@@ -1,68 +1,61 @@
 import User from "../models/user.model.js";
 import { updateUserSchema } from "../validators/user.validator.js";
 import { uploadToDrive, deleteFromDrive } from "../services/drive.service.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 import fs from "fs";
 
-const createUser = async (req, res) => {
+const createUser = async (req, res, next) => {
     try {
         const newUser = new User(req.body);
         const createdUser = await User.create(newUser);
-        res.status(201).json(createdUser);
+        return successResponse(res, createdUser, "User created successfully", 201);
     } catch (err) {
-        res.status(500).json({
-            message: "Internal server error",
-            error: err.message,
-        });
+        next(err);
     }
 };
 
-const getUserById = async (req, res) => {
+const getUserById = async (req, res, next) => {
     try {
         const { user_id } = req.params;
 
         if (req.user.role !== "admin" && req.user.user_id.toString() !== user_id) {
-            return res.status(403).json({ message: "Forbidden: You can only access your own profile" });
+            return errorResponse(res, "Forbidden: You can only access your own profile", 403);
         }
 
         const user = await User.findById(user_id);
         if (user) {
             const { user_id: _, hashed_password, otp, otp_expires, is_verified, ...userData } = user;
-            res.status(200).json({ user: userData });
+            return successResponse(res, userData);
         } else {
-            res.status(404).json({ message: "User not found" });
+            return errorResponse(res, "User not found", 404);
         }
     } catch (err) {
-        res.status(500).json({
-            message: "Internal server error",
-            error: err.message,
-        });
+        next(err);
     }
 };
 
-const getAllUsers = async (req, res) => {
+const getAllUsers = async (req, res, next) => {
     try {
         const { page = 1, limit = 10 } = req.query;
         const users = await User.find(Number(page), Number(limit));
-        res.status(200).json(users);
+        return successResponse(res, users);
     } catch (err) {
-        res.status(500).json({
-            message: "Internal server error",
-            error: err.message,
-        });
+        next(err);
     }
 };
 
-const updateUser = async (req, res) => {
+const updateUser = async (req, res, next) => {
+    let newAvatarUrl = null;
     try {
         const { user_id } = req.params;
 
         if (req.user.role !== "admin" && req.user.user_id.toString() !== user_id) {
-            return res.status(403).json({ message: "Forbidden: You can only update your own profile" });
+            return errorResponse(res, "Forbidden: You can only update your own profile", 403);
         }
 
         const existingUser = await User.findById(user_id);
         if (!existingUser) {
-            return res.status(404).json({ message: "User not found" });
+            return errorResponse(res, "User not found", 404);
         }
 
         if (req.user.role !== "admin" && req.body.role) {
@@ -71,35 +64,42 @@ const updateUser = async (req, res) => {
 
         const { error, value } = updateUserSchema.validate(req.body);
         if (error)
-            return res.status(400).json({ message: error.details[0].message });
+            return errorResponse(res, error.details[0].message, 400);
 
         const updateData = { ...value };
 
         if (req.file) {
             const uploadResult = await uploadToDrive(req.file);
-            updateData.avatar_url = uploadResult.fileId;
+            newAvatarUrl = uploadResult.fileId;
+            updateData.avatar_url = newAvatarUrl;
+        }
 
-            if (existingUser.avatar_url) {
+        const result = await User.update(user_id, updateData);
+
+        if (result) {
+            if (newAvatarUrl && existingUser.avatar_url) {
                 try {
                     await deleteFromDrive(existingUser.avatar_url);
                 } catch (err) {
                     console.error("Failed to delete old avatar from drive:", err);
                 }
             }
-        }
-
-        const result = await User.update(user_id, updateData);
-
-        if (result) {
-            res.status(200).json(result);
+            return successResponse(res, result, "User updated successfully");
         } else {
-            res.status(404).json({ message: "User not found" });
+            if (newAvatarUrl) {
+                await deleteFromDrive(newAvatarUrl);
+            }
+            return errorResponse(res, "User not found", 404);
         }
     } catch (err) {
-        res.status(500).json({
-            message: "Internal server error",
-            error: err.message,
-        });
+        if (newAvatarUrl) {
+            try {
+                await deleteFromDrive(newAvatarUrl);
+            } catch (cleanupErr) {
+                console.error("Failed to cleanup uploaded avatar after error:", cleanupErr);
+            }
+        }
+        next(err);
     } finally {
         if (req.file && fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
@@ -107,13 +107,13 @@ const updateUser = async (req, res) => {
     }
 };
 
-const deleteUser = async (req, res) => {
+const deleteUser = async (req, res, next) => {
     try {
         const { user_id } = req.params;
 
         const user = await User.findById(user_id);
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return errorResponse(res, "User not found", 404);
         }
 
         const result = await User.delete(user_id);
@@ -126,15 +126,12 @@ const deleteUser = async (req, res) => {
                     console.error("Failed to delete user avatar from drive:", err);
                 }
             }
-            res.status(200).json({ message: "User deleted successfully" });
+            return successResponse(res, null, "User deleted successfully");
         } else {
-            res.status(404).json({ message: "User not found" });
+            return errorResponse(res, "User not found", 404);
         }
     } catch (err) {
-        res.status(500).json({
-            message: "Internal server error",
-            error: err.message,
-        });
+        next(err);
     }
 };
 

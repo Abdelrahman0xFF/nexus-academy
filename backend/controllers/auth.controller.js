@@ -8,13 +8,14 @@ import { hashPassword, comparePassword } from "../utils/hash.js";
 import { generateJWTToken } from "../config/jwt.config.js";
 import { uploadToDrive, deleteFromDrive } from "../services/drive.service.js";
 import { generateAndSendOTP } from "../services/otp.service.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 import fs from "fs";
 
-const register = async (req, res) => {
+const register = async (req, res, next) => {
+    let avatarUrl = null;
     try {
         const { error } = registerSchema.validate(req.body);
-        if (error)
-            return res.status(400).json({ message: error.details[0].message });
+        if (error) return errorResponse(res, error.details[0].message, 400);
 
         const existingUser = await User.findByEmail(req.body.email);
         if (existingUser) {
@@ -23,16 +24,17 @@ const register = async (req, res) => {
                     req.body.email,
                 );
                 await User.updateOTP(req.body.email, hashedOtp, otpExpires);
-                return res
-                    .status(200)
-                    .json({ message: "OTP resent. Please verify your email." });
+                return successResponse(
+                    res,
+                    null,
+                    "OTP resent. Please verify your email.",
+                );
             }
-            return res.status(400).json({ message: "Email already in use" });
+            return errorResponse(res, "Email already in use", 400);
         }
 
         const hashedPassword = await hashPassword(req.body.password);
 
-        let avatarUrl = null;
         if (req.file) {
             const uploadResult = await uploadToDrive(req.file);
             avatarUrl = uploadResult.fileId;
@@ -51,11 +53,23 @@ const register = async (req, res) => {
             is_verified: false,
         });
 
-        res.status(200).json({
-            message: "OTP sent. Please verify to complete registration.",
-        });
+        return successResponse(
+            res,
+            null,
+            "OTP sent. Please verify to complete registration.",
+        );
     } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+        if (avatarUrl) {
+            try {
+                await deleteFromDrive(avatarUrl);
+            } catch (cleanupErr) {
+                console.error(
+                    "Failed to cleanup uploaded avatar after error:",
+                    cleanupErr,
+                );
+            }
+        }
+        next(err);
     } finally {
         if (req.file && fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
@@ -63,15 +77,15 @@ const register = async (req, res) => {
     }
 };
 
-const verifyOtp = async (req, res) => {
+const verifyOtp = async (req, res, next) => {
     try {
         const { email, otp } = req.body;
 
         const user = await User.findByEmail(email);
-        if (!user) return res.status(404).json({ message: "User not found" });
+        if (!user) return errorResponse(res, "User not found", 404);
 
         if (user.is_verified)
-            return res.status(400).json({ message: "User already verified" });
+            return errorResponse(res, "User already verified", 400);
 
         if (Date.now() > user.otp_expires) {
             const avatarUrl = user.avatar_url;
@@ -88,39 +102,37 @@ const verifyOtp = async (req, res) => {
                 }
             }
 
-            return res
-                .status(400)
-                .json({ message: "OTP expired. Please register again." });
+            return errorResponse(
+                res,
+                "OTP expired. Please register again.",
+                400,
+            );
         }
 
         const isOtpValid = await comparePassword(otp, user.otp);
-        if (!isOtpValid)
-            return res.status(400).json({ message: "Invalid OTP" });
+        if (!isOtpValid) return errorResponse(res, "Invalid OTP", 400);
 
         await User.verify(email);
 
-        res.status(201).json({ message: "User registered successfully" });
+        return successResponse(res, null, "User registered successfully", 201);
     } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+        next(err);
     }
 };
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
     try {
         const { error } = loginSchema.validate(req.body);
-        if (error)
-            return res.status(400).json({ message: error.details[0].message });
+        if (error) return errorResponse(res, error.details[0].message, 400);
 
         const user = await User.findByEmail(req.body.email);
-        if (!user)
-            return res.status(401).json({ message: "Invalid credentials" });
+        if (!user) return errorResponse(res, "Invalid credentials", 401);
 
         const match = await comparePassword(
             req.body.password,
             user.hashed_password,
         );
-        if (!match)
-            return res.status(401).json({ message: "Invalid credentials" });
+        if (!match) return errorResponse(res, "Invalid credentials", 401);
 
         const token = generateJWTToken({
             id: user.user_id,
@@ -133,8 +145,9 @@ const login = async (req, res) => {
             sameSite: "Strict",
         });
 
-        res.json({
-            user: {
+        return successResponse(
+            res,
+            {
                 first_name: user.first_name,
                 last_name: user.last_name,
                 email: user.email,
@@ -144,18 +157,14 @@ const login = async (req, res) => {
                 bio: user.bio,
                 created_at: user.created_at,
             },
-        });
+            "Logged in successfully",
+        );
     } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+        next(err);
     }
 };
 
-const logout = async (req, res) => {
-    res.clearCookie("token");
-    res.json({ message: "Logged out successfully" });
-};
-
-const me = async (req, res) => {
+const me = async (req, res, next) => {
     try {
         const {
             user_id,
@@ -165,36 +174,30 @@ const me = async (req, res) => {
             is_verified,
             ...userData
         } = req.user;
-        res.json({ user: userData });
+        return successResponse(res, userData);
     } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+        next(err);
     }
 };
 
-const changePassword = async (req, res) => {
+const changePassword = async (req, res, next) => {
     try {
-        if (!req.body) {
-            return res.status(400).json({ message: "Request body is missing" });
-        }
-
         const { error } = changePasswordSchema.validate(req.body);
-        if (error)
-            return res.status(400).json({ message: error.details[0].message });
+        if (error) return errorResponse(res, error.details[0].message, 400);
 
         const { old_password, new_password } = req.body;
         const user = req.user;
 
         const match = await comparePassword(old_password, user.hashed_password);
-        if (!match)
-            return res.status(401).json({ message: "Invalid old password" });
+        if (!match) return errorResponse(res, "Invalid old password", 401);
 
         const hashedPassword = await hashPassword(new_password);
         await User.update(user.user_id, { hashed_password: hashedPassword });
 
-        res.json({ message: "Password updated successfully" });
+        return successResponse(res, null, "Password updated successfully");
     } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+        next(err);
     }
 };
 
-export { register, login, verifyOtp, logout, me, changePassword };
+export { register, login, verifyOtp, me, changePassword };

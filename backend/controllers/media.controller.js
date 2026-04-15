@@ -4,21 +4,21 @@ import {
     deleteFromDrive,
 } from "../services/drive.service.js";
 import { driveConfig } from "../config/drive.config.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 
-export const uploadMedia = async (req, res) => {
+export const uploadMedia = async (req, res, next) => {
     req.setTimeout(0);
-    if (!req.file) return res.status(400).send("No file uploaded.");
+    if (!req.file) return errorResponse(res, "No file uploaded.", 400);
 
     try {
         const result = await uploadToDrive(req.file);
-        res.status(200).json(result);
+        return successResponse(res, result, "Media uploaded successfully", 201);
     } catch (error) {
-        console.error("Upload Error:", error);
-        res.status(500).send("Upload failed.");
+        next(error);
     }
 };
 
-export const streamMedia = async (req, res) => {
+export const streamMedia = async (req, res, next) => {
     try {
         const { fileId } = req.params;
         const { streamConfig, options, requestConfig } = await getDriveStream(
@@ -50,17 +50,16 @@ export const streamMedia = async (req, res) => {
             )
             .pipe(res);
     } catch (error) {
-        if (!res.headersSent) res.status(500).send("Stream failed.");
+        if (!res.headersSent) next(error);
     }
 };
 
-export const deleteMedia = async (req, res) => {
+export const deleteMedia = async (req, res, next) => {
     try {
         const { fileId } = req.params;
         const result = await deleteFromDrive(fileId);
-        res.status(200).json(result);
+        return successResponse(res, result, "Media deleted successfully");
     } catch (error) {
-        console.error("Delete Error:", error);
-        res.status(500).send("Deletion failed.");
+        next(error);
     }
 };

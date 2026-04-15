@@ -1,27 +1,27 @@
 import Course from "../models/course.model.js";
 import Category from "../models/category.model.js";
-import User from "../models/user.model.js";
 import { uploadToDrive, deleteFromDrive } from "../services/drive.service.js";
 import {
     courseSchema,
     updateCourseSchema,
 } from "../validators/course.validator.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 import fs from "fs";
 
-const createCourse = async (req, res) => {
+const createCourse = async (req, res, next) => {
+    let courseThumbnailUrl = null;
     try {
         const { error } = courseSchema.validate(req.body);
         if (error)
-            return res.status(400).json({ message: error.details[0].message });
+            return errorResponse(res, error.details[0].message, 400);
 
         const { category_id } = req.body;
 
         const category = await Category.findById(category_id);
         if (!category) {
-            return res.status(404).json({ message: "Category not found" });
+            return errorResponse(res, "Category not found", 404);
         }
 
-        let courseThumbnailUrl = null;
         if (req.file) {
             const uploadResult = await uploadToDrive(req.file);
             courseThumbnailUrl = uploadResult.fileId;
@@ -29,15 +29,20 @@ const createCourse = async (req, res) => {
 
         const newCourse = await Course.create({
             ...req.body,
-            instructor_id: req.user.user_id, // Automatically assign the instructor from authenticated user
+            instructor_id: req.user.user_id,
             thumbnail_url: courseThumbnailUrl,
         });
-        res.status(201).json(newCourse);
+        
+        return successResponse(res, newCourse, "Course created successfully", 201);
     } catch (err) {
-        res.status(500).json({
-            message: "Internal Server error",
-            error: err.message,
-        });
+        if (courseThumbnailUrl) {
+            try {
+                await deleteFromDrive(courseThumbnailUrl);
+            } catch (cleanupErr) {
+                console.error("Failed to cleanup uploaded thumbnail after error:", cleanupErr);
+            }
+        }
+        next(err);
     } finally {
         if (req.file && fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
@@ -45,7 +50,7 @@ const createCourse = async (req, res) => {
     }
 };
 
-const getCourseById = async (req, res) => {
+const getCourseById = async (req, res, next) => {
     try {
         const { course_id } = req.params;
         const userId = req.user?.user_id || null;
@@ -53,16 +58,16 @@ const getCourseById = async (req, res) => {
 
         const course = await Course.findById(course_id, userId, isAdmin);
         if (course) {
-            res.json(course);
+            return successResponse(res, course);
         } else {
-            res.status(404).json({ message: "Course not found" });
+            return errorResponse(res, "Course not found", 404);
         }
     } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+        next(err);
     }
 };
 
-const getAllCourses = async (req, res) => {
+const getAllCourses = async (req, res, next) => {
     try {
         const { page = 1, limit = 10 } = req.query;
         const userId = req.user?.user_id || null;
@@ -74,48 +79,40 @@ const getAllCourses = async (req, res) => {
             userId,
             isAdmin,
         );
-        res.json(courses);
+        return successResponse(res, courses);
     } catch (err) {
-        res.status(500).json({
-            message: "Internal Server error",
-            error: err.message,
-        });
+        next(err);
     }
 };
 
-const updateCourse = async (req, res) => {
+const updateCourse = async (req, res, next) => {
+    let newThumbnailUrl = null;
     try {
         const { course_id } = req.params;
         const { error } = updateCourseSchema.validate(req.body);
         if (error)
-            return res.status(400).json({ message: error.details[0].message });
+            return errorResponse(res, error.details[0].message, 400);
 
-        const existingCourse = await Course.findById(
-            course_id,
-            req.user.user_id,
-            req.user.role === "admin",
-        );
+        const userId = req.user.user_id;
+        const isAdmin = req.user.role === "admin";
+        
+        const existingCourse = await Course.findById(course_id, userId, isAdmin);
         if (!existingCourse) {
-            return res.status(404).json({ message: "Course not found" });
+            return errorResponse(res, "Course not found", 404);
         }
 
-        // Ownership: Admin or the course instructor
         if (
             req.user.role !== "admin" &&
             existingCourse.instructor_id !== req.user.user_id
         ) {
-            return res.status(403).json({
-                message:
-                    "Forbidden: You are not authorized to update this course",
-            });
+            return errorResponse(res, "Forbidden: You are not authorized to update this course", 403);
         }
 
         const { category_id } = req.body;
-
         if (category_id) {
             const category = await Category.findById(category_id);
             if (!category) {
-                return res.status(404).json({ message: "Category not found" });
+                return errorResponse(res, "Category not found", 404);
             }
         }
 
@@ -124,35 +121,38 @@ const updateCourse = async (req, res) => {
 
         if (req.file) {
             const uploadResult = await uploadToDrive(req.file);
-            updateData.thumbnail_url = uploadResult.fileId;
-
-            if (existingCourse.thumbnail_url) {
-                try {
-                    await deleteFromDrive(existingCourse.thumbnail_url);
-                } catch (err) {
-                    console.error(
-                        "Failed to delete old thumbnail from drive:",
-                        err,
-                    );
-                }
-            }
+            newThumbnailUrl = uploadResult.fileId;
+            updateData.thumbnail_url = newThumbnailUrl;
         }
 
         const result = await Course.update(course_id, updateData);
         if (result) {
-            res.json({
-                message: "Course updated successfully",
-                thumbnail_url:
-                    updateData.thumbnail_url || existingCourse.thumbnail_url,
-            });
+            if (newThumbnailUrl && existingCourse.thumbnail_url) {
+                try {
+                    await deleteFromDrive(existingCourse.thumbnail_url);
+                } catch (err) {
+                    console.error("Failed to delete old thumbnail from drive:", err);
+                }
+            }
+            return successResponse(res, {
+                ...result,
+                thumbnail_url: updateData.thumbnail_url || existingCourse.thumbnail_url
+            }, "Course updated successfully");
         } else {
-            res.status(404).json({ message: "Course not found" });
+            if (newThumbnailUrl) {
+                await deleteFromDrive(newThumbnailUrl);
+            }
+            return errorResponse(res, "Course not found", 404);
         }
     } catch (err) {
-        res.status(500).json({
-            message: "Internal Server error",
-            error: err.message,
-        });
+        if (newThumbnailUrl) {
+            try {
+                await deleteFromDrive(newThumbnailUrl);
+            } catch (cleanupErr) {
+                console.error("Failed to cleanup uploaded thumbnail after error:", cleanupErr);
+            }
+        }
+        next(err);
     } finally {
         if (req.file && fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
@@ -160,27 +160,22 @@ const updateCourse = async (req, res) => {
     }
 };
 
-const deleteCourse = async (req, res) => {
+const deleteCourse = async (req, res, next) => {
     try {
         const { course_id } = req.params;
-        const course = await Course.findById(
-            course_id,
-            req.user.user_id,
-            req.user.role === "admin",
-        );
+        const userId = req.user.user_id;
+        const isAdmin = req.user.role === "admin";
+
+        const course = await Course.findById(course_id, userId, isAdmin);
         if (!course) {
-            return res.status(404).json({ message: "Course not found" });
+            return errorResponse(res, "Course not found", 404);
         }
 
-        // Ownership: Admin or the course instructor
         if (
             req.user.role !== "admin" &&
             course.instructor_id !== req.user.user_id
         ) {
-            return res.status(403).json({
-                message:
-                    "Forbidden: You are not authorized to delete this course",
-            });
+            return errorResponse(res, "Forbidden: You are not authorized to delete this course", 403);
         }
 
         const result = await Course.delete(course_id);
@@ -189,21 +184,15 @@ const deleteCourse = async (req, res) => {
                 try {
                     await deleteFromDrive(course.thumbnail_url);
                 } catch (err) {
-                    console.error(
-                        "Failed to delete course thumbnail from drive:",
-                        err,
-                    );
+                    console.error("Failed to delete course thumbnail from drive:", err);
                 }
             }
-            res.json({ message: "Course deleted successfully" });
+            return successResponse(res, null, "Course deleted successfully");
         } else {
-            res.status(404).json({ message: "Course not found" });
+            return errorResponse(res, "Course not found", 404);
         }
     } catch (err) {
-        res.status(500).json({
-            message: "Internal Server error",
-            error: err.message,
-        });
+        next(err);
     }
 };
 

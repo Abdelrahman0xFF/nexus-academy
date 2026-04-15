@@ -3,8 +3,11 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import router from "./routes/router.js";
+import errorHandler from "./middleware/error.middleware.js";
+import requestLogger from "./middleware/logger.middleware.js";
 
 const app = express();
+app.use(requestLogger);
 app.use(express.json());
 app.use(cookieParser());
 app.use(
@@ -15,6 +18,8 @@ app.use(
 );
 
 app.use("/api", router);
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {

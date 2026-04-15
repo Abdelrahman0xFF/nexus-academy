@@ -1,76 +1,77 @@
 import Category from "../models/category.model.js";
 import Course from "../models/course.model.js";
 import { categorySchema } from "../validators/category.validator.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 
-const createCategory = async (req, res) => {
+const createCategory = async (req, res, next) => {
     try {
         const { error } = categorySchema.validate(req.body);
         if (error)
-            return res.status(400).json({ message: error.details[0].message });
+            return errorResponse(res, error.details[0].message, 400);
 
         const newCategory = await Category.create(req.body);
-        res.status(201).json(newCategory);
+        return successResponse(res, newCategory, "Category created successfully", 201);
     } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+        next(err);
     }
 };
 
-const getCategoryById = async (req, res) => {
+const getCategoryById = async (req, res, next) => {
     try {
         const { category_id } = req.params;
         const category = await Category.findById(category_id);
         if (category) {
-            res.json(category);
+            return successResponse(res, category);
         } else {
-            res.status(404).json({ message: "Category not found" });
+            return errorResponse(res, "Category not found", 404);
         }
     } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+        next(err);
     }
 };
 
-const getAllCategories = async (req, res) => {
+const getAllCategories = async (req, res, next) => {
     try {
         const categories = await Category.findAll();
-        res.json(categories);
+        return successResponse(res, categories);
     } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+        next(err);
     }
 };
 
-const updateCategory = async (req, res) => {
+const updateCategory = async (req, res, next) => {
     try {
         const { category_id } = req.params;
         const { error } = categorySchema.validate(req.body);
         if (error)
-            return res.status(400).json({ message: error.details[0].message });
+            return errorResponse(res, error.details[0].message, 400);
 
         const result = await Category.update(category_id, req.body);
         if (result) {
-            res.json(result);
+            return successResponse(res, result, "Category updated successfully");
         } else {
-            res.status(404).json({ message: "Category not found" });
+            return errorResponse(res, "Category not found", 404);
         }
     } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+        next(err);
     }
 };
 
-const deleteCategory = async (req, res) => {
+const deleteCategory = async (req, res, next) => {
     try {
         const { category_id } = req.params;
         const result = await Category.delete(category_id);
         if (result) {
-            res.json({ message: "Category deleted successfully" });
+            return successResponse(res, null, "Category deleted successfully");
         } else {
-            res.status(404).json({ message: "Category not found" });
+            return errorResponse(res, "Category not found", 404);
         }
     } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+        next(err);
     }
 };
 
-const getCoursesByCategory = async (req, res) => {
+const getCoursesByCategory = async (req, res, next) => {
     try {
         const { category_id } = req.params;
         const { page = 1, limit = 10 } = req.query;
@@ -79,7 +80,7 @@ const getCoursesByCategory = async (req, res) => {
 
         const category = await Category.findById(category_id);
         if (!category) {
-            return res.status(404).json({ message: "Category not found" });
+            return errorResponse(res, "Category not found", 404);
         }
         const courses = await Course.findByCategoryId(
             category_id,
@@ -88,9 +89,9 @@ const getCoursesByCategory = async (req, res) => {
             userId,
             isAdmin,
         );
-        res.json(courses);
+        return successResponse(res, courses);
     } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+        next(err);
     }
 };
 
