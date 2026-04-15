@@ -6,7 +6,7 @@ import {
 } from "../validators/user.validator.js";
 import { hashPassword, comparePassword } from "../utils/hash.js";
 import { generateJWTToken } from "../config/jwt.config.js";
-import { uploadToDrive } from "../services/drive.service.js";
+import { uploadToDrive, deleteFromDrive } from "../services/drive.service.js";
 import { generateAndSendOTP } from "../services/otp.service.js";
 import fs from "fs";
 
@@ -74,7 +74,20 @@ const verifyOtp = async (req, res) => {
             return res.status(400).json({ message: "User already verified" });
 
         if (Date.now() > user.otp_expires) {
+            const avatarUrl = user.avatar_url;
             await User.deleteUnverified(email);
+
+            if (avatarUrl) {
+                try {
+                    await deleteFromDrive(avatarUrl);
+                } catch (err) {
+                    console.error(
+                        "Failed to delete unverified user avatar from drive:",
+                        err,
+                    );
+                }
+            }
+
             return res
                 .status(400)
                 .json({ message: "OTP expired. Please register again." });

@@ -34,7 +34,7 @@ const updateUserSchema = Joi.object({
     last_name: Joi.string().max(50),
     title: Joi.string().max(100),
     bio: Joi.string().max(500),
-    avatar_url: Joi.string().uri().allow(null, ""),
+    avatar_url: Joi.string().allow(null, ""),
     role: Joi.string().valid("user", "instructor", "admin"),
 });
 
