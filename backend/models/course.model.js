@@ -97,6 +97,29 @@ class Course {
         }
     }
 
+    static async findByCategoryId(category_id, page = 1, limit = 10) {
+        try {
+            const offset = (page - 1) * limit;
+            const pool = await poolPromise;
+            const result = await pool
+                .request()
+                .input("category_id", sql.Int, category_id)
+                .input("limit", sql.Int, limit)
+                .input("offset", sql.Int, offset).query(`
+                    SELECT c.*, 
+                    (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating
+                    FROM courses c
+                    WHERE c.category_id = @category_id
+                    ORDER BY c.course_id 
+                    OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
+                `);
+            return result.recordset;
+        } catch (err) {
+            console.error("Error finding courses by category ID: ", err);
+            throw err;
+        }
+    }
+
     static async update(course_id, updatedCourse) {
         try {
             const pool = await poolPromise;

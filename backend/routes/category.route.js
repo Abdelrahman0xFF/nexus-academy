@@ -12,11 +12,16 @@ import { authenticate, authorize } from "../middleware/auth.middleware.js";
 const router = Router();
 
 router.get("/", getAllCategories);
-router.get("/:id", getCategoryById);
-router.get("/:id/courses", getCoursesByCategory);
+router.get("/:category_id", getCategoryById);
+router.get("/:category_id/courses", getCoursesByCategory);
 
 router.post("/", authenticate, authorize("admin"), createCategory);
-router.put("/:id", authenticate, authorize("admin"), updateCategory);
-router.delete("/:id", authenticate, authorize("admin"), deleteCategory);
+router.put("/:category_id", authenticate, authorize("admin"), updateCategory);
+router.delete(
+    "/:category_id",
+    authenticate,
+    authorize("admin"),
+    deleteCategory,
+);
 
 export default router;
