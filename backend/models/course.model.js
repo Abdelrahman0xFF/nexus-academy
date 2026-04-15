@@ -57,17 +57,19 @@ class Course {
         }
     }
 
-    static async findById(course_id) {
+    static async findById(course_id, userId = null, isAdmin = false) {
         try {
             const pool = await poolPromise;
-            const result =
-                // appends rating from reviews table that will be implemented
-                await pool.request().input("course_id", sql.Int, course_id)
-                    .query(`
+            const result = await pool
+                .request()
+                .input("course_id", sql.Int, course_id)
+                .input("userId", sql.Int, userId)
+                .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
                     SELECT c.*, 
                     (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating
                     FROM courses c
                     WHERE c.course_id = @course_id
+                    AND (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)
                 `);
             return result.recordset[0];
         } catch (err) {
@@ -76,17 +78,20 @@ class Course {
         }
     }
 
-    static async find(page, limit) {
+    static async find(page, limit, userId = null, isAdmin = false) {
         try {
             const offset = (page - 1) * limit;
             const pool = await poolPromise;
             const result = await pool
                 .request()
                 .input("limit", sql.Int, limit)
-                .input("offset", sql.Int, offset).query(`
+                .input("offset", sql.Int, offset)
+                .input("userId", sql.Int, userId)
+                .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
                     SELECT c.*, 
                     (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating
                     FROM courses c
+                    WHERE (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)
                     ORDER BY c.course_id 
                     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
                 `);
@@ -97,7 +102,13 @@ class Course {
         }
     }
 
-    static async findByCategoryId(category_id, page = 1, limit = 10) {
+    static async findByCategoryId(
+        category_id,
+        page = 1,
+        limit = 10,
+        userId = null,
+        isAdmin = false,
+    ) {
         try {
             const offset = (page - 1) * limit;
             const pool = await poolPromise;
@@ -105,11 +116,14 @@ class Course {
                 .request()
                 .input("category_id", sql.Int, category_id)
                 .input("limit", sql.Int, limit)
-                .input("offset", sql.Int, offset).query(`
+                .input("offset", sql.Int, offset)
+                .input("userId", sql.Int, userId)
+                .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
                     SELECT c.*, 
                     (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating
                     FROM courses c
                     WHERE c.category_id = @category_id
+                    AND (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)
                     ORDER BY c.course_id 
                     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
                 `);

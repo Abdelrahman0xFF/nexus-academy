@@ -74,12 +74,20 @@ const getCoursesByCategory = async (req, res) => {
     try {
         const { category_id } = req.params;
         const { page = 1, limit = 10 } = req.query;
+        const userId = req.user?.user_id || null;
+        const isAdmin = req.user?.role === "admin";
 
         const category = await Category.findById(category_id);
         if (!category) {
             return res.status(404).json({ message: "Category not found" });
         }
-        const courses = await Course.findByCategoryId(category_id, page, limit);
+        const courses = await Course.findByCategoryId(
+            category_id,
+            Number(page),
+            Number(limit),
+            userId,
+            isAdmin,
+        );
         res.json(courses);
     } catch (err) {
         res.status(500).json({ message: "Server error", error: err.message });

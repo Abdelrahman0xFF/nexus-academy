@@ -6,13 +6,17 @@ import {
     updateCourse,
     deleteCourse,
 } from "../controllers/course.controller.js";
-import { authenticate, authorize } from "../middleware/auth.middleware.js";
+import {
+    authenticate,
+    authorize,
+    optionalAuthenticate,
+} from "../middleware/auth.middleware.js";
 import upload from "../middleware/multer.js";
 
 const router = Router();
 
-router.get("/", getAllCourses);
-router.get("/:course_id", getCourseById);
+router.get("/", optionalAuthenticate, getAllCourses);
+router.get("/:course_id", optionalAuthenticate, getCourseById);
 
 router.post(
     "/",

@@ -48,7 +48,10 @@ const createCourse = async (req, res) => {
 const getCourseById = async (req, res) => {
     try {
         const { course_id } = req.params;
-        const course = await Course.findById(course_id);
+        const userId = req.user?.user_id || null;
+        const isAdmin = req.user?.role === "admin";
+
+        const course = await Course.findById(course_id, userId, isAdmin);
         if (course) {
             res.json(course);
         } else {
@@ -62,7 +65,15 @@ const getCourseById = async (req, res) => {
 const getAllCourses = async (req, res) => {
     try {
         const { page = 1, limit = 10 } = req.query;
-        const courses = await Course.find(Number(page), Number(limit));
+        const userId = req.user?.user_id || null;
+        const isAdmin = req.user?.role === "admin";
+
+        const courses = await Course.find(
+            Number(page),
+            Number(limit),
+            userId,
+            isAdmin,
+        );
         res.json(courses);
     } catch (err) {
         res.status(500).json({
@@ -79,7 +90,11 @@ const updateCourse = async (req, res) => {
         if (error)
             return res.status(400).json({ message: error.details[0].message });
 
-        const existingCourse = await Course.findById(course_id);
+        const existingCourse = await Course.findById(
+            course_id,
+            req.user.user_id,
+            req.user.role === "admin",
+        );
         if (!existingCourse) {
             return res.status(404).json({ message: "Course not found" });
         }
@@ -125,7 +140,11 @@ const updateCourse = async (req, res) => {
 
         const result = await Course.update(course_id, updateData);
         if (result) {
-            res.json({ message: "Course updated successfully" });
+            res.json({
+                message: "Course updated successfully",
+                thumbnail_url:
+                    updateData.thumbnail_url || existingCourse.thumbnail_url,
+            });
         } else {
             res.status(404).json({ message: "Course not found" });
         }
@@ -144,11 +163,16 @@ const updateCourse = async (req, res) => {
 const deleteCourse = async (req, res) => {
     try {
         const { course_id } = req.params;
-        const course = await Course.findById(course_id);
+        const course = await Course.findById(
+            course_id,
+            req.user.user_id,
+            req.user.role === "admin",
+        );
         if (!course) {
             return res.status(404).json({ message: "Course not found" });
         }
 
+        // Ownership: Admin or the course instructor
         if (
             req.user.role !== "admin" &&
             course.instructor_id !== req.user.user_id

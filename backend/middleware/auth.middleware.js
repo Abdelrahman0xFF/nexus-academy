@@ -24,6 +24,24 @@ const authenticate = async (req, res, next) => {
     }
 };
 
+const optionalAuthenticate = async (req, res, next) => {
+    try {
+        const token =
+            req.cookies?.token || req.headers.authorization?.split(" ")[1];
+
+        if (token) {
+            const decoded = verifyJWTToken(token);
+            const user = await User.findById(decoded.id);
+            if (user) {
+                req.user = user;
+            }
+        }
+        next();
+    } catch (err) {
+        next();
+    }
+};
+
 const authorize = (...roles) => {
     return (req, res, next) => {
         if (!req.user || !roles.includes(req.user.role)) {
@@ -35,4 +53,4 @@ const authorize = (...roles) => {
     };
 };
 
-export { authenticate, authorize };
+export { authenticate, authorize, optionalAuthenticate };
