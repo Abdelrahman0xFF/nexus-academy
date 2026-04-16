@@ -33,16 +33,15 @@ class Course {
                 )
                 .input("thumbnail_url", sql.NVarChar, newCourse.thumbnail_url)
                 .input("level", sql.NVarChar, newCourse.level)
-                .input("duration", sql.NVarChar, newCourse.duration)
                 .input("is_available", sql.Bit, newCourse.is_available ?? 1)
                 .query(`
                     INSERT INTO courses (
                         category_id, instructor_id, title, description,
-                        price, original_price, thumbnail_url, level, duration, is_available
+                        price, original_price, thumbnail_url, level, is_available
                     )
                     VALUES (
                         @category_id, @instructor_id, @title, @description,
-                        @price, @original_price, @thumbnail_url, @level, @duration, @is_available
+                        @price, @original_price, @thumbnail_url, @level, @is_available
                     );
 
                     SELECT course_id FROM courses WHERE course_id = SCOPE_IDENTITY();
@@ -66,7 +65,8 @@ class Course {
                 .input("userId", sql.Int, userId)
                 .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
                     SELECT c.*, 
-                    (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating
+                    (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
+                    ISNULL((SELECT SUM(duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration
                     FROM courses c
                     WHERE c.course_id = @course_id
                     AND (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)
@@ -89,7 +89,8 @@ class Course {
                 .input("userId", sql.Int, userId)
                 .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
                     SELECT c.*, 
-                    (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating
+                    (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
+                    ISNULL((SELECT SUM(duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration
                     FROM courses c
                     WHERE (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)
                     ORDER BY c.course_id 
@@ -120,7 +121,8 @@ class Course {
                 .input("userId", sql.Int, userId)
                 .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
                     SELECT c.*, 
-                    (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating
+                    (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
+                    ISNULL((SELECT SUM(duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration
                     FROM courses c
                     WHERE c.category_id = @category_id
                     AND (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)
@@ -144,7 +146,7 @@ class Course {
             let query = "UPDATE courses SET ";
             const updates = [];
             for (const [key, value] of Object.entries(updatedCourse)) {
-                if (value !== undefined && key !== "course_id") {
+                if (value !== undefined && !["course_id", "duration"].includes(key)) {
                     if (key === "price" || key === "original_price") {
                         request.input(key, sql.Decimal(10, 2), value);
                     } else if (
@@ -184,8 +186,16 @@ class Course {
             const result = await pool
                 .request()
                 .input("course_id", sql.Int, course_id)
-                .query("DELETE FROM courses WHERE course_id = @course_id");
-            return result.rowsAffected[0] > 0;
+                .query(`
+                    DELETE FROM reviews WHERE course_id = @course_id;
+                    DELETE FROM user_lessons WHERE course_id = @course_id;
+                    DELETE FROM lessons WHERE course_id = @course_id;
+                    DELETE FROM sections WHERE course_id = @course_id;
+                    DELETE FROM certificates WHERE course_id = @course_id;
+                    DELETE FROM enrollments WHERE course_id = @course_id;
+                    DELETE FROM courses WHERE course_id = @course_id;
+                `);
+            return result.rowsAffected[result.rowsAffected.length - 1] > 0;
         } catch (err) {
             console.error("Error deleting course: ", err);
             throw err;

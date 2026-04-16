@@ -8,7 +8,7 @@ class Lesson {
         this.title = lesson.title;
         this.description = lesson.description;
         this.video_url = lesson.video_url;
-        this.duration = lesson.duration;
+        this.duration = lesson.duration || 0;
     }
 
     static async create(newLesson) {
@@ -22,7 +22,7 @@ class Lesson {
                 .input("title", sql.NVarChar, newLesson.title)
                 .input("description", sql.NVarChar, newLesson.description)
                 .input("video_url", sql.NVarChar, newLesson.video_url)
-                .input("duration", sql.NVarChar, newLesson.duration)
+                .input("duration", sql.Int, newLesson.duration)
                 .query(`
                     INSERT INTO lessons (course_id, section_order, lesson_order, title, description, video_url, duration)
                     VALUES (@course_id, @section_order, @lesson_order, @title, @description, @video_url, @duration);
@@ -91,7 +91,11 @@ class Lesson {
             const updates = [];
             for (const [key, value] of Object.entries(updatedLesson)) {
                 if (value !== undefined && !["course_id", "section_order", "lesson_order"].includes(key)) {
-                    request.input(key, sql.NVarChar, value);
+                    if (key === "duration") {
+                        request.input(key, sql.Int, value);
+                    } else {
+                        request.input(key, sql.NVarChar, value);
+                    }
                     updates.push(`${key} = @${key}`);
                 }
             }

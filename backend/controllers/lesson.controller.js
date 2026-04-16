@@ -51,22 +51,23 @@ const createLesson = async (req, res, next) => {
             const uploadResult = await uploadToDrive(req.file);
             videoUrl = uploadResult.fileId;
 
-            req.body.duration = duration;
+            const newLessonData = {
+                ...req.body,
+                video_url: videoUrl,
+                duration: duration,
+            };
+
+            const newLesson = await Lesson.create(newLessonData);
+
+            return successResponse(
+                res,
+                newLesson,
+                "Lesson created successfully",
+                201,
+            );
         } else {
             return errorResponse(res, "Video file is required", 400);
         }
-
-        const newLesson = await Lesson.create({
-            ...req.body,
-            video_url: videoUrl,
-        });
-
-        return successResponse(
-            res,
-            newLesson,
-            "Lesson created successfully",
-            201,
-        );
     } catch (err) {
         if (videoUrl) {
             try {
@@ -148,9 +149,10 @@ const updateLesson = async (req, res, next) => {
             const duration = await getVideoDuration(req.file.path);
 
             const uploadResult = await uploadToDrive(req.file);
-            videoUrl = uploadResult.fileId;
+            newVideoUrl = uploadResult.fileId;
 
-            req.body.duration = duration;
+            updateData.video_url = newVideoUrl;
+            updateData.duration = duration;
         }
 
         const result = await Lesson.update(

@@ -7,7 +7,6 @@ const courseSchema = Joi.object({
     price: Joi.number().precision(2).allow(null),
     original_price: Joi.number().precision(2).required(),
     level: Joi.string().valid("Beginner", "Intermediate", "Advanced").required(),
-    duration: Joi.string().required(),
     is_available: Joi.boolean(),
 });
 
@@ -19,7 +18,6 @@ const updateCourseSchema = Joi.object({
     original_price: Joi.number().precision(2),
     thumbnail_url: Joi.string().uri(),
     level: Joi.string().valid("Beginner", "Intermediate", "Advanced"),
-    duration: Joi.string(),
     is_available: Joi.boolean(),
 });
 

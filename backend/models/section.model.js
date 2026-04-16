@@ -89,8 +89,12 @@ class Section {
                 .request()
                 .input("course_id", sql.Int, course_id)
                 .input("section_order", sql.Int, section_order)
-                .query("DELETE FROM sections WHERE course_id = @course_id AND section_order = @section_order");
-            return result.rowsAffected[0] > 0;
+                .query(`
+                    DELETE FROM user_lessons WHERE course_id = @course_id AND section_order = @section_order;
+                    DELETE FROM lessons WHERE course_id = @course_id AND section_order = @section_order;
+                    DELETE FROM sections WHERE course_id = @course_id AND section_order = @section_order;
+                `);
+            return result.rowsAffected[result.rowsAffected.length - 1] > 0;
         } catch (err) {
             console.error("Error deleting section: ", err);
             throw err;

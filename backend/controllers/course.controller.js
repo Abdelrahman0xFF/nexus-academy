@@ -210,6 +210,8 @@ const deleteCourse = async (req, res, next) => {
             );
         }
 
+        const lessons = await Lesson.findByCourseId(course_id);
+
         const result = await Course.delete(course_id);
         if (result) {
             if (course.thumbnail_url) {
@@ -222,6 +224,20 @@ const deleteCourse = async (req, res, next) => {
                     );
                 }
             }
+
+            for (const lesson of lessons) {
+                if (lesson.video_url) {
+                    try {
+                        await deleteFromDrive(lesson.video_url);
+                    } catch (err) {
+                        console.error(
+                            `Failed to delete video for lesson ${lesson.lesson_order} of course ${course_id} from drive:`,
+                            err,
+                        );
+                    }
+                }
+            }
+
             return successResponse(res, null, "Course deleted successfully");
         } else {
             return errorResponse(res, "Course not found", 404);
