@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            :root {
+                --nexus-navy: #0f172a;
+                --nexus-teal: #136f83;
+                --nexus-teal-light: #4cb8c9;
+                --nexus-slate: #64748b;
+                --nexus-border: #e2e8f0;
+            }
+
+            body {
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                background-color: #f1f5f9;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                padding: 40px;
+            }
+
+            /* Premium Shadow & Frame */
+            .cert-container {
+                position: relative;
+                width: 1100px;
+                height: 770px;
+                background: white;
+                padding: 16px;
+                box-shadow: 
+                    0 30px 60px -12px rgba(15, 23, 42, 0.15),
+                    0 18px 36px -18px rgba(0, 0, 0, 0.2);
+                border-radius: 4px;
+            }
+
+            /* The Professional Border */
+            .outer-border {
+                position: relative;
+                height: 100%;
+                width: 100%;
+                border: 1px solid var(--nexus-border);
+                display: flex;
+                overflow: hidden;
+            }
+
+            /* Nexus Sidebar Accent - The "Shape" upgrade */
+            .sidebar-accent {
+                width: 12px;
+                background: linear-gradient(to bottom, var(--nexus-navy), var(--nexus-teal));
+                height: 100%;
+            }
+
+            .main-content {
+                flex: 1;
+                padding: 60px 80px;
+                display: flex;
+                flex-direction: column;
+                position: relative;
+            }
+
+            /* Geometric Background Watermark */
+            .main-content::after {
+                content: "N";
+                position: absolute;
+                bottom: -50px;
+                right: -20px;
+                font-size: 500px;
+                font-weight: 900;
+                color: var(--nexus-teal);
+                opacity: 0.03;
+                z-index: 0;
+                pointer-events: none;
+            }
+
+            .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 60px;
+                z-index: 1;
+            }
+
+            .logo {
+                font-size: 28px;
+                font-weight: 800;
+                color: var(--nexus-navy);
+                letter-spacing: -1px;
+            }
+
+            .logo span {
+                background: linear-gradient(135deg, var(--nexus-teal), var(--nexus-teal-light));
+                -webkit-background-clip: text;
+                background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+            .cert-id {
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                color: var(--nexus-slate);
+                font-weight: 600;
+            }
+
+            .body-text {
+                text-align: center;
+                z-index: 1;
+            }
+
+            .title-label {
+                font-size: 14px;
+                font-weight: 800;
+                color: var(--nexus-teal);
+                text-transform: uppercase;
+                letter-spacing: 6px;
+                margin-bottom: 30px;
+                display: block;
+            }
+
+            .intro-text {
+                font-size: 18px;
+                color: var(--nexus-slate);
+                margin-bottom: 10px;
+            }
+
+            .student-name {
+                font-size: 72px;
+                font-weight: 800;
+                color: var(--nexus-navy);
+                margin-bottom: 40px;
+                line-height: 1;
+                letter-spacing: -2px;
+            }
+
+            .course-container {
+                position: relative;
+                display: inline-block;
+                margin: 0 auto;
+                padding: 15px 40px;
+            }
+
+            .course-container::before {
+                content: "";
+                position: absolute;
+                top: 0; left: 0; width: 100%; height: 100%;
+                background: var(--nexus-navy);
+                transform: skewX(-10deg);
+                z-index: -1;
+            }
+
+            .course-name {
+                font-size: 26px;
+                font-weight: 700;
+                color: white;
+            }
+
+            .footer {
+                margin-top: auto;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                z-index: 1;
+            }
+
+            .meta-block {
+                display: flex;
+                gap: 40px;
+            }
+
+            .meta-item .label {
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 1.5px;
+                color: var(--nexus-slate);
+                margin-bottom: 6px;
+                font-weight: 700;
+            }
+
+            .meta-item .value {
+                font-size: 16px;
+                font-weight: 600;
+                color: var(--nexus-navy);
+            }
+
+            .signature-box {
+                text-align: center;
+                min-width: 200px;
+            }
+
+            .signature-text {
+                font-family: "Brush Script MT", cursive;
+                font-size: 36px;
+                color: var(--nexus-navy);
+                margin-bottom: 5px;
+            }
+
+            .signature-line {
+                height: 1px;
+                background: var(--nexus-navy);
+                margin-bottom: 8px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="cert-container">
+            <div class="outer-border">
+                <div class="sidebar-accent"></div>
+                
+                <div class="main-content">
+                    <header class="header">
+                        <div class="logo">Nexus<span>Academy</span></div>
+                        <div class="cert-id">NEX-{{certificateId}}</div>
+                    </header>
+
+                    <main class="body-text">
+                        <span class="title-label">Certificate of Excellence</span>
+                        <p class="intro-text">This academic credential is awarded to</p>
+                        <h1 class="student-name">{{studentName}}</h1>
+                        <p class="intro-text" style="margin-bottom: 25px;">for successfully mastering the curriculum of</p>
+                        
+                        <div class="course-container">
+                            <div class="course-name">{{courseName}}</div>
+                        </div>
+                    </main>
+
+                    <footer class="footer">
+                        <div class="meta-block">
+                            <div class="meta-item">
+                                <div class="label">Date Issued</div>
+                                <div class="value">{{date}}</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="label">Instructor</div>
+                                <div class="value">{{instructorName}}</div>
+                            </div>
+                        </div>
+
+                        <div class="signature-box">
+                            <div class="signature-text">S. Nexus</div>
+                            <div class="signature-line"></div>
+                            <div class="label" style="font-size: 10px; letter-spacing: 1px; color: var(--nexus-slate); font-weight: 700; text-transform: uppercase;">Head of Education</div>
+                        </div>
+                    </footer>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

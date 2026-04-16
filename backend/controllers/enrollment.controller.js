@@ -1,32 +1,29 @@
 import Enrollment from "../models/enrollment.model.js";
 import { enrollmentSchema } from "../validators/enrollment.validator.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 
 export const enroll = async (req, res) => {
     try {
         if (req.user.role !== "student") {
-            return res
-                .status(403)
-                .json({ message: "Only students can enroll in courses" });
+            return errorResponse(res, "Only students can enroll in courses", 403);
         }
 
         const { error } = enrollmentSchema.validate(req.body);
         if (error)
-            return res.status(400).json({ message: error.details[0].message });
+            return errorResponse(res, error.details[0].message, 400);
 
         const { course_id, payment_method = "card" } = req.body;
         const user_id = req.user.user_id;
 
         const alreadyEnrolled = await Enrollment.isEnrolled(user_id, course_id);
         if (alreadyEnrolled) {
-            return res
-                .status(400)
-                .json({ message: "Already enrolled in this course" });
+            return errorResponse(res, "Already enrolled in this course", 400);
         }
 
         await Enrollment.create(user_id, course_id, payment_method, "ok");
-        res.status(201).json({ message: "Enrolled successfully" });
+        return successResponse(res, null, "Enrolled successfully", 201);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        return errorResponse(res, err.message, 500);
     }
 };
 
@@ -36,8 +33,8 @@ export const getProgress = async (req, res) => {
         const user_id = req.user.user_id;
 
         const progress = await Enrollment.getProgress(user_id, course_id);
-        res.status(200).json({ progress });
+        return successResponse(res, { progress });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        return errorResponse(res, err.message, 500);
     }
 };
