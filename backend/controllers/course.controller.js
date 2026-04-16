@@ -287,6 +287,7 @@ const getCourseContent = asyncHandler(async (req, res, next) => {
     return successResponse(res, {
         course_id: course.course_id,
         title: course.title,
+        duration: course.duration,
         is_enrolled: !!isEnrolled,
         sections: structuredContent,
     });

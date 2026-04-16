@@ -3,12 +3,6 @@ import { uploadToDrive, deleteFromDrive } from "../services/drive.service.js";
 import { successResponse, errorResponse } from "../utils/response.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
-const createUser = asyncHandler(async (req, res) => {
-    const newUser = new User(req.body);
-    const createdUser = await User.create(newUser);
-    return successResponse(res, createdUser, "User created successfully", 201);
-});
-
 const getUserById = asyncHandler(async (req, res) => {
     const { user_id } = req.params;
 
@@ -110,4 +104,4 @@ const deleteUser = asyncHandler(async (req, res) => {
     }
 });
 
-export { createUser, getUserById, getAllUsers, updateUser, deleteUser };
+export { getUserById, getAllUsers, updateUser, deleteUser };

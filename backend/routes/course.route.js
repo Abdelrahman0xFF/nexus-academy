@@ -44,8 +44,7 @@ router.get("/:course_id/sections", optionalAuthenticate, getSectionsByCourseId);
 
 router.get(
     "/:course_id/content",
-    authenticate,
-    verifyEnrollment,
+    optionalAuthenticate,
     getCourseContent,
 );
 

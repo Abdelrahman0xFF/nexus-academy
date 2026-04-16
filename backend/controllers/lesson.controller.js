@@ -67,27 +67,6 @@ const createLesson = asyncHandler(async (req, res, next) => {
     }
 });
 
-const getLessonsBySection = asyncHandler(async (req, res, next) => {
-    const { course_id, section_order } = req.params;
-    const user_id = req.user?.user_id;
-    const role = req.user?.role;
-
-    const lessons = await Lesson.findBySection(course_id, section_order);
-
-    const course = await Course.findById(course_id);
-    if (!course) return errorResponse(res, "Course not found", 404);
-
-    const isAuthorized = role === "admin" || course.instructor_id === user_id || (user_id && await Enrollment.isEnrolled(user_id, course_id));
-
-    if (isAuthorized) {
-        return successResponse(res, lessons);
-    } else {
-        // Only return basic info if not enrolled
-        const publicLessons = lessons.map(({ video_url, description, duration, ...lessonData }) => lessonData);
-        return successResponse(res, publicLessons);
-    }
-});
-
 const getLessonDetails = asyncHandler(async (req, res, next) => {
     const { course_id, section_order, lesson_order } = req.params;
     const lesson = await Lesson.findOne(
@@ -235,7 +214,6 @@ const completeLesson = asyncHandler(async (req, res, next) => {
 
 export {
     createLesson,
-    getLessonsBySection,
     getLessonDetails,
     updateLesson,
     deleteLesson,

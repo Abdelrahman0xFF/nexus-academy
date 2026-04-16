@@ -1,5 +1,4 @@
 import {
-    createUser,
     getUserById,
     getAllUsers,
     updateUser,
