@@ -4,7 +4,7 @@ class Enrollment {
     static async create(user_id, course_id, payment_method, payment_status) {
         try {
             const pool = await poolPromise;
-            await pool
+            const result = await pool
                 .request()
                 .input("user_id", sql.Int, user_id)
                 .input("course_id", sql.Int, course_id)
@@ -20,7 +20,11 @@ class Enrollment {
                     FROM courses
                     WHERE course_id = @course_id;
                 `);
-            return { user_id, course_id, message: "Enrolled successfully" };
+
+            if (result.rowsAffected[0] > 0) {
+                return { user_id, course_id, message: "Enrolled successfully" };
+            }
+            return null;
         } catch (err) {
             console.error("Error creating enrollment: ", err);
             throw err;

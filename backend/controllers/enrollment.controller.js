@@ -11,18 +11,32 @@ export const enroll = asyncHandler(async (req, res) => {
     const { course_id, payment_method, payment_status } = req.body;
     const user_id = req.user.user_id;
 
+    const course = await Course.findById(course_id);
+    if (!course) {
+        return errorResponse(res, "Course not found", 404);
+    }
+
+    if (course.instructor_id === user_id) {
+        return errorResponse(res, "You cannot enroll in your own course", 400);
+    }
+
     const alreadyEnrolled = await Enrollment.isEnrolled(user_id, course_id);
     if (alreadyEnrolled) {
         return errorResponse(res, "Already enrolled in this course", 400);
     }
 
-    await Enrollment.create(
+    const result = await Enrollment.create(
         user_id,
         course_id,
         payment_method,
         payment_status,
     );
-    return successResponse(res, null, "Enrolled successfully", 201);
+
+    if (result) {
+        return successResponse(res, null, "Enrolled successfully", 201);
+    } else {
+        return errorResponse(res, "Failed to enroll in course", 500);
+    }
 });
 
 export const getProgress = asyncHandler(async (req, res) => {
