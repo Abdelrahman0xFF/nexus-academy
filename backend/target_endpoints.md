@@ -67,9 +67,9 @@
 | Method | Endpoint               | Description                       | Done |
 | ------ | ---------------------- | --------------------------------- | ---- |
 | POST   | `/api/enrollments`     | Enroll in a course                | ✅   |
-| GET    | `/api/enrollments/my`  | Get current student's enrollments |
+| GET    | `/api/enrollments/my`  | Get current student's enrollments | ✅   |
 | GET    | `/api/enrollments/:id` | Get enrollment details            | ✅   |
-| DELETE | `/api/enrollments/:id` | Unenroll from a course            |
+| DELETE | `/api/enrollments/:id` | Unenroll from a course            | ✅   |
 
 ## 📈 Progress
 
@@ -77,7 +77,6 @@
 | ------ | ------------------------------- | ------------------------------ | ---- |
 | GET    | `/api/enrollments/:id/progress` | Get progress for an enrollment | ✅   |
 | POST   | `/api/progress`                 | Mark a lesson as complete      | ✅   |
-| PUT    | `/api/progress/:id`             | Update progress record         |
 
 ## ⭐ Reviews
 

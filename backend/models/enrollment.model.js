@@ -79,6 +79,48 @@ class Enrollment {
             throw err;
         }
     }
+
+    static async findByUserId(user_id) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool
+                .request()
+                .input("user_id", sql.Int, user_id).query(`
+                SELECT 
+                    e.*, 
+                    c.title, 
+                    c.thumbnail_url, 
+                    c.instructor_id,
+                    u.first_name AS instructor_first_name, 
+                    u.last_name AS instructor_last_name
+                FROM enrollments e
+                JOIN courses c ON e.course_id = c.course_id
+                JOIN users u ON c.instructor_id = u.user_id
+                WHERE e.user_id = @user_id
+            `);
+            return result.recordset;
+        } catch (err) {
+            console.error("Error fetching user enrollments: ", err);
+            throw err;
+        }
+    }
+
+    static async delete(user_id, course_id) {
+        try {
+            const pool = await poolPromise;
+            await pool
+                .request()
+                .input("user_id", sql.Int, user_id)
+                .input("course_id", sql.Int, course_id).query(`
+                    DELETE FROM user_lessons WHERE user_id = @user_id AND course_id = @course_id;
+                    DELETE FROM enrollments WHERE user_id = @user_id AND course_id = @course_id;
+                `);
+            return true;
+        } catch (err) {
+            console.error("Error deleting enrollment: ", err);
+            throw err;
+        }
+    }
 }
 
 export default Enrollment;

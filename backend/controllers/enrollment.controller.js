@@ -67,8 +67,36 @@ export const getEnrollmentsByCourseId = async (req, res) => {
             );
         }
 
-        const enrollments = await Enrollment.getEnrollmentsByCourseId(course_id);
+        const enrollments =
+            await Enrollment.getEnrollmentsByCourseId(course_id);
         return successResponse(res, enrollments);
+    } catch (err) {
+        return errorResponse(res, err.message, 500);
+    }
+};
+
+export const getMyEnrollments = async (req, res) => {
+    try {
+        const user_id = req.user.user_id;
+        const enrollments = await Enrollment.findByUserId(user_id);
+        return successResponse(res, enrollments);
+    } catch (err) {
+        return errorResponse(res, err.message, 500);
+    }
+};
+
+export const unenroll = async (req, res) => {
+    try {
+        const { course_id } = req.params;
+        const user_id = req.user.user_id;
+
+        const enrolled = await Enrollment.isEnrolled(user_id, course_id);
+        if (!enrolled) {
+            return errorResponse(res, "Not enrolled in this course", 404);
+        }
+
+        await Enrollment.delete(user_id, course_id);
+        return successResponse(res, null, "Unenrolled successfully");
     } catch (err) {
         return errorResponse(res, err.message, 500);
     }
