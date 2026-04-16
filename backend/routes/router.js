@@ -8,6 +8,7 @@ import sectionRoutes from "./section.route.js";
 import lessonRoutes from "./lesson.route.js";
 import enrollmentRoutes from "./enrollment.route.js";
 import certificateRoutes from "./certificate.route.js";
+import reviewRoutes from "./review.route.js";
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use("/sections", sectionRoutes);
 router.use("/lessons", lessonRoutes);
 router.use("/enrollments", enrollmentRoutes);
 router.use("/certificates", certificateRoutes);
+router.use("/reviews", reviewRoutes);
 
 export default router;

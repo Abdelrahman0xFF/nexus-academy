@@ -9,6 +9,7 @@ import {
     deleteCourse,
     getCourseContent,
 } from "../controllers/course.controller.js";
+import { getCourseReviews } from "../controllers/review.controller.js";
 import { getEnrollmentsByCourseId } from "../controllers/enrollment.controller.js";
 import { getSectionsByCourseId } from "../controllers/section.controller.js";
 import {
@@ -41,6 +42,7 @@ router.get(
 );
 
 router.get("/:course_id/sections", optionalAuthenticate, getSectionsByCourseId);
+router.get("/:course_id/reviews", getCourseReviews);
 
 router.get(
     "/:course_id/content",

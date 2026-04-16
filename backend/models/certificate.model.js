@@ -8,8 +8,8 @@ class Certificate {
                 .request()
                 .input("user_id", sql.Int, userId)
                 .input("course_id", sql.Int, courseId).query(`
-                    INSERT INTO certificates (user_id, course_id, issue_date)
-                    VALUES (@user_id, @course_id, GETDATE());
+                    INSERT INTO certificates (user_id, course_id)
+                    VALUES (@user_id, @course_id);
                 `);
             return {
                 userId,
