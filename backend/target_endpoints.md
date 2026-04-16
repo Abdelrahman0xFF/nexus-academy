@@ -41,7 +41,7 @@
 | DELETE | `/api/courses/:id`             | Delete a course _(instructor / admin)_      | ✅   |
 | GET    | `/api/courses/:id/content`     | Get data used in side panel                 | ✅   |
 | GET    | `/api/courses/:id/sections`    | Get all sections of a course                | ✅   |
-| GET    | `/api/courses/:id/reviews`     | Get reviews for a course                    |
+| GET    | `/api/courses/:id/reviews`     | Get reviews for a course                    | ✅   |
 | GET    | `/api/courses/:id/enrollments` | Get enrollments for a course _(instructor)_ | ✅   |
 
 ## 📦 Sections
@@ -82,10 +82,10 @@
 
 | Method | Endpoint           | Description                            | Done |
 | ------ | ------------------ | -------------------------------------- | ---- |
-| POST   | `/api/reviews`     | Create a review _(tied to enrollment)_ |
-| GET    | `/api/reviews/:id` | Get review by ID                       |
-| PUT    | `/api/reviews/:id` | Update a review                        |
-| DELETE | `/api/reviews/:id` | Delete a review                        |
+| GET    | `/api/reviews/:id` | Get review by ID                       | ✅   |
+| POST   | `/api/reviews`     | Create a review _(tied to enrollment)_ | ✅   |
+| PUT    | `/api/reviews/:id` | Update a review                        | ✅   |
+| DELETE | `/api/reviews/:id` | Delete a review                        | ✅   |
 
 ## 🏆 Certificates
 
@@ -98,5 +98,5 @@
 
 | Method | Endpoint           | Description                | Done |
 | ------ | ------------------ | -------------------------- | ---- |
-| GET    | `/api/earnings/my` | Get instructor's earnings  |
-| GET    | `/api/earnings`    | Get all earnings _(admin)_ |
+| GET    | `/api/earnings/my` | Get instructor's earnings  | ✅   |
+| GET    | `/api/earnings`    | Get all earnings _(admin)_ | ✅   |

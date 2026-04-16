@@ -9,6 +9,7 @@ import lessonRoutes from "./lesson.route.js";
 import enrollmentRoutes from "./enrollment.route.js";
 import certificateRoutes from "./certificate.route.js";
 import reviewRoutes from "./review.route.js";
+import earningRoutes from "./earning.route.js";
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use("/lessons", lessonRoutes);
 router.use("/enrollments", enrollmentRoutes);
 router.use("/certificates", certificateRoutes);
 router.use("/reviews", reviewRoutes);
+router.use("/earnings", earningRoutes);
 
 export default router;

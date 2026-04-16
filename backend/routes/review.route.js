@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
     createReview,
     getCourseReviews,
+    getReview,
     updateReview,
     deleteReview,
 } from "../controllers/review.controller.js";
@@ -11,7 +12,13 @@ import { reviewSchema } from "../validators/review.validator.js";
 
 const router = Router();
 
-router.post("/:course_id", authenticate, validateRequest(reviewSchema), createReview);
+router.get("/:course_id/", authenticate, getReview);
+router.post(
+    "/:course_id",
+    authenticate,
+    validateRequest(reviewSchema),
+    createReview,
+);
 router.put("/:course_id", authenticate, updateReview);
 router.delete("/:course_id", authenticate, deleteReview);
 

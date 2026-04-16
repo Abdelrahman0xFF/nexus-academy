@@ -10,7 +10,11 @@ export const createReview = asyncHandler(async (req, res) => {
 
     const isEnrolled = await Enrollment.isEnrolled(user_id, course_id);
     if (!isEnrolled) {
-        return errorResponse(res, "You must be enrolled to review this course", 403);
+        return errorResponse(
+            res,
+            "You must be enrolled to review this course",
+            403,
+        );
     }
 
     const existingReview = await Review.find(user_id, course_id);
@@ -20,6 +24,15 @@ export const createReview = asyncHandler(async (req, res) => {
 
     await Review.create(user_id, course_id, rating, comment);
     return successResponse(res, null, "Review added successfully", 201);
+});
+
+export const getReview = asyncHandler(async (req, res) => {
+    const { course_id } = req.params;
+    const user_id = req.user.user_id;
+
+    const review = await Review.find(user_id, course_id);
+    if (!review) return errorResponse(res, "Review not found", 404);
+    return successResponse(res, review);
 });
 
 export const getCourseReviews = asyncHandler(async (req, res) => {
