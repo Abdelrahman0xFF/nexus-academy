@@ -7,6 +7,7 @@ import {
     deleteCourse,
     getCourseContent,
 } from "../controllers/course.controller.js";
+import { getEnrollmentsByCourseId } from "../controllers/enrollment.controller.js";
 import { getSectionsByCourseId } from "../controllers/section.controller.js";
 import {
     authenticate,
@@ -20,6 +21,13 @@ const router = Router();
 
 router.get("/", optionalAuthenticate, getAllCourses);
 router.get("/:course_id", optionalAuthenticate, getCourseById);
+
+router.get(
+    "/:course_id/enrollments",
+    authenticate,
+    authorize("instructor", "admin"),
+    getEnrollmentsByCourseId,
+);
 
 router.get("/:course_id/sections", optionalAuthenticate, getSectionsByCourseId);
 

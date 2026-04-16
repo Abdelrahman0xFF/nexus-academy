@@ -9,15 +9,16 @@ class Enrollment {
                 .input("user_id", sql.Int, user_id)
                 .input("course_id", sql.Int, course_id)
                 .input("payment_method", sql.NVarChar, payment_method)
-                .input("payment_status", sql.NVarChar, payment_status)
-                .query(`
-                    INSERT INTO enrollments (course_id, user_id, payment_method, payment_status)
-                    VALUES (
+                .input("payment_status", sql.NVarChar, payment_status).query(`
+                    INSERT INTO enrollments (course_id, user_id, payment_method, payment_status, enrollment_cost)
+                    SELECT 
                         @course_id, 
                         @user_id, 
                         ISNULL(@payment_method, 'card'),
-                        ISNULL(@payment_status, 'paid')
-                    );
+                        ISNULL(@payment_status, 'paid'),
+                        ISNULL(price, original_price)
+                    FROM courses
+                    WHERE course_id = @course_id;
                 `);
             return { user_id, course_id, message: "Enrolled successfully" };
         } catch (err) {
@@ -59,6 +60,22 @@ class Enrollment {
             return result.recordset[0].progress || 0;
         } catch (err) {
             console.error("Error getting progress: ", err);
+            throw err;
+        }
+    }
+
+    static async getEnrollmentsByCourseId(course_id) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool
+                .request()
+                .input("course_id", sql.Int, course_id).query(`
+                    SELECT * FROM enrollments
+                    WHERE course_id = @course_id
+                `);
+            return result.recordset;
+        } catch (err) {
+            console.error("Error fetching enrollments: ", err);
             throw err;
         }
     }
