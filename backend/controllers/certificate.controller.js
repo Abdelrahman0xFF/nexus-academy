@@ -13,15 +13,19 @@ const generateCertificateHtml = async (user_id, course_id) => {
         cert = await Certificate.getByStudentAndCourse(user_id, course_id);
     }
 
-    const templatePath = path.join(process.cwd(), 'templates', 'certificate.html');
-    let template = fs.readFileSync(templatePath, 'utf8');
+    const templatePath = path.join(
+        process.cwd(),
+        "templates",
+        "certificate.html",
+    );
+    let template = fs.readFileSync(templatePath, "utf8");
 
     return template
-        .replace('{{certificateId}}', `${cert.user_id}-${cert.course_id}`)
-        .replace('{{studentName}}', `${cert.first_name} ${cert.last_name}`)
-        .replace('{{courseName}}', cert.course_name)
-        .replace('{{date}}', new Date(cert.issue_date).toLocaleDateString())
-        .replace('{{instructorName}}', `${cert.inst_first} ${cert.inst_last}`);
+        .replace("{{certificateId}}", `${cert.user_id}-${cert.course_id}`)
+        .replace("{{studentName}}", `${cert.first_name} ${cert.last_name}`)
+        .replace("{{courseName}}", cert.course_name)
+        .replace("{{date}}", new Date(cert.issue_date).toLocaleDateString())
+        .replace("{{instructorName}}", `${cert.inst_first} ${cert.inst_last}`);
 };
 
 export const getCertificate = asyncHandler(async (req, res) => {
@@ -35,7 +39,11 @@ export const getCertificate = asyncHandler(async (req, res) => {
 
     const progress = await Enrollment.getProgress(user_id, course_id);
     if (progress < 95) {
-        return errorResponse(res, "Progress must be at least 95% to get certificate", 403);
+        return errorResponse(
+            res,
+            "Progress must be at least 95% to get certificate",
+            403,
+        );
     }
 
     const html = await generateCertificateHtml(user_id, course_id);
@@ -53,7 +61,11 @@ export const downloadCertificate = asyncHandler(async (req, res) => {
 
     const progress = await Enrollment.getProgress(user_id, course_id);
     if (progress < 95) {
-        return errorResponse(res, "Progress must be at least 95% to get certificate", 403);
+        return errorResponse(
+            res,
+            "Progress must be at least 95% to get certificate",
+            403,
+        );
     }
 
     const html = await generateCertificateHtml(user_id, course_id);
@@ -61,27 +73,33 @@ export const downloadCertificate = asyncHandler(async (req, res) => {
     let browser;
     try {
         browser = await puppeteer.launch({
-            headless: 'new',
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            headless: "new",
+            args: ["--no-sandbox", "--disable-setuid-sandbox"],
         });
         const page = await browser.newPage();
-        
-        // Use networkidle0 to ensure fonts/external resources are loaded
-        await page.setContent(html, { waitUntil: 'networkidle0' });
-        
+
+        await page.setContent(html, { waitUntil: "networkidle0" });
+
         const pdfBuffer = await page.pdf({
-            format: 'A4',
+            format: "A4",
             landscape: true,
             printBackground: true,
-            margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' }
+            margin: { top: "0px", right: "0px", bottom: "0px", left: "0px" },
         });
 
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=certificate-${course_id}.pdf`);
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename=certificate-${course_id}.pdf`,
+        );
         res.send(pdfBuffer);
     } catch (err) {
         console.error("PDF Generation Error:", err);
-        return errorResponse(res, "Failed to generate PDF: " + err.message, 500);
+        return errorResponse(
+            res,
+            "Failed to generate PDF: " + err.message,
+            500,
+        );
     } finally {
         if (browser) {
             await browser.close();
@@ -89,13 +107,25 @@ export const downloadCertificate = asyncHandler(async (req, res) => {
     }
 });
 
+export const verifyCertificate = asyncHandler(async (req, res) => {
+    const { certificate_id } = req.params;
+    const cert = await Certificate.verify(certificate_id);
+
+    if (!cert) {
+        return errorResponse(res, "Certificate not found or invalid", 404);
+    }
+
+    const html = await generateCertificateHtml(cert.user_id, cert.course_id);
+    res.send(html);
+});
+
 export const getAllUserCertificates = asyncHandler(async (req, res) => {
     const user_id = req.user.user_id;
     const certs = await Certificate.getByStudent(user_id);
-    
-    const certsWithLinks = certs.map(cert => ({
+
+    const certsWithLinks = certs.map((cert) => ({
         ...cert,
-        download_url: `/api/certificates/download/${cert.course_id}`
+        download_url: `/api/certificates/download/${cert.course_id}`,
     }));
 
     return successResponse(res, certsWithLinks);
