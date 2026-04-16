@@ -78,24 +78,54 @@ class Course {
         }
     }
 
-    static async find(page, limit, userId = null, isAdmin = false) {
+    static async find(
+        page,
+        limit,
+        userId = null,
+        isAdmin = false,
+        filters = {},
+    ) {
         try {
             const offset = (page - 1) * limit;
             const pool = await poolPromise;
-            const result = await pool
-                .request()
-                .input("limit", sql.Int, limit)
-                .input("offset", sql.Int, offset)
-                .input("userId", sql.Int, userId)
-                .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
-                    SELECT c.*, 
-                    (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
-                    ISNULL((SELECT SUM(duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration
-                    FROM courses c
-                    WHERE (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)
-                    ORDER BY c.course_id 
-                    OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
-                `);
+            const request = pool.request();
+
+            request.input("limit", sql.Int, limit);
+            request.input("offset", sql.Int, offset);
+            request.input("userId", sql.Int, userId);
+            request.input("isAdmin", sql.Bit, isAdmin ? 1 : 0);
+
+            let whereClause =
+                "WHERE (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)";
+
+            if (filters.search) {
+                request.input("search", sql.NVarChar, `%${filters.search}%`);
+                whereClause +=
+                    " AND (c.title LIKE @search OR c.description LIKE @search)";
+            }
+
+            if (filters.category_id) {
+                request.input("category_id", sql.Int, filters.category_id);
+                whereClause += " AND c.category_id = @category_id";
+            }
+
+            if (filters.level) {
+                request.input("level", sql.NVarChar, filters.level);
+                whereClause += " AND c.level = @level";
+            }
+
+            const query = `
+                SELECT c.*, cat.name as category_name,
+                (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
+                ISNULL((SELECT SUM(duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration
+                FROM courses c
+                LEFT JOIN categories cat ON c.category_id = cat.category_id
+                ${whereClause}
+                ORDER BY c.course_id 
+                OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
+            `;
+
+            const result = await request.query(query);
             return result.recordset;
         } catch (err) {
             console.error("Error finding courses: ", err);
@@ -136,7 +166,11 @@ class Course {
         }
     }
 
-    static async findByInstructorId(instructor_id, userId = null, isAdmin = false) {
+    static async findByInstructorId(
+        instructor_id,
+        userId = null,
+        isAdmin = false,
+    ) {
         try {
             const pool = await poolPromise;
             const result = await pool
@@ -168,7 +202,10 @@ class Course {
             let query = "UPDATE courses SET ";
             const updates = [];
             for (const [key, value] of Object.entries(updatedCourse)) {
-                if (value !== undefined && !["course_id", "duration"].includes(key)) {
+                if (
+                    value !== undefined &&
+                    !["course_id", "duration"].includes(key)
+                ) {
                     if (key === "is_available") {
                         request.input(key, sql.Bit, value ? 1 : 0);
                     } else {
@@ -200,8 +237,7 @@ class Course {
             const pool = await poolPromise;
             const result = await pool
                 .request()
-                .input("course_id", sql.Int, course_id)
-                .query(`
+                .input("course_id", sql.Int, course_id).query(`
                     DELETE FROM reviews WHERE course_id = @course_id;
                     DELETE FROM user_lessons WHERE course_id = @course_id;
                     DELETE FROM lessons WHERE course_id = @course_id;
@@ -213,6 +249,27 @@ class Course {
             return result.rowsAffected[result.rowsAffected.length - 1] > 0;
         } catch (err) {
             console.error("Error deleting course: ", err);
+            throw err;
+        }
+    }
+
+    static async getCourseStats(course_id) {
+        try {
+            const pool = await poolPromise;
+
+            const result = await pool
+                .request()
+                .input("course_id", sql.Int, course_id).query(`
+                    SELECT 
+                        COUNT(e.user_id) as students,
+                        SUM(e.enrollment_cost) as revenue,
+                        (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = @course_id) as rating
+                    FROM enrollments e
+                    WHERE e.course_id = @course_id
+                `);
+            return result.recordset[0];
+        } catch (err) {
+            console.error("Error getting course stats: ", err);
             throw err;
         }
     }

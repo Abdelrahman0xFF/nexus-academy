@@ -54,3 +54,41 @@ export const getEarnings = asyncHandler(async (req, res) => {
         details: result.recordset,
     });
 });
+
+export const getEarningsAnalytics = asyncHandler(async (req, res) => {
+    const user_id = req.user.user_id;
+    const is_admin = req.user.role === "admin";
+    const pool = await poolPromise;
+
+    let query;
+    if (is_admin) {
+        query = `
+            SELECT 
+                FORMAT(e.enrolled_at, 'yyyy-MM') as month,
+                SUM(e.enrollment_cost * 0.3) as revenue
+            FROM enrollments e
+            WHERE e.enrolled_at >= DATEADD(year, -1, GETDATE())
+            GROUP BY FORMAT(e.enrolled_at, 'yyyy-MM')
+            ORDER BY month ASC
+        `;
+    } else {
+        query = `
+            SELECT 
+                FORMAT(e.enrolled_at, 'yyyy-MM') as month,
+                SUM(e.enrollment_cost * 0.7) as revenue
+            FROM enrollments e
+            JOIN courses c ON e.course_id = c.course_id
+            WHERE c.instructor_id = @instructor_id
+            AND e.enrolled_at >= DATEADD(year, -1, GETDATE())
+            GROUP BY FORMAT(e.enrolled_at, 'yyyy-MM')
+            ORDER BY month ASC
+        `;
+    }
+
+    const request = pool.request();
+    if (!is_admin) request.input("instructor_id", sql.Int, user_id);
+
+    const result = await request.query(query);
+
+    return successResponse(res, result.recordset);
+});

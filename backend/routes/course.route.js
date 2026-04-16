@@ -8,6 +8,7 @@ import {
     updateCourse,
     deleteCourse,
     getCourseContent,
+    getCourseStats,
 } from "../controllers/course.controller.js";
 import { getCourseReviews } from "../controllers/review.controller.js";
 import { getEnrollmentsByCourseId } from "../controllers/enrollment.controller.js";
@@ -30,7 +31,11 @@ const router = Router();
 router.get("/", optionalAuthenticate, getAllCourses);
 
 router.get("/my", authenticate, authorize("instructor"), getMyCourses);
-router.get("/instructor/:instructor_id", optionalAuthenticate, getCoursesByInstructorId);
+router.get(
+    "/instructor/:instructor_id",
+    optionalAuthenticate,
+    getCoursesByInstructorId,
+);
 
 router.get("/:course_id", optionalAuthenticate, getCourseById);
 
@@ -44,10 +49,13 @@ router.get(
 router.get("/:course_id/sections", optionalAuthenticate, getSectionsByCourseId);
 router.get("/:course_id/reviews", getCourseReviews);
 
+router.get("/:course_id/content", optionalAuthenticate, getCourseContent);
+
 router.get(
-    "/:course_id/content",
-    optionalAuthenticate,
-    getCourseContent,
+    "/:course_id/stats",
+    authenticate,
+    authorize("instructor", "admin"),
+    getCourseStats,
 );
 
 router.post(

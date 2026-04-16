@@ -61,7 +61,7 @@ const getCourseById = asyncHandler(async (req, res, next) => {
 });
 
 const getAllCourses = asyncHandler(async (req, res, next) => {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, search, category_id, level } = req.query;
     const userId = req.user?.user_id || null;
     const isAdmin = req.user?.role === "admin";
 
@@ -70,6 +70,7 @@ const getAllCourses = asyncHandler(async (req, res, next) => {
         Number(limit),
         userId,
         isAdmin,
+        { search, category_id, level }
     );
     return successResponse(res, courses);
 });
@@ -293,6 +294,17 @@ const getCourseContent = asyncHandler(async (req, res, next) => {
     });
 });
 
+const getCourseStats = asyncHandler(async (req, res, next) => {
+    const { course_id } = req.params;
+
+    const stats = await Course.getCourseStats(course_id);
+    if (!stats) {
+        return errorResponse(res, "Course not found", 404);
+    }
+
+    return successResponse(res, stats);
+});
+
 export {
     createCourse,
     getCourseById,
@@ -302,4 +314,5 @@ export {
     updateCourse,
     deleteCourse,
     getCourseContent,
+    getCourseStats
 };
