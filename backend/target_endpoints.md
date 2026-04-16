@@ -33,6 +33,8 @@
 | Method | Endpoint                       | Description                                 | Done |
 | ------ | ------------------------------ | ------------------------------------------- | ---- |
 | GET    | `/api/courses`                 | Browse / search / filter courses            | ✅   |
+| GET    | `/api/courses/my`              | Get Instructor Courses _(instructor)_       | ✅   |
+| GET    | `/api/courses/instructor/:id`  | Get Instructor Courses                      | ✅   |
 | GET    | `/api/courses/:id`             | Get course details                          | ✅   |
 | POST   | `/api/courses`                 | Create a new course _(instructor)_          | ✅   |
 | PUT    | `/api/courses/:id`             | Update a course _(instructor)_              | ✅   |

@@ -136,6 +136,28 @@ class Course {
         }
     }
 
+    static async findByInstructorId(instructor_id, userId = null, isAdmin = false) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool
+                .request()
+                .input("instructor_id", sql.Int, instructor_id)
+                .input("userId", sql.Int, userId)
+                .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
+                    SELECT c.*, 
+                    (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
+                    ISNULL((SELECT SUM(duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration
+                    FROM courses c
+                    WHERE c.instructor_id = @instructor_id
+                    AND (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)
+                `);
+            return result.recordset;
+        } catch (err) {
+            console.error("Error finding courses by instructor ID: ", err);
+            throw err;
+        }
+    }
+
     static async update(course_id, updatedCourse) {
         try {
             const pool = await poolPromise;

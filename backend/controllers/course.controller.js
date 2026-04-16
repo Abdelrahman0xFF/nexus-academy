@@ -94,6 +94,40 @@ const getAllCourses = async (req, res, next) => {
     }
 };
 
+const getMyCourses = async (req, res, next) => {
+    try {
+        const userId = req.user.user_id;
+        const isAdmin = req.user.role === "admin";
+
+        const courses = await Course.findByInstructorId(
+            userId,
+            userId,
+            isAdmin,
+        );
+        return successResponse(res, courses);
+    } catch (err) {
+        next(err);
+    }
+};
+
+const getCoursesByInstructorId = async (req, res, next) => {
+    try {
+        const { instructor_id } = req.params;
+        const userId = req.user?.user_id || null;
+        const isAdmin = req.user?.role === "admin";
+
+        const courses = await Course.findByInstructorId(
+            instructor_id,
+            userId,
+            isAdmin,
+        );
+
+        return successResponse(res, courses);
+    } catch (err) {
+        next(err);
+    }
+};
+
 const updateCourse = async (req, res, next) => {
     let newThumbnailUrl = null;
     try {
@@ -316,6 +350,8 @@ export {
     createCourse,
     getCourseById,
     getAllCourses,
+    getMyCourses,
+    getCoursesByInstructorId,
     updateCourse,
     deleteCourse,
     getCourseContent,

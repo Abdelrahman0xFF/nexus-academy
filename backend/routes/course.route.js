@@ -3,6 +3,8 @@ import {
     createCourse,
     getCourseById,
     getAllCourses,
+    getMyCourses,
+    getCoursesByInstructorId,
     updateCourse,
     deleteCourse,
     getCourseContent,
@@ -20,6 +22,10 @@ import upload from "../middleware/multer.js";
 const router = Router();
 
 router.get("/", optionalAuthenticate, getAllCourses);
+
+router.get("/my", authenticate, authorize("instructor"), getMyCourses);
+router.get("/instructor/:instructor_id", optionalAuthenticate, getCoursesByInstructorId);
+
 router.get("/:course_id", optionalAuthenticate, getCourseById);
 
 router.get(
