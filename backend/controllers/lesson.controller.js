@@ -1,6 +1,7 @@
 import Lesson from "../models/lesson.model.js";
 import Section from "../models/section.model.js";
 import Course from "../models/course.model.js";
+import Enrollment from "../models/enrollment.model.js";
 import { uploadToDrive, deleteFromDrive } from "../services/drive.service.js";
 import { getVideoDuration } from "../utils/video.js";
 import { successResponse, errorResponse } from "../utils/response.js";
@@ -68,8 +69,23 @@ const createLesson = asyncHandler(async (req, res, next) => {
 
 const getLessonsBySection = asyncHandler(async (req, res, next) => {
     const { course_id, section_order } = req.params;
+    const user_id = req.user?.user_id;
+    const role = req.user?.role;
+
     const lessons = await Lesson.findBySection(course_id, section_order);
-    return successResponse(res, lessons);
+
+    const course = await Course.findById(course_id);
+    if (!course) return errorResponse(res, "Course not found", 404);
+
+    const isAuthorized = role === "admin" || course.instructor_id === user_id || (user_id && await Enrollment.isEnrolled(user_id, course_id));
+
+    if (isAuthorized) {
+        return successResponse(res, lessons);
+    } else {
+        // Only return basic info if not enrolled
+        const publicLessons = lessons.map(({ video_url, description, duration, ...lessonData }) => lessonData);
+        return successResponse(res, publicLessons);
+    }
 });
 
 const getLessonDetails = asyncHandler(async (req, res, next) => {

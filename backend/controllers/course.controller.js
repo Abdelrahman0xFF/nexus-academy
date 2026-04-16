@@ -2,6 +2,7 @@ import Course from "../models/course.model.js";
 import Category from "../models/category.model.js";
 import Section from "../models/section.model.js";
 import Lesson from "../models/lesson.model.js";
+import Enrollment from "../models/enrollment.model.js";
 import { uploadToDrive, deleteFromDrive } from "../services/drive.service.js";
 import { successResponse, errorResponse } from "../utils/response.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -224,21 +225,24 @@ const deleteCourse = asyncHandler(async (req, res, next) => {
 const getCourseContent = asyncHandler(async (req, res, next) => {
     const { course_id } = req.params;
     const userId = req.user?.user_id || null;
+    const role = req.user?.role;
 
     const course = await Course.findById(
         course_id,
         userId,
-        req.user?.role === "admin",
+        role === "admin",
     );
     if (!course) {
         return errorResponse(res, "Course not found", 404);
     }
 
+    const isEnrolled = userId && (role === "admin" || course.instructor_id === userId || await Enrollment.isEnrolled(userId, course_id));
+
     const sections = await Section.findByCourseId(course_id);
     const lessons = await Lesson.findByCourseId(course_id);
 
     let completedLessonIds = new Set();
-    if (userId) {
+    if (userId && isEnrolled) {
         const completed = await Lesson.getCompletedLessons(userId, course_id);
         completed.forEach((l) => {
             completedLessonIds.add(`${l.section_order}-${l.lesson_order}`);
@@ -261,12 +265,21 @@ const getCourseContent = asyncHandler(async (req, res, next) => {
                         ...lessonData
                     } = lesson;
 
-                    return {
-                        ...lessonData,
-                        is_completed: completedLessonIds.has(
-                            `${lesson.section_order}-${lesson.lesson_order}`,
-                        ),
-                    };
+                    if (isEnrolled) {
+                        return {
+                            ...lessonData,
+                            is_completed: completedLessonIds.has(
+                                `${lesson.section_order}-${lesson.lesson_order}`,
+                            ),
+                        };
+                    } else {
+                        // Public view: only show titles and orders
+                        return {
+                            lesson_order: lessonData.lesson_order,
+                            title: lessonData.title,
+                            duration: lessonData.duration
+                        };
+                    }
                 }),
         };
     });
@@ -274,6 +287,7 @@ const getCourseContent = asyncHandler(async (req, res, next) => {
     return successResponse(res, {
         course_id: course.course_id,
         title: course.title,
+        is_enrolled: !!isEnrolled,
         sections: structuredContent,
     });
 });
