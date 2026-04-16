@@ -54,6 +54,7 @@ export const getProgress = asyncHandler(async (req, res) => {
 
 export const getEnrollmentsByCourseId = asyncHandler(async (req, res) => {
     const { course_id } = req.params;
+    const { page = 1, limit = 10 } = req.query;
     const user_id = req.user.user_id;
     const isAdmin = req.user.role === "admin";
 
@@ -70,13 +71,22 @@ export const getEnrollmentsByCourseId = asyncHandler(async (req, res) => {
         );
     }
 
-    const enrollments = await Enrollment.getEnrollmentsByCourseId(course_id);
+    const enrollments = await Enrollment.getEnrollmentsByCourseId(
+        course_id,
+        Number(page),
+        Number(limit),
+    );
     return successResponse(res, enrollments);
 });
 
 export const getMyEnrollments = asyncHandler(async (req, res) => {
     const user_id = req.user.user_id;
-    const enrollments = await Enrollment.findByUserId(user_id);
+    const { page = 1, limit = 10 } = req.query;
+    const enrollments = await Enrollment.findByUserId(
+        user_id,
+        Number(page),
+        Number(limit),
+    );
     return successResponse(res, enrollments);
 });
 

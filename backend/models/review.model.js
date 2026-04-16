@@ -37,17 +37,21 @@ class Review {
         }
     }
 
-    static async findByCourseId(course_id) {
+    static async findByCourseId(course_id, page = 1, limit = 10) {
         try {
+            const offset = (page - 1) * limit;
             const pool = await poolPromise;
             const result = await pool
                 .request()
-                .input("course_id", sql.Int, course_id).query(`
+                .input("course_id", sql.Int, course_id)
+                .input("limit", sql.Int, limit)
+                .input("offset", sql.Int, offset).query(`
                     SELECT r.*, u.first_name, u.last_name 
                     FROM reviews r
                     JOIN users u ON r.user_id = u.user_id
                     WHERE r.course_id = @course_id
                     ORDER BY r.rating DESC
+                    OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
                 `);
             return result.recordset;
         } catch (err) {

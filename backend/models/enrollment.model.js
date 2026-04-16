@@ -68,14 +68,19 @@ class Enrollment {
         }
     }
 
-    static async getEnrollmentsByCourseId(course_id) {
+    static async getEnrollmentsByCourseId(course_id, page = 1, limit = 10) {
         try {
+            const offset = (page - 1) * limit;
             const pool = await poolPromise;
             const result = await pool
                 .request()
-                .input("course_id", sql.Int, course_id).query(`
+                .input("course_id", sql.Int, course_id)
+                .input("limit", sql.Int, limit)
+                .input("offset", sql.Int, offset).query(`
                     SELECT * FROM enrollments
                     WHERE course_id = @course_id
+                    ORDER BY enrolled_at DESC
+                    OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
                 `);
             return result.recordset;
         } catch (err) {
@@ -84,12 +89,15 @@ class Enrollment {
         }
     }
 
-    static async findByUserId(user_id) {
+    static async findByUserId(user_id, page = 1, limit = 10) {
         try {
+            const offset = (page - 1) * limit;
             const pool = await poolPromise;
             const result = await pool
                 .request()
-                .input("user_id", sql.Int, user_id).query(`
+                .input("user_id", sql.Int, user_id)
+                .input("limit", sql.Int, limit)
+                .input("offset", sql.Int, offset).query(`
                 SELECT 
                     e.*, 
                     c.title, 
@@ -101,6 +109,8 @@ class Enrollment {
                 JOIN courses c ON e.course_id = c.course_id
                 JOIN users u ON c.instructor_id = u.user_id
                 WHERE e.user_id = @user_id
+                ORDER BY e.enrolled_at DESC
+                OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
             `);
             return result.recordset;
         } catch (err) {
