@@ -48,9 +48,10 @@ class Certificate {
                 .request()
                 .input("user_id", sql.Int, userId)
                 .query(`
-                    SELECT c.*, co.title as course_name
+                    SELECT c.*, co.title as course_name, inst.first_name as inst_first, inst.last_name as inst_last
                     FROM certificates c
                     JOIN courses co ON c.course_id = co.course_id
+                    JOIN users inst ON co.instructor_id = inst.user_id
                     WHERE c.user_id = @user_id
                 `);
             return result.recordset;

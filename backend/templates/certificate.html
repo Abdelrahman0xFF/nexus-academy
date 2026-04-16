@@ -4,6 +4,11 @@
         <meta charset="UTF-8" />
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
         <style>
+            @page {
+                size: A4 landscape;
+                margin: 0;
+            }
+
             * {
                 box-sizing: border-box;
                 margin: 0;
@@ -11,47 +16,36 @@
             }
 
             :root {
-                --nexus-navy: #0f172a;
-                --nexus-teal: #136f83;
-                --nexus-teal-light: #4cb8c9;
+                --nexus-navy: #0f172a;       /* Original Navy for depth */
+                --nexus-teal: #065f73;       /* Brand Primary for accents */
+                --nexus-teal-light: #76b5b5; /* Brand Secondary for gradients */
                 --nexus-slate: #64748b;
                 --nexus-border: #e2e8f0;
             }
 
             body {
                 font-family: 'Plus Jakarta Sans', sans-serif;
-                background-color: #f1f5f9;
+                background-color: white;
+                width: 297mm;
+                height: 210mm;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                min-height: 100vh;
-                padding: 40px;
+                -webkit-print-color-adjust: exact;
             }
 
             /* Premium Shadow & Frame */
             .cert-container {
                 position: relative;
-                width: 1100px;
-                height: 770px;
+                width: 280mm;
+                height: 190mm;
                 background: white;
-                padding: 16px;
-                box-shadow: 
-                    0 30px 60px -12px rgba(15, 23, 42, 0.15),
-                    0 18px 36px -18px rgba(0, 0, 0, 0.2);
-                border-radius: 4px;
-            }
-
-            /* The Professional Border */
-            .outer-border {
-                position: relative;
-                height: 100%;
-                width: 100%;
                 border: 1px solid var(--nexus-border);
                 display: flex;
                 overflow: hidden;
             }
 
-            /* Nexus Sidebar Accent - The "Shape" upgrade */
+            /* Nexus Sidebar Accent */
             .sidebar-accent {
                 width: 12px;
                 background: linear-gradient(to bottom, var(--nexus-navy), var(--nexus-teal));
@@ -211,45 +205,43 @@
     </head>
     <body>
         <div class="cert-container">
-            <div class="outer-border">
-                <div class="sidebar-accent"></div>
-                
-                <div class="main-content">
-                    <header class="header">
-                        <div class="logo">Nexus<span>Academy</span></div>
-                        <div class="cert-id">NEX-{{certificateId}}</div>
-                    </header>
+            <div class="sidebar-accent"></div>
+            
+            <div class="main-content">
+                <header class="header">
+                    <div class="logo">Nexus<span>Academy</span></div>
+                    <div class="cert-id">NEX-{{certificateId}}</div>
+                </header>
 
-                    <main class="body-text">
-                        <span class="title-label">Certificate of Excellence</span>
-                        <p class="intro-text">This academic credential is awarded to</p>
-                        <h1 class="student-name">{{studentName}}</h1>
-                        <p class="intro-text" style="margin-bottom: 25px;">for successfully mastering the curriculum of</p>
-                        
-                        <div class="course-container">
-                            <div class="course-name">{{courseName}}</div>
-                        </div>
-                    </main>
+                <main class="body-text">
+                    <span class="title-label">Certificate of Excellence</span>
+                    <p class="intro-text">This academic credential is awarded to</p>
+                    <h1 class="student-name">{{studentName}}</h1>
+                    <p class="intro-text" style="margin-bottom: 25px;">for successfully mastering the curriculum of</p>
+                    
+                    <div class="course-container">
+                        <div class="course-name">{{courseName}}</div>
+                    </div>
+                </main>
 
-                    <footer class="footer">
-                        <div class="meta-block">
-                            <div class="meta-item">
-                                <div class="label">Date Issued</div>
-                                <div class="value">{{date}}</div>
-                            </div>
-                            <div class="meta-item">
-                                <div class="label">Instructor</div>
-                                <div class="value">{{instructorName}}</div>
-                            </div>
+                <footer class="footer">
+                    <div class="meta-block">
+                        <div class="meta-item">
+                            <div class="label">Date Issued</div>
+                            <div class="value">{{date}}</div>
                         </div>
+                        <div class="meta-item">
+                            <div class="label">Instructor</div>
+                            <div class="value">{{instructorName}}</div>
+                        </div>
+                    </div>
 
-                        <div class="signature-box">
-                            <div class="signature-text">S. Nexus</div>
-                            <div class="signature-line"></div>
-                            <div class="label" style="font-size: 10px; letter-spacing: 1px; color: var(--nexus-slate); font-weight: 700; text-transform: uppercase;">Head of Education</div>
-                        </div>
-                    </footer>
-                </div>
+                    <div class="signature-box">
+                        <div class="signature-text">S. Nexus</div>
+                        <div class="signature-line"></div>
+                        <div class="label" style="font-size: 10px; letter-spacing: 1px; color: var(--nexus-slate); font-weight: 700; text-transform: uppercase;">Head of Education</div>
+                    </div>
+                </footer>
             </div>
         </div>
     </body>
