@@ -4,15 +4,18 @@ import { successResponse, errorResponse } from "../utils/response.js";
 
 export const enroll = async (req, res) => {
     try {
-        if (req.user.role !== "student") {
-            return errorResponse(res, "Only students can enroll in courses", 403);
+        if (req.user.role !== "user") {
+            return errorResponse(
+                res,
+                "Only students can enroll in courses",
+                403,
+            );
         }
 
         const { error } = enrollmentSchema.validate(req.body);
-        if (error)
-            return errorResponse(res, error.details[0].message, 400);
+        if (error) return errorResponse(res, error.details[0].message, 400);
 
-        const { course_id, payment_method = "card" } = req.body;
+        const { course_id, payment_method, patment_status } = req.body;
         const user_id = req.user.user_id;
 
         const alreadyEnrolled = await Enrollment.isEnrolled(user_id, course_id);
@@ -20,7 +23,12 @@ export const enroll = async (req, res) => {
             return errorResponse(res, "Already enrolled in this course", 400);
         }
 
-        await Enrollment.create(user_id, course_id, payment_method, "ok");
+        await Enrollment.create(
+            user_id,
+            course_id,
+            payment_method,
+            patment_status,
+        );
         return successResponse(res, null, "Enrolled successfully", 201);
     } catch (err) {
         return errorResponse(res, err.message, 500);
