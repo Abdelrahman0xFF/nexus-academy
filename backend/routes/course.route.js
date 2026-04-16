@@ -17,6 +17,11 @@ import {
     optionalAuthenticate,
 } from "../middleware/auth.middleware.js";
 import { verifyEnrollment } from "../middleware/enrollment.middleware.js";
+import { validateRequest } from "../middleware/validate.middleware.js";
+import {
+    courseSchema,
+    updateCourseSchema,
+} from "../validators/course.validator.js";
 import upload from "../middleware/multer.js";
 
 const router = Router();
@@ -49,6 +54,7 @@ router.post(
     authenticate,
     authorize("instructor"),
     upload.single("thumbnail"),
+    validateRequest(courseSchema),
     createCourse,
 );
 
@@ -57,6 +63,7 @@ router.put(
     authenticate,
     authorize("instructor", "admin"),
     upload.single("thumbnail"),
+    validateRequest(updateCourseSchema),
     updateCourse,
 );
 

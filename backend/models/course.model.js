@@ -169,17 +169,10 @@ class Course {
             const updates = [];
             for (const [key, value] of Object.entries(updatedCourse)) {
                 if (value !== undefined && !["course_id", "duration"].includes(key)) {
-                    if (key === "price" || key === "original_price") {
-                        request.input(key, sql.Decimal(10, 2), value);
-                    } else if (
-                        key === "category_id" ||
-                        key === "instructor_id"
-                    ) {
-                        request.input(key, sql.Int, value);
-                    } else if (key === "is_available") {
+                    if (key === "is_available") {
                         request.input(key, sql.Bit, value ? 1 : 0);
                     } else {
-                        request.input(key, sql.NVarChar, value);
+                        request.input(key, value);
                     }
                     updates.push(`${key} = @${key}`);
                 }

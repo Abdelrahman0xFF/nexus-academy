@@ -9,6 +9,11 @@ import {
 import { authenticate, authorize } from "../middleware/auth.middleware.js";
 import { verifyEnrollment } from "../middleware/enrollment.middleware.js";
 import upload from "../middleware/multer.js";
+import { validateRequest } from "../middleware/validate.middleware.js";
+import {
+    lessonSchema,
+    updateLessonSchema,
+} from "../validators/lesson.validator.js";
 
 const router = Router();
 
@@ -19,6 +24,7 @@ router.post(
     authenticate,
     authorize("instructor", "admin"),
     upload.single("video"),
+    validateRequest(lessonSchema),
     createLesson
 );
 
@@ -27,6 +33,7 @@ router.put(
     authenticate,
     authorize("instructor", "admin"),
     upload.single("video"),
+    validateRequest(updateLessonSchema),
     updateLesson
 );
 

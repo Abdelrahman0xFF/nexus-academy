@@ -12,6 +12,8 @@ import {
     authorize,
     optionalAuthenticate,
 } from "../middleware/auth.middleware.js";
+import { validateRequest } from "../middleware/validate.middleware.js";
+import { categorySchema } from "../validators/category.validator.js";
 
 const router = Router();
 
@@ -19,8 +21,20 @@ router.get("/", getAllCategories);
 router.get("/:category_id", getCategoryById);
 router.get("/:category_id/courses", optionalAuthenticate, getCoursesByCategory);
 
-router.post("/", authenticate, authorize("admin"), createCategory);
-router.put("/:category_id", authenticate, authorize("admin"), updateCategory);
+router.post(
+    "/",
+    authenticate,
+    authorize("admin"),
+    validateRequest(categorySchema),
+    createCategory,
+);
+router.put(
+    "/:category_id",
+    authenticate,
+    authorize("admin"),
+    validateRequest(categorySchema),
+    updateCategory,
+);
 router.delete(
     "/:category_id",
     authenticate,

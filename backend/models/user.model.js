@@ -111,10 +111,8 @@ class User {
                 if (value !== undefined && key !== "user_id") {
                     if (key === "is_verified") {
                         request.input(key, sql.Bit, value ? 1 : 0);
-                    } else if (key === "otp_expires") {
-                        request.input(key, sql.BigInt, value);
                     } else {
-                        request.input(key, sql.NVarChar, value);
+                        request.input(key, value);
                     }
                     updates.push(`${key} = @${key}`);
                 }

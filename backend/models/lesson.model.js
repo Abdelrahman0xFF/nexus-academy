@@ -91,11 +91,7 @@ class Lesson {
             const updates = [];
             for (const [key, value] of Object.entries(updatedLesson)) {
                 if (value !== undefined && !["course_id", "section_order", "lesson_order"].includes(key)) {
-                    if (key === "duration") {
-                        request.input(key, sql.Int, value);
-                    } else {
-                        request.input(key, sql.NVarChar, value);
-                    }
+                    request.input(key, value);
                     updates.push(`${key} = @${key}`);
                 }
             }

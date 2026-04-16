@@ -1,5 +1,6 @@
 import { verifyJWTToken } from "../config/jwt.config.js";
 import User from "../models/user.model.js";
+import { errorResponse } from "../utils/response.js";
 
 const authenticate = async (req, res, next) => {
     try {
@@ -7,20 +8,20 @@ const authenticate = async (req, res, next) => {
             req.cookies?.token || req.headers.authorization?.split(" ")[1];
 
         if (!token) {
-            return res.status(401).json({ message: "Authentication required" });
+            return errorResponse(res, "Authentication required", 401);
         }
 
         const decoded = verifyJWTToken(token);
         const user = await User.findById(decoded.id);
 
         if (!user) {
-            return res.status(401).json({ message: "User not found" });
+            return errorResponse(res, "User not found", 401);
         }
 
         req.user = user;
         next();
     } catch (err) {
-        return res.status(401).json({ message: "Invalid or expired token" });
+        return errorResponse(res, "Invalid or expired token", 401);
     }
 };
 
@@ -45,9 +46,7 @@ const optionalAuthenticate = async (req, res, next) => {
 const authorize = (...roles) => {
     return (req, res, next) => {
         if (!req.user || !roles.includes(req.user.role)) {
-            return res.status(403).json({
-                message: "Forbidden: You don't have enough permissions",
-            });
+            return errorResponse(res, "Forbidden: You don't have enough permissions", 403);
         }
         next();
     };
