@@ -61,16 +61,36 @@ const getCourseById = asyncHandler(async (req, res, next) => {
 });
 
 const getAllCourses = asyncHandler(async (req, res, next) => {
-    const { page = 1, limit = 10, search, category_id, level } = req.query;
+    const {
+        page = 1,
+        limit = 10,
+        search,
+        category_id,
+        level,
+        sortBy = "Time",
+        order = "ASC",
+    } = req.query;
     const userId = req.user?.user_id || null;
     const isAdmin = req.user?.role === "admin";
+
+    const sortMap = {
+        Title: "title",
+        Price: "price",
+        Rating: "rating",
+        Duration: "duration",
+        Time: "created_at",
+    };
+
+    const sortColumn = sortMap[sortBy] || "created_at";
 
     const courses = await Course.find(
         Number(page),
         Number(limit),
         userId,
         isAdmin,
-        { search, category_id, level }
+        { search, category_id, level },
+        sortColumn,
+        order,
     );
     return successResponse(res, courses);
 });
@@ -105,7 +125,11 @@ const updateCourse = asyncHandler(async (req, res, next) => {
         const userId = req.user.user_id;
         const isAdmin = req.user.role === "admin";
 
-        const existingCourse = await Course.findById(course_id, userId, isAdmin);
+        const existingCourse = await Course.findById(
+            course_id,
+            userId,
+            isAdmin,
+        );
         if (!existingCourse) {
             return errorResponse(res, "Course not found", 404);
         }
@@ -141,8 +165,12 @@ const updateCourse = asyncHandler(async (req, res, next) => {
         const result = await Course.update(course_id, updateData);
         if (result) {
             if (newThumbnailUrl && existingCourse.thumbnail_url) {
-                await deleteFromDrive(existingCourse.thumbnail_url).catch((err) =>
-                    console.error("Failed to delete old thumbnail from drive:", err),
+                await deleteFromDrive(existingCourse.thumbnail_url).catch(
+                    (err) =>
+                        console.error(
+                            "Failed to delete old thumbnail from drive:",
+                            err,
+                        ),
                 );
             }
             return successResponse(
@@ -150,7 +178,8 @@ const updateCourse = asyncHandler(async (req, res, next) => {
                 {
                     ...result,
                     thumbnail_url:
-                        updateData.thumbnail_url || existingCourse.thumbnail_url,
+                        updateData.thumbnail_url ||
+                        existingCourse.thumbnail_url,
                 },
                 "Course updated successfully",
             );
@@ -202,7 +231,10 @@ const deleteCourse = asyncHandler(async (req, res, next) => {
     if (result) {
         if (course.thumbnail_url) {
             await deleteFromDrive(course.thumbnail_url).catch((err) =>
-                console.error("Failed to delete course thumbnail from drive:", err),
+                console.error(
+                    "Failed to delete course thumbnail from drive:",
+                    err,
+                ),
             );
         }
 
@@ -228,16 +260,16 @@ const getCourseContent = asyncHandler(async (req, res, next) => {
     const userId = req.user?.user_id || null;
     const role = req.user?.role;
 
-    const course = await Course.findById(
-        course_id,
-        userId,
-        role === "admin",
-    );
+    const course = await Course.findById(course_id, userId, role === "admin");
     if (!course) {
         return errorResponse(res, "Course not found", 404);
     }
 
-    const isEnrolled = userId && (role === "admin" || course.instructor_id === userId || await Enrollment.isEnrolled(userId, course_id));
+    const isEnrolled =
+        userId &&
+        (role === "admin" ||
+            course.instructor_id === userId ||
+            (await Enrollment.isEnrolled(userId, course_id)));
 
     const sections = await Section.findByCourseId(course_id);
     const lessons = await Lesson.findByCourseId(course_id);
@@ -278,7 +310,7 @@ const getCourseContent = asyncHandler(async (req, res, next) => {
                         return {
                             lesson_order: lessonData.lesson_order,
                             title: lessonData.title,
-                            duration: lessonData.duration
+                            duration: lessonData.duration,
                         };
                     }
                 }),
@@ -314,5 +346,5 @@ export {
     updateCourse,
     deleteCourse,
     getCourseContent,
-    getCourseStats
+    getCourseStats,
 };

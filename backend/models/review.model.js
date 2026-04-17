@@ -37,10 +37,15 @@ class Review {
         }
     }
 
-    static async findByCourseId(course_id, page = 1, limit = 10) {
+    static async findByCourseId(course_id, page = 1, limit = 10, sortBy = "rating", order = "DESC") {
         try {
             const offset = (page - 1) * limit;
             const pool = await poolPromise;
+
+            const allowedSortColumns = ["rating", "reviewed_at"];
+            if (!allowedSortColumns.includes(sortBy)) sortBy = "rating";
+            const validOrder = ["ASC", "DESC"].includes(order.toUpperCase()) ? order.toUpperCase() : "DESC";
+
             const result = await pool
                 .request()
                 .input("course_id", sql.Int, course_id)
@@ -50,7 +55,7 @@ class Review {
                     FROM reviews r
                     JOIN users u ON r.user_id = u.user_id
                     WHERE r.course_id = @course_id
-                    ORDER BY r.rating DESC
+                    ORDER BY r.${sortBy} ${validOrder}
                     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
                 `);
             return result.recordset;

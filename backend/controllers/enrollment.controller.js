@@ -53,7 +53,7 @@ export const getProgress = asyncHandler(async (req, res) => {
 
 export const getEnrollmentsByCourseId = asyncHandler(async (req, res) => {
     const { course_id } = req.params;
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, sortBy = "Time", order = "DESC" } = req.query;
     const user_id = req.user.user_id;
     const isAdmin = req.user.role === "admin";
 
@@ -70,21 +70,42 @@ export const getEnrollmentsByCourseId = asyncHandler(async (req, res) => {
         );
     }
 
+    const sortMap = {
+        "Time": "enrolled_at",
+        "User": "user_id",
+        "Cost": "enrollment_cost"
+    };
+
+    const sortColumn = sortMap[sortBy] || "enrolled_at";
+
     const enrollments = await Enrollment.getEnrollmentsByCourseId(
         course_id,
         Number(page),
         Number(limit),
+        sortColumn,
+        order,
     );
     return successResponse(res, enrollments);
 });
 
 export const getMyEnrollments = asyncHandler(async (req, res) => {
     const user_id = req.user.user_id;
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, sortBy = "Time", order = "DESC" } = req.query;
+
+    const sortMap = {
+        "Time": "enrolled_at",
+        "Course": "course_id",
+        "Cost": "enrollment_cost"
+    };
+
+    const sortColumn = sortMap[sortBy] || "enrolled_at";
+
     const enrollments = await Enrollment.findByUserId(
         user_id,
         Number(page),
         Number(limit),
+        sortColumn,
+        order,
     );
     return successResponse(res, enrollments);
 });

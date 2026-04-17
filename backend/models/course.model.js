@@ -84,6 +84,8 @@ class Course {
         userId = null,
         isAdmin = false,
         filters = {},
+        sortBy = "created_at",
+        order = "ASC"
     ) {
         try {
             const offset = (page - 1) * limit;
@@ -114,6 +116,12 @@ class Course {
                 whereClause += " AND c.level = @level";
             }
 
+            const allowedSortColumns = ["title", "price", "rating", "duration", "created_at"];
+            if (!allowedSortColumns.includes(sortBy)) {
+                sortBy = "created_at";
+            }
+            const validOrder = ["ASC", "DESC"].includes(order.toUpperCase()) ? order.toUpperCase() : "ASC";
+
             const query = `
                 SELECT c.*, cat.name as category_name,
                 (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
@@ -121,7 +129,7 @@ class Course {
                 FROM courses c
                 LEFT JOIN categories cat ON c.category_id = cat.category_id
                 ${whereClause}
-                ORDER BY c.course_id 
+                ORDER BY ${sortBy} ${validOrder} 
                 OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
             `;
 

@@ -80,16 +80,35 @@ class User {
         }
     }
 
-    static async find(page, limit) {
+    static async find(page, limit, sortBy = "user_id", order = "ASC") {
         try {
             const offset = (page - 1) * limit;
             const pool = await poolPromise;
+
+            const allowedSortColumns = [
+                "first_name",
+                "last_name",
+                "email",
+                "role",
+                "created_at",
+            ];
+            if (!allowedSortColumns.includes(sortBy)) {
+                sortBy = "created_at";
+            }
+
+            const validOrder = ["ASC", "DESC"].includes(order.toUpperCase())
+                ? order.toUpperCase()
+                : "ASC";
+
             const result = await pool
                 .request()
                 .input("limit", sql.Int, limit)
                 .input("offset", sql.Int, offset)
                 .query(
-                    "SELECT user_id, first_name, last_name, email, role, avatar_url, title, bio, is_verified, created_at FROM users ORDER BY user_id OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY",
+                    `SELECT user_id, first_name, last_name, email, role, avatar_url, title, bio, is_verified, created_at 
+                     FROM users 
+                     ORDER BY ${sortBy} ${validOrder} 
+                     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`,
                 );
             return result.recordset;
         } catch (err) {

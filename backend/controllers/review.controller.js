@@ -37,11 +37,21 @@ export const getReview = asyncHandler(async (req, res) => {
 
 export const getCourseReviews = asyncHandler(async (req, res) => {
     const { course_id } = req.params;
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, sortBy = "Rating", order = "DESC" } = req.query;
+
+    const sortMap = {
+        "Rating": "rating",
+        "Time": "reviewed_at"
+    };
+
+    const sortColumn = sortMap[sortBy] || "rating";
+
     const reviews = await Review.findByCourseId(
         course_id,
         Number(page),
         Number(limit),
+        sortColumn,
+        order,
     );
     return successResponse(res, reviews);
 });

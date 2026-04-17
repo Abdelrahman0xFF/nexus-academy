@@ -7,12 +7,23 @@ const getUserById = asyncHandler(async (req, res) => {
     const { user_id } = req.params;
 
     if (req.user.role !== "admin" && req.user.user_id.toString() !== user_id) {
-        return errorResponse(res, "Forbidden: You can only access your own profile", 403);
+        return errorResponse(
+            res,
+            "Forbidden: You can only access your own profile",
+            403,
+        );
     }
 
     const user = await User.findById(user_id);
     if (user) {
-        const { user_id: _, hashed_password, otp, otp_expires, is_verified, ...userData } = user;
+        const {
+            user_id: _,
+            hashed_password,
+            otp,
+            otp_expires,
+            is_verified,
+            ...userData
+        } = user;
         return successResponse(res, userData);
     } else {
         return errorResponse(res, "User not found", 404);
@@ -20,8 +31,24 @@ const getUserById = asyncHandler(async (req, res) => {
 });
 
 const getAllUsers = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10 } = req.query;
-    const users = await User.find(Number(page), Number(limit));
+    const { page = 1, limit = 10, sortBy = "ID", order = "ASC" } = req.query;
+
+    const sortMap = {
+        FirstName: "first_name",
+        LastName: "last_name",
+        Email: "email",
+        Role: "role",
+        Time: "created_at",
+    };
+
+    const sortColumn = sortMap[sortBy] || "created_at";
+
+    const users = await User.find(
+        Number(page),
+        Number(limit),
+        sortColumn,
+        order,
+    );
     return successResponse(res, users);
 });
 
@@ -30,7 +57,11 @@ const updateUser = asyncHandler(async (req, res) => {
     const { user_id } = req.params;
 
     if (req.user.role !== "admin" && req.user.user_id.toString() !== user_id) {
-        return errorResponse(res, "Forbidden: You can only update your own profile", 403);
+        return errorResponse(
+            res,
+            "Forbidden: You can only update your own profile",
+            403,
+        );
     }
 
     const existingUser = await User.findById(user_id);
@@ -58,7 +89,10 @@ const updateUser = asyncHandler(async (req, res) => {
                 try {
                     await deleteFromDrive(existingUser.avatar_url);
                 } catch (err) {
-                    console.error("Failed to delete old avatar from drive:", err);
+                    console.error(
+                        "Failed to delete old avatar from drive:",
+                        err,
+                    );
                 }
             }
             return successResponse(res, result, "User updated successfully");
@@ -73,7 +107,10 @@ const updateUser = asyncHandler(async (req, res) => {
             try {
                 await deleteFromDrive(newAvatarUrl);
             } catch (cleanupErr) {
-                console.error("Failed to cleanup uploaded avatar after error:", cleanupErr);
+                console.error(
+                    "Failed to cleanup uploaded avatar after error:",
+                    cleanupErr,
+                );
             }
         }
         throw err;

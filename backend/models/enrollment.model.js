@@ -67,10 +67,15 @@ class Enrollment {
         }
     }
 
-    static async getEnrollmentsByCourseId(course_id, page = 1, limit = 10) {
+    static async getEnrollmentsByCourseId(course_id, page = 1, limit = 10, sortBy = "enrolled_at", order = "DESC") {
         try {
             const offset = (page - 1) * limit;
             const pool = await poolPromise;
+
+            const allowedSortColumns = ["enrolled_at", "user_id", "enrollment_cost"];
+            if (!allowedSortColumns.includes(sortBy)) sortBy = "enrolled_at";
+            const validOrder = ["ASC", "DESC"].includes(order.toUpperCase()) ? order.toUpperCase() : "DESC";
+
             const result = await pool
                 .request()
                 .input("course_id", sql.Int, course_id)
@@ -78,7 +83,7 @@ class Enrollment {
                 .input("offset", sql.Int, offset).query(`
                     SELECT * FROM enrollments
                     WHERE course_id = @course_id
-                    ORDER BY enrolled_at DESC
+                    ORDER BY ${sortBy} ${validOrder}
                     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
                 `);
             return result.recordset;
@@ -88,10 +93,15 @@ class Enrollment {
         }
     }
 
-    static async findByUserId(user_id, page = 1, limit = 10) {
+    static async findByUserId(user_id, page = 1, limit = 10, sortBy = "enrolled_at", order = "DESC") {
         try {
             const offset = (page - 1) * limit;
             const pool = await poolPromise;
+
+            const allowedSortColumns = ["enrolled_at", "course_id", "enrollment_cost"];
+            if (!allowedSortColumns.includes(sortBy)) sortBy = "enrolled_at";
+            const validOrder = ["ASC", "DESC"].includes(order.toUpperCase()) ? order.toUpperCase() : "DESC";
+
             const result = await pool
                 .request()
                 .input("user_id", sql.Int, user_id)
@@ -108,7 +118,7 @@ class Enrollment {
                 JOIN courses c ON e.course_id = c.course_id
                 JOIN users u ON c.instructor_id = u.user_id
                 WHERE e.user_id = @user_id
-                ORDER BY e.enrolled_at DESC
+                ORDER BY e.${sortBy} ${validOrder}
                 OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
             `);
             return result.recordset;
