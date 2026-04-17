@@ -45,12 +45,23 @@ export const streamMedia = asyncHandler(async (req, res, next) => {
     }
 
     const response = await driveConfig.files.get(options, requestConfig);
-    req.on("close", () => response.data?.destroy());
+
+    const destroyStream = () => {
+        if (response.data && !response.data.destroyed) {
+            response.data.destroy();
+        }
+    };
+
+    req.on("close", destroyStream);
+    res.on("error", destroyStream);
+
     response.data
-        .on(
-            "error",
-            (e) => e.message !== "Premature close" && console.error(e),
-        )
+        .on("error", (e) => {
+            if (e.message !== "Premature close") {
+                console.error("Drive stream error:", e);
+            }
+            destroyStream();
+        })
         .pipe(res);
 });
 

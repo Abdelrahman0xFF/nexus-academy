@@ -23,8 +23,8 @@ const register = asyncHandler(async (req, res) => {
         }
         return errorResponse(res, "Email already in use", 400);
     }
-
-    const hashedPassword = await hashPassword(req.body.password);
+    const { password, ...userData } = req.body;
+    const hashedPassword = await hashPassword(password);
 
     if (req.file) {
         const uploadResult = await uploadToDrive(req.file);

@@ -108,12 +108,26 @@ class Enrollment {
                 .input("limit", sql.Int, limit)
                 .input("offset", sql.Int, offset).query(`
                 SELECT 
-                    e.*, 
+                    e.course_id,
+                    e.user_id,
+                    e.enrolled_at,
+                    e.payment_method,
+                    e.payment_status,
+                    e.enrollment_cost,
                     c.title, 
                     c.thumbnail_url, 
                     c.instructor_id,
                     u.first_name AS instructor_first_name, 
-                    u.last_name AS instructor_last_name
+                    u.last_name AS instructor_last_name,
+                    ISNULL((
+                        SELECT 
+                            CASE 
+                                WHEN COUNT(*) = 0 THEN 0 
+                                ELSE (CAST((SELECT COUNT(*) FROM user_lessons WHERE user_id = @user_id AND course_id = e.course_id) AS FLOAT) / COUNT(*) * 100)
+                            END
+                        FROM lessons 
+                        WHERE course_id = e.course_id
+                    ), 0) AS progress
                 FROM enrollments e
                 JOIN courses c ON e.course_id = c.course_id
                 JOIN users u ON c.instructor_id = u.user_id

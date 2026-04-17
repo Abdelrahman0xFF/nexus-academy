@@ -31,7 +31,7 @@ export const uploadToDrive = async (file, retries = 3) => {
             return { fileId };
         } catch (error) {
             lastError = error;
-            console.warn(`Drive upload failed, retrying (\${i + 1}/\${retries})...`);
+            console.warn(`Drive upload failed, retrying (${i + 1}/${retries})...`);
             if (i < retries - 1) {
                 await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
             }
@@ -61,7 +61,7 @@ export const getDriveStream = async (fileId, rangeHeader = null) => {
             ? parseInt(parts[1], 10)
             : Math.min(start + 10 ** 6 - 1, fileSize - 1);
 
-        requestConfig.headers = { Range: `bytes=\${start}-\${end}` };
+        requestConfig.headers = { Range: `bytes=${start}-${end}` };
         return {
             streamConfig: { start, end, fileSize, mimeType: metadata.mimeType },
             options,
@@ -89,7 +89,7 @@ export const deleteFromDrive = async (fileId, retries = 3) => {
             if (error.code === 404) {
                 return { message: "File already deleted or not found" };
             }
-            console.warn(`Drive delete failed for \${fileId}, retrying (\${i + 1}/\${retries})...`);
+            console.warn(`Drive delete failed for ${fileId}, retrying (${i + 1}/${retries})...`);
             if (i < retries - 1) {
                 await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
             }

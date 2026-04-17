@@ -79,7 +79,7 @@ const LessonPlayer = () => {
 
     const backendUrl = "http://localhost:4000";
     const videoUrl = currentLesson.videoId
-        ? `${backendUrl}/api/media/${currentLesson.videoId}`
+        ? `${backendUrl}/api/media/1WU6wva-cOoDGJzvHEKxKvUizEIc2vtFC`
         : "https://vjs.zencdn.net/v/oceans.mp4";
 
     const triggerFeedback = (type: string) => {
