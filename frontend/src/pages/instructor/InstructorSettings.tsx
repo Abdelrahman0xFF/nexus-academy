@@ -1,109 +1,384 @@
-import { Save, Camera } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  Save,
+  Camera,
+  Mail,
+  Briefcase,
+  Bell,
+  CheckCircle2,
+  XCircle,
+  Shield,
+  User,
+} from "lucide-react";
+import { useState, useRef } from "react";
 import DashboardLayout from "@/layouts/DashboardLayout";
-import { AppSelect } from "@/components/ui/app-select";
+import { Button } from "@/components/ui/button";
 
 const InstructorSettings = () => {
+  const [formData, setFormData] = useState({
+    firstName: "Sarah",
+    lastName: "Johnson",
+    email: "sarah@nexusacademy.com",
+    bio: "Senior Full-Stack Developer with 10+ years of experience building scalable web applications.",
+    title: "Senior Full-Stack Developer",
+    website: "https://sarahjohnson.dev",
+    avatar: "",
+  });
+
+  const [displayedProfile, setDisplayedProfile] = useState({ ...formData });
+
+  const [passwords, setPasswords] = useState({
+    old: "",
+    new: "",
+    confirm: "",
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, avatar: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const passwordCriteria = {
+    length: passwords.new.length >= 6,
+    hasUpper: /[A-Z]/.test(passwords.new),
+    hasLower: /[a-z]/.test(passwords.new),
+    hasNumber: /[0-9]/.test(passwords.new),
+    hasSymbol: /[@%*]/.test(passwords.new),
+    match: passwords.new === passwords.confirm && passwords.new !== "",
+  };
+
+  const isPasswordValid = Object.values(passwordCriteria).every(Boolean);
+  const canSave = passwords.new === "" ? true : isPasswordValid;
+
+  const handleSave = () => {
+    setDisplayedProfile({ ...formData });
+    setPasswords({ old: "", new: "", confirm: "" });
+  };
+
   return (
     <DashboardLayout type="instructor">
       <div className="mb-8">
         <h1 className="text-h1 text-foreground">Settings</h1>
-        <p className="text-body text-muted-foreground mt-1">Manage your instructor profile and preferences</p>
+        <p className="text-body text-muted-foreground mt-1">
+          Manage your instructor profile and preferences
+        </p>
       </div>
 
-      <div className="max-w-3xl space-y-6">
-        {/* Profile */}
-        <div className="bg-card rounded-card card-shadow p-6">
-          <h2 className="text-h3 text-card-foreground mb-5">Profile Information</h2>
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center relative">
-              <span className="text-xl font-bold text-primary-foreground">SJ</span>
-              <button className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-card border border-border flex items-center justify-center shadow-sm hover:bg-muted transition-colors">
-                <Camera size={14} className="text-muted-foreground" />
-              </button>
-            </div>
-            <div>
-              <div className="text-body font-semibold text-foreground">Sarah Johnson</div>
-              <div className="text-small text-muted-foreground">Senior Full-Stack Developer</div>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-small font-medium text-foreground block mb-1.5">First Name</label>
-                <input type="text" defaultValue="Sarah"                   className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20" />
-              </div>
-              <div>
-                <label className="text-small font-medium text-foreground block mb-1.5">Last Name</label>
-                <input type="text" defaultValue="Johnson" className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20" />
-              </div>
-            </div>
-            <div>
-              <label className="text-small font-medium text-foreground block mb-1.5">Email</label>
-              <input type="email" defaultValue="sarah@nexusacademy.com" className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20" />
-            </div>
-            <div>
-              <label className="text-small font-medium text-foreground block mb-1.5">Bio</label>
-              <textarea
-                rows={3}
-                defaultValue="Senior Full-Stack Developer with 10+ years of experience building scalable web applications."
-                className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20 resize-none"
-              />
-            </div>
-            <div>
-              <label className="text-small font-medium text-foreground block mb-1.5">Website</label>
-              <input type="url" defaultValue="https://sarahjohnson.dev" className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20" />
-            </div>
-          </div>
-        </div>
+      <div className="grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-card rounded-card card-shadow p-6">
+            <h2 className="text-h3 text-card-foreground mb-8 flex items-center gap-2">
+              Personal Information
+              <User size={20} className="text-muted-foreground" />
+            </h2>
 
-        {/* Payout */}
-        <div className="bg-card rounded-card card-shadow p-6">
-          <h2 className="text-h3 text-card-foreground mb-5">Payout Settings</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="text-small font-medium text-foreground block mb-1.5">Payout Method</label>
-              <AppSelect
-                options={["Bank Transfer (ACH)", "PayPal", "Stripe"]}
-                defaultValue="Bank Transfer (ACH)"
-                triggerClassName="px-4 py-2.5"
-              />
-            </div>
-            <div>
-              <label className="text-small font-medium text-foreground block mb-1.5">Payout Schedule</label>
-              <AppSelect
-                options={["Monthly (1st of each month)", "Bi-weekly", "Weekly"]}
-                defaultValue="Monthly (1st of each month)"
-                triggerClassName="px-4 py-2.5"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Notifications */}
-        <div className="bg-card rounded-card card-shadow p-6">
-          <h2 className="text-h3 text-card-foreground mb-5">Notifications</h2>
-          <div className="space-y-4">
-            {[
-              { label: "New enrollment alerts", description: "Get notified when a student enrolls", checked: true },
-              { label: "Review notifications", description: "Get notified when you receive a review", checked: true },
-              { label: "Payout notifications", description: "Get notified when a payout is processed", checked: true },
-              { label: "Marketing emails", description: "Receive tips and platform updates", checked: false },
-            ].map((n) => (
-              <label key={n.label} className="flex items-center justify-between py-2 cursor-pointer">
-                <div>
-                  <div className="text-small font-medium text-foreground">{n.label}</div>
-                  <div className="text-xs text-muted-foreground">{n.description}</div>
+            <div className="flex flex-col md:flex-row gap-8 items-start mb-8">
+              <div className="relative group">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-sm flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD]">
+                  {formData.avatar ? (
+                    <img
+                      src={formData.avatar}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-white text-4xl font-bold tracking-tighter">
+                      {formData.firstName[0]}
+                      {formData.lastName[0]}
+                    </span>
+                  )}
                 </div>
-                <input type="checkbox" defaultChecked={n.checked} className="w-5 h-5 rounded accent-[hsl(var(--primary))]" />
-              </label>
-            ))}
+                <button
+                  onClick={handleImageClick}
+                  className="absolute bottom-1 right-1 p-2 bg-white text-slate-500 rounded-full border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                >
+                  <Camera size={18} />
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+
+              <div className="flex-1 w-full space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-small font-medium text-foreground block mb-1.5">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.firstName}
+                      onChange={(e) =>
+                        setFormData({ ...formData, firstName: e.target.value })
+                      }
+                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-small font-medium text-foreground block mb-1.5">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.lastName}
+                      onChange={(e) =>
+                        setFormData({ ...formData, lastName: e.target.value })
+                      }
+                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-4 w-full">
+                  <div className="w-full">
+                    <label className="text-small font-medium text-foreground block mb-1.5 flex items-center gap-2">
+                      <Briefcase size={14} className="text-primary" />{" "}
+                      Professional Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) =>
+                        setFormData({ ...formData, title: e.target.value })
+                      }
+                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                    />
+                  </div>
+
+                  <div className="w-full">
+                    <label className="text-small font-medium text-foreground block mb-1.5 flex items-center gap-2">
+                      <Mail size={14} className="text-primary" /> Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      readOnly
+                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none bg-muted/30 cursor-not-allowed opacity-70"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-4 border-t border-border/50">
+              <div>
+                <label className="text-small font-medium text-foreground block mb-1.5">
+                  Bio
+                </label>
+                <textarea
+                  value={formData.bio}
+                  onChange={(e) =>
+                    setFormData({ ...formData, bio: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background h-28 resize-none"
+                />
+              </div>
+              <div>
+                <label className="text-small font-medium text-foreground block mb-1.5">
+                  Website
+                </label>
+                <input
+                  type="url"
+                  value={formData.website}
+                  onChange={(e) =>
+                    setFormData({ ...formData, website: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-card rounded-card card-shadow p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <Bell size={20} className="text-primary" />
+              <h2 className="text-h3 text-card-foreground">Notifications</h2>
+            </div>
+            <div className="space-y-4">
+              {[
+                {
+                  label: "New enrollment alerts",
+                  description: "Get notified when a student enrolls",
+                  checked: true,
+                },
+                {
+                  label: "Review notifications",
+                  description: "Get notified when you receive a review",
+                  checked: true,
+                },
+                {
+                  label: "Payout notifications",
+                  description: "Get notified when a payout is processed",
+                  checked: true,
+                },
+                {
+                  label: "Marketing emails",
+                  description: "Receive tips and platform updates",
+                  checked: false,
+                },
+              ].map((n) => (
+                <label
+                  key={n.label}
+                  className="flex items-center justify-between py-2 cursor-pointer"
+                >
+                  <div>
+                    <div className="text-small font-medium text-foreground">
+                      {n.label}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {n.description}
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    defaultChecked={n.checked}
+                    className="w-5 h-5 rounded accent-[hsl(var(--primary))]"
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-card rounded-card card-shadow p-6">
+            <h2 className="text-h3 text-card-foreground mb-6 flex items-center gap-2">
+              <Shield size={20} className="text-primary" /> Security & Password
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="text-small font-medium text-foreground block mb-1.5">
+                  Old Password
+                </label>
+                <input
+                  type="password"
+                  placeholder="Enter current password"
+                  value={passwords.old}
+                  onChange={(e) =>
+                    setPasswords({ ...passwords, old: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                />
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-small font-medium text-foreground block mb-1.5">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Enter new password"
+                    value={passwords.new}
+                    onChange={(e) =>
+                      setPasswords({ ...passwords, new: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                  />
+                </div>
+                <div>
+                  <label className="text-small font-medium text-foreground block mb-1.5">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={passwords.confirm}
+                    onChange={(e) =>
+                      setPasswords({ ...passwords, confirm: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 bg-muted/20 rounded-xl grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { label: "6+ Characters", met: passwordCriteria.length },
+                  { label: "Capital Letter", met: passwordCriteria.hasUpper },
+                  { label: "Small Letter", met: passwordCriteria.hasLower },
+                  { label: "Number", met: passwordCriteria.hasNumber },
+                  {
+                    label: "Symbol (@, %, *)",
+                    met: passwordCriteria.hasSymbol,
+                  },
+                  { label: "Match Passwords", met: passwordCriteria.match },
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 text-[11px]"
+                  >
+                    {item.met ? (
+                      <CheckCircle2 size={14} className="text-emerald-500" />
+                    ) : (
+                      <XCircle size={14} className="text-muted-foreground/30" />
+                    )}
+                    <span
+                      className={
+                        item.met
+                          ? "text-emerald-600 font-bold"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex justify-end">
-          <Button className="gradient-primary border-0 text-primary-foreground rounded-button hover:opacity-90 px-8">
-            <Save size={16} className="mr-2" /> Save Changes
+        <div className="space-y-6">
+          <div className="bg-card rounded-card card-shadow p-6 text-center border-b-4 border-primary overflow-hidden relative">
+            <div className="w-28 h-28 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-md flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD]">
+              {displayedProfile.avatar ? (
+                <img
+                  src={displayedProfile.avatar}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-white text-3xl font-bold tracking-tighter">
+                  {displayedProfile.firstName[0]}
+                  {displayedProfile.lastName[0]}
+                </span>
+              )}
+            </div>
+
+            <h3 className="text-h3 font-black text-foreground truncate">
+              {displayedProfile.firstName} {displayedProfile.lastName}
+            </h3>
+            <p className="text-xs font-medium text-muted-foreground mb-4 px-2 line-clamp-1">
+              {displayedProfile.title}
+            </p>
+
+            <div className="py-2.5 px-4 bg-muted/40 rounded-xl flex items-center justify-center gap-2 text-[11px] text-muted-foreground border border-border shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+              <span className="font-medium truncate">
+                {displayedProfile.email}
+              </span>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleSave}
+            disabled={!canSave}
+            className="w-full gradient-primary border-0 text-primary-foreground font-black rounded-button shadow-xl py-6 hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Save size={20} className="mr-2" /> Save Changes
           </Button>
         </div>
       </div>

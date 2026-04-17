@@ -33,6 +33,7 @@ import HelpCenter from "./pages/HelpCenter";
 import ScrollToTopOnNavigation from "./components/ScrollToTopOnNavigation";
 import PageTransition from "./components/PageTransition";
 import MainLayout from "./layouts/MainLayout";
+import VerifyOTP from "./pages/VerifyOTP";
 
 const queryClient = new QueryClient();
 
@@ -45,23 +46,58 @@ const App = () => (
         <ScrollToTopOnNavigation />
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
-          <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
+          <Route
+            path="/login"
+            element={
+              <PageTransition>
+                <Login />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <PageTransition>
+                <Signup />
+              </PageTransition>
+            }
+          />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:id" element={<CourseDetails />} />
-          <Route path="/help" element={<MainLayout><HelpCenter /></MainLayout>} />
+          <Route
+            path="/help"
+            element={
+              <MainLayout>
+                <HelpCenter />
+              </MainLayout>
+            }
+          />
           {/* Student Dashboard */}
           <Route path="/dashboard" element={<StudentDashboard />} />
           <Route path="/dashboard/courses" element={<StudentCourses />} />
           <Route path="/dashboard/progress" element={<StudentProgress />} />
-          <Route path="/dashboard/certificates" element={<StudentCertificates />} />
+          <Route
+            path="/dashboard/certificates"
+            element={<StudentCertificates />}
+          />
           <Route path="/dashboard/settings" element={<StudentSettings />} />
-          <Route path="/learn/:id" element={<PageTransition><LessonPlayer /></PageTransition>} />
+          <Route
+            path="/learn/:id"
+            element={
+              <PageTransition>
+                <LessonPlayer />
+              </PageTransition>
+            }
+          />
           {/* Instructor Dashboard */}
           <Route path="/instructor" element={<InstructorDashboard />} />
           <Route path="/instructor/courses" element={<InstructorCourses />} />
           <Route path="/instructor/upload" element={<UploadCourse />} />
-          <Route path="/instructor/analytics" element={<InstructorAnalytics />} />
+          <Route
+            path="/instructor/analytics"
+            element={<InstructorAnalytics />}
+          />
           <Route path="/instructor/students" element={<InstructorStudents />} />
           <Route path="/instructor/revenue" element={<InstructorRevenue />} />
           <Route path="/instructor/settings" element={<InstructorSettings />} />
@@ -73,7 +109,14 @@ const App = () => (
           <Route path="/admin/payments" element={<AdminPayments />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/reviews" element={<AdminReviews />} />
-          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+          <Route
+            path="*"
+            element={
+              <PageTransition>
+                <NotFound />
+              </PageTransition>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

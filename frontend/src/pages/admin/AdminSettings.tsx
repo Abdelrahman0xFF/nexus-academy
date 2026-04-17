@@ -1,120 +1,325 @@
-import { Save, Shield, Bell, Globe, Mail, Lock, Database } from "lucide-react";
+import {
+  Save,
+  Camera,
+  User,
+  CheckCircle2,
+  XCircle,
+  Mail,
+  Briefcase,
+  Shield,
+} from "lucide-react";
+import { useState, useRef } from "react";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 
 const AdminSettings = () => {
+  const [formData, setFormData] = useState({
+    firstName: "Zeyad",
+    lastName: "Mostafa",
+    nickname: "El ZooZ",
+    email: "zeyad.mostafa@nexusacademy.com",
+    bio: "Full-stack developer and platform administrator.",
+    title: "Chief Administrator",
+    avatar: "",
+  });
+
+  const [displayedProfile, setDisplayedProfile] = useState({ ...formData });
+
+  const [passwords, setPasswords] = useState({
+    old: "",
+    new: "",
+    confirm: "",
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, avatar: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSave = () => {
+    setDisplayedProfile({ ...formData });
+    setPasswords({ old: "", new: "", confirm: "" });
+  };
+
+  const passwordCriteria = {
+    length: passwords.new.length >= 6,
+    hasUpper: /[A-Z]/.test(passwords.new),
+    hasLower: /[a-z]/.test(passwords.new),
+    hasNumber: /[0-9]/.test(passwords.new),
+    hasSymbol: /[@%*]/.test(passwords.new),
+    match: passwords.new === passwords.confirm && passwords.new !== "",
+  };
+
+  const isPasswordValid = Object.values(passwordCriteria).every(Boolean);
+
+  const canSave = passwords.new === "" ? true : isPasswordValid;
+
   return (
     <DashboardLayout type="admin">
       <div className="mb-8">
-        <h1 className="text-h1 text-foreground">Platform Settings</h1>
-        <p className="text-body text-muted-foreground mt-1">Configure global platform behavior and security</p>
+        <h1 className="text-h1 text-foreground"> Settings</h1>
+        <p className="text-body text-muted-foreground mt-1">
+          Manage your admin profile and preferences
+        </p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          {/* General Settings */}
           <div className="bg-card rounded-card card-shadow p-6">
-            <h2 className="text-h3 text-card-foreground mb-6 flex items-center gap-2">
-                <Globe size={20} className="text-primary" /> General Configuration
+            <h2 className="text-h3 text-card-foreground mb-8 flex items-center gap-2">
+              Personal Information
+              <User size={20} className="text-muted-foreground" />
             </h2>
-            <div className="space-y-4">
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                    <label className="text-small font-medium text-foreground block mb-1.5">Site Name</label>
-                    <input 
-                        type="text" 
-                        defaultValue="NexusAcademy" 
-                        className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20"
+
+            <div className="flex flex-col md:flex-row gap-8 items-start mb-8">
+              <div className="relative group">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-sm flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD]">
+                  {formData.avatar ? (
+                    <img
+                      src={formData.avatar}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
                     />
+                  ) : (
+                    <span className="text-white text-4xl font-bold tracking-tighter">
+                      {formData.firstName[0]}
+                      {formData.lastName[0]}
+                    </span>
+                  )}
                 </div>
-                <div>
-                    <label className="text-small font-medium text-foreground block mb-1.5">Support Email</label>
-                    <input 
-                        type="email" 
-                        defaultValue="support@nexusacademy.com" 
-                        className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20"
+                <button
+                  onClick={handleImageClick}
+                  className="absolute bottom-1 right-1 p-2 bg-white text-slate-500 rounded-full border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                >
+                  <Camera size={18} />
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+
+              <div className="flex-1 w-full space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-small font-medium text-foreground block mb-1.5">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.firstName}
+                      onChange={(e) =>
+                        setFormData({ ...formData, firstName: e.target.value })
+                      }
+                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
                     />
+                  </div>
+                  <div>
+                    <label className="text-small font-medium text-foreground block mb-1.5">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.lastName}
+                      onChange={(e) =>
+                        setFormData({ ...formData, lastName: e.target.value })
+                      }
+                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-4 w-full">
+                  <div className="w-full">
+                    <label className="text-small font-medium text-foreground block mb-1.5 flex items-center gap-2">
+                      <Briefcase size={14} className="text-primary" />{" "}
+                      Professional Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) =>
+                        setFormData({ ...formData, title: e.target.value })
+                      }
+                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                      placeholder="e.g. Senior Instructor"
+                    />
+                  </div>
+
+                  <div className="w-full">
+                    <label className="text-small font-medium text-foreground block mb-1.5 flex items-center gap-2">
+                      <Mail size={14} className="text-primary" /> Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      readOnly
+                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none bg-muted/30 cursor-not-allowed opacity-70"
+                    />
+                  </div>
                 </div>
               </div>
+            </div>
+
+            <div className="space-y-4 pt-4 border-t border-border/50">
               <div>
-                    <label className="text-small font-medium text-foreground block mb-1.5">Currency</label>
-                    <select className="w-full px-4 py-2.5 text-small border border-border rounded-button bg-card outline-none focus:ring-2 focus:ring-primary/20">
-                        <option>USD ($)</option>
-                        <option>EUR (€)</option>
-                        <option>GBP (£)</option>
-                    </select>
-                </div>
+                <label className="text-small font-medium text-foreground block mb-1.5">
+                  Bio
+                </label>
+                <textarea
+                  value={formData.bio}
+                  onChange={(e) =>
+                    setFormData({ ...formData, bio: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background h-28 resize-none"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Security Settings */}
           <div className="bg-card rounded-card card-shadow p-6">
             <h2 className="text-h3 text-card-foreground mb-6 flex items-center gap-2">
-                <Shield size={20} className="text-primary" /> Security & Access
+              <Shield size={20} className="text-primary" /> Security & Password
             </h2>
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <div className="text-small font-medium text-foreground">Self-Registration</div>
-                        <div className="text-xs text-muted-foreground">Allow new users to create accounts</div>
-                    </div>
-                    <Switch defaultChecked />
+            <div className="space-y-4">
+              <div>
+                <label className="text-small font-medium text-foreground block mb-1.5">
+                  Old Password
+                </label>
+                <input
+                  type="password"
+                  placeholder="Enter current password"
+                  value={passwords.old}
+                  onChange={(e) =>
+                    setPasswords({ ...passwords, old: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                />
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-small font-medium text-foreground block mb-1.5">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Enter new password"
+                    value={passwords.new}
+                    onChange={(e) =>
+                      setPasswords({ ...passwords, new: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                  />
                 </div>
-                <div className="flex items-center justify-between">
-                    <div>
-                        <div className="text-small font-medium text-foreground">Email Verification</div>
-                        <div className="text-xs text-muted-foreground">Require email confirmation for new users</div>
-                    </div>
-                    <Switch defaultChecked />
+                <div>
+                  <label className="text-small font-medium text-foreground block mb-1.5">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={passwords.confirm}
+                    onChange={(e) =>
+                      setPasswords({ ...passwords, confirm: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                  />
                 </div>
-                <div className="flex items-center justify-between">
-                    <div>
-                        <div className="text-small font-medium text-foreground">Instructor Approval</div>
-                        <div className="text-xs text-muted-foreground">Manually approve instructor applications</div>
-                    </div>
-                    <Switch />
-                </div>
-                <div className="flex items-center justify-between">
-                    <div>
-                        <div className="text-small font-medium text-foreground">Maintenance Mode</div>
-                        <div className="text-xs text-muted-foreground">Disable frontend access for all users except admins</div>
-                    </div>
-                    <Switch />
-                </div>
+              </div>
+
+              <div className="p-4 bg-muted/20 rounded-xl grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { label: "6+ Characters", met: passwordCriteria.length },
+                  { label: "Capital Letter", met: passwordCriteria.hasUpper },
+                  { label: "Small Letter", met: passwordCriteria.hasLower },
+                  { label: "Number", met: passwordCriteria.hasNumber },
+                  {
+                    label: "Symbol (@, %, *)",
+                    met: passwordCriteria.hasSymbol,
+                  },
+                  { label: "Match Match", met: passwordCriteria.match },
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 text-[11px]"
+                  >
+                    {item.met ? (
+                      <CheckCircle2 size={14} className="text-emerald-500" />
+                    ) : (
+                      <XCircle size={14} className="text-muted-foreground/30" />
+                    )}
+                    <span
+                      className={
+                        item.met
+                          ? "text-emerald-600 font-bold"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
         <div className="space-y-6">
-            {/* Quick Info */}
-            <div className="bg-card rounded-card card-shadow p-6">
-                <h3 className="text-body font-bold text-card-foreground mb-4 flex items-center gap-2">
-                    <Database size={18} /> System Status
-                </h3>
-                <div className="space-y-4">
-                    <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Version</span>
-                        <span className="font-medium">1.2.0-stable</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Last Backup</span>
-                        <span className="font-medium">2 hours ago</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Storage Usage</span>
-                        <span className="font-medium text-amber-600">82% (41.2 GB)</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">API Status</span>
-                        <span className="text-emerald-500 font-bold uppercase tracking-tighter">Healthy</span>
-                    </div>
-                </div>
+          <div className="bg-card rounded-card card-shadow p-6 text-center border-b-4 border-primary overflow-hidden relative">
+            <div className="w-28 h-28 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-md flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD]">
+              {displayedProfile.avatar ? (
+                <img
+                  src={displayedProfile.avatar}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-white text-3xl font-bold tracking-tighter">
+                  {displayedProfile.firstName[0]}
+                  {displayedProfile.lastName[0]}
+                </span>
+              )}
             </div>
 
-            <Button className="w-full gradient-primary border-0 text-primary-foreground font-bold rounded-button">
-                <Save size={16} className="mr-2" /> Save Changes
-            </Button>
+            <h3 className="text-h3 font-black text-foreground truncate">
+              {displayedProfile.firstName} {displayedProfile.lastName}
+            </h3>
+            <p className="text-[10px] font-black text-primary mb-1 uppercase tracking-[0.2em]">
+              {displayedProfile.nickname}
+            </p>
+            <p className="text-xs font-medium text-muted-foreground mb-4 px-2 line-clamp-1">
+              {displayedProfile.title}
+            </p>
+
+            <div className="py-2.5 px-4 bg-muted/40 rounded-xl flex items-center justify-center gap-2 text-[11px] text-muted-foreground border border-border shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+              <span className="font-medium truncate">
+                {displayedProfile.email}
+              </span>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleSave}
+            className="w-full gradient-primary border-0 text-primary-foreground font-black rounded-button shadow-xl py-6 hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+            disabled={!canSave}
+          >
+            <Save size={20} className="mr-2" /> Save Changes
+          </Button>
         </div>
       </div>
     </DashboardLayout>

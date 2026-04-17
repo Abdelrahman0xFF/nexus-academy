@@ -52,7 +52,7 @@ const adminLinks = [
 const DashboardSidebar = ({ type }: DashboardSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  
+
   let links = studentLinks;
   if (type === "instructor") links = instructorLinks;
   if (type === "admin") links = adminLinks;
@@ -108,12 +108,12 @@ const DashboardSidebar = ({ type }: DashboardSidebarProps) => {
       {/* Logout */}
       <div className="p-3 border-t border-border">
         <button
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-button text-small font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors w-full ${
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-button text-small font-medium text-[#F24848] hover:text-destructive hover:bg-destructive/10 transition-colors w-full ${
             collapsed ? "justify-center" : ""
           }`}
         >
           <LogOut size={20} />
-          {!collapsed && <span>Log Out</span>}
+          {!collapsed && <span> Log Out</span>}
         </button>
       </div>
     </aside>
