@@ -18,6 +18,10 @@ const authenticate = async (req, res, next) => {
             return errorResponse(res, "User not found", 401);
         }
 
+        if (!user.is_verified) {
+            return errorResponse(res, "Please verify your email to access this resource", 401);
+        }
+
         req.user = user;
         next();
     } catch (err) {
@@ -33,7 +37,7 @@ const optionalAuthenticate = async (req, res, next) => {
         if (token) {
             const decoded = verifyJWTToken(token);
             const user = await User.findById(decoded.id);
-            if (user) {
+            if (user && user.is_verified) {
                 req.user = user;
             }
         }

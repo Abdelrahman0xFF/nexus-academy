@@ -172,9 +172,13 @@ class User {
             const pool = await poolPromise;
             const result = await pool
                 .request()
-                .input("user_id", sql.Int, user_id)
-                .query("DELETE FROM users WHERE user_id = @user_id");
-            return result.rowsAffected[0] > 0;
+                .input("user_id", sql.Int, user_id).query(`
+                    DELETE FROM certificates WHERE user_id = @user_id;
+                    DELETE FROM user_lessons WHERE user_id = @user_id;
+                    DELETE FROM enrollments WHERE user_id = @user_id;
+                    DELETE FROM users WHERE user_id = @user_id;
+                `);
+            return result.rowsAffected[result.rowsAffected.length - 1] > 0;
         } catch (err) {
             console.error("Error deleting user: ", err);
             throw err;

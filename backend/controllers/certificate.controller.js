@@ -33,17 +33,21 @@ export const getCertificate = asyncHandler(async (req, res) => {
     const user_id = req.user.user_id;
 
     const enrolled = await Enrollment.isEnrolled(user_id, course_id);
-    if (!enrolled) {
-        return errorResponse(res, "Not enrolled in this course", 404);
+    const certExists = await Certificate.getByStudentAndCourse(user_id, course_id);
+
+    if (!enrolled && !certExists) {
+        return errorResponse(res, "Not enrolled in this course and no certificate found", 404);
     }
 
-    const progress = await Enrollment.getProgress(user_id, course_id);
-    if (progress < 95) {
-        return errorResponse(
-            res,
-            "Progress must be at least 95% to get certificate",
-            403,
-        );
+    if (!certExists) {
+        const progress = await Enrollment.getProgress(user_id, course_id);
+        if (progress < 95) {
+            return errorResponse(
+                res,
+                "Progress must be at least 95% to get certificate",
+                403,
+            );
+        }
     }
 
     const html = await generateCertificateHtml(user_id, course_id);
@@ -55,17 +59,21 @@ export const downloadCertificate = asyncHandler(async (req, res) => {
     const user_id = req.user.user_id;
 
     const enrolled = await Enrollment.isEnrolled(user_id, course_id);
-    if (!enrolled) {
-        return errorResponse(res, "Not enrolled in this course", 404);
+    const certExists = await Certificate.getByStudentAndCourse(user_id, course_id);
+
+    if (!enrolled && !certExists) {
+        return errorResponse(res, "Not enrolled in this course and no certificate found", 404);
     }
 
-    const progress = await Enrollment.getProgress(user_id, course_id);
-    if (progress < 95) {
-        return errorResponse(
-            res,
-            "Progress must be at least 95% to get certificate",
-            403,
-        );
+    if (!certExists) {
+        const progress = await Enrollment.getProgress(user_id, course_id);
+        if (progress < 95) {
+            return errorResponse(
+                res,
+                "Progress must be at least 95% to get certificate",
+                403,
+            );
+        }
     }
 
     const html = await generateCertificateHtml(user_id, course_id);
@@ -112,7 +120,11 @@ export const verifyCertificate = asyncHandler(async (req, res) => {
     const cert = await Certificate.verify(certificate_id);
 
     if (!cert) {
-        return errorResponse(res, "Certificate not found or invalid", 404);
+        return errorResponse(res, "Certificate not found", 404);
+    }
+
+    if (cert.is_invalid) {
+        return errorResponse(res, "This certificate is no longer valid as the associated user or course has been deleted.", 400);
     }
 
     const html = await generateCertificateHtml(cert.user_id, cert.course_id);

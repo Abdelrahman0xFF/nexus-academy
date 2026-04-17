@@ -32,7 +32,7 @@ class Section {
             const result = await pool
                 .request()
                 .input("course_id", sql.Int, course_id)
-                .query("SELECT * FROM sections WHERE course_id = @course_id ORDER BY section_order");
+                .query("SELECT * FROM sections WHERE course_id = @course_id ORDER BY section_order ASC");
             return result.recordset;
         } catch (err) {
             console.error("Error finding sections by course ID: ", err);

@@ -76,11 +76,19 @@ class Certificate {
                 .input("course_id", sql.Int, parseInt(course_id)).query(`
                     SELECT c.*, u.first_name, u.last_name, co.title as course_name 
                     FROM certificates c
-                    JOIN users u ON c.user_id = u.user_id
-                    JOIN courses co ON c.course_id = co.course_id
+                    LEFT JOIN users u ON c.user_id = u.user_id
+                    LEFT JOIN courses co ON c.course_id = co.course_id
                     WHERE c.user_id = @user_id AND c.course_id = @course_id
                 `);
-            return result.recordset[0] || null;
+            
+            const cert = result.recordset[0];
+            if (!cert) return null;
+
+            if (!cert.first_name || !cert.course_name) {
+                return { ...cert, is_invalid: true };
+            }
+
+            return cert;
         } catch (err) {
             console.error("Error verifying certificate: ", err);
             throw err;

@@ -41,7 +41,7 @@ class Lesson {
                 .input("course_id", sql.Int, course_id)
                 .input("section_order", sql.Int, section_order)
                 .query(
-                    "SELECT * FROM lessons WHERE course_id = @course_id AND section_order = @section_order ORDER BY lesson_order",
+                    "SELECT * FROM lessons WHERE course_id = @course_id AND section_order = @section_order ORDER BY lesson_order ASC",
                 );
             return result.recordset;
         } catch (err) {
@@ -57,7 +57,7 @@ class Lesson {
                 .request()
                 .input("course_id", sql.Int, course_id)
                 .query(
-                    "SELECT * FROM lessons WHERE course_id = @course_id ORDER BY section_order, lesson_order",
+                    "SELECT * FROM lessons WHERE course_id = @course_id ORDER BY section_order ASC, lesson_order ASC",
                 );
             return result.recordset;
         } catch (err) {
@@ -179,6 +179,8 @@ class Lesson {
                 request.input("course_id", sql.Int, course_id);
                 query += " AND course_id = @course_id";
             }
+
+            query += " ORDER BY section_order ASC, lesson_order ASC";
 
             const result = await request.query(query);
             return result.recordset;
