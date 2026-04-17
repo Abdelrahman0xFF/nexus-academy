@@ -49,31 +49,10 @@ const deleteCategory = asyncHandler(async (req, res, next) => {
     }
 });
 
-const getCoursesByCategory = asyncHandler(async (req, res, next) => {
-    const { category_id } = req.params;
-    const { page = 1, limit = 10 } = req.query;
-    const userId = req.user?.user_id || null;
-    const isAdmin = req.user?.role === "admin";
-
-    const category = await Category.findById(category_id);
-    if (!category) {
-        return errorResponse(res, "Category not found", 404);
-    }
-    const courses = await Course.findByCategoryId(
-        category_id,
-        Number(page),
-        Number(limit),
-        userId,
-        isAdmin,
-    );
-    return successResponse(res, courses);
-});
-
 export {
     createCategory,
     getCategoryById,
     getAllCategories,
     updateCategory,
     deleteCategory,
-    getCoursesByCategory,
 };

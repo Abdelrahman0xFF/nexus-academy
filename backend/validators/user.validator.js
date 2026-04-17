@@ -30,11 +30,10 @@ const changePasswordSchema = Joi.object({
 });
 
 const updateUserSchema = Joi.object({
-    first_name: Joi.string().max(50),
-    last_name: Joi.string().max(50),
-    title: Joi.string().max(100),
-    bio: Joi.string().max(500),
-    avatar_url: Joi.string().allow(null, ""),
+    first_name: Joi.string().max(50).optional(),
+    last_name: Joi.string().max(50).optional(),
+    title: Joi.string().max(100).optional(),
+    bio: Joi.string().max(500).optional(),
     role: Joi.string().valid("user", "instructor", "admin"),
 });
 

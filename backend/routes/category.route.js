@@ -5,7 +5,6 @@ import {
     getAllCategories,
     updateCategory,
     deleteCategory,
-    getCoursesByCategory,
 } from "../controllers/category.controller.js";
 import {
     authenticate,
@@ -19,7 +18,6 @@ const router = Router();
 
 router.get("/", getAllCategories);
 router.get("/:category_id", getCategoryById);
-router.get("/:category_id/courses", optionalAuthenticate, getCoursesByCategory);
 
 router.post(
     "/",
