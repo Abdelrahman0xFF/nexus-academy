@@ -102,6 +102,13 @@ const login = asyncHandler(async (req, res) => {
     const user = await User.findByEmail(req.body.email);
     if (!user) return errorResponse(res, "Invalid credentials", 401);
 
+    if (!user.is_verified)
+        return errorResponse(
+            res,
+            "User not verified, Verify OTP and try again.",
+            401,
+        );
+
     const match = await comparePassword(
         req.body.password,
         user.hashed_password,
