@@ -7,7 +7,7 @@ import {
 
 import { Router } from "express";
 import { authenticate, authorize } from "../middleware/auth.middleware.js";
-import upload from "../middleware/multer.js";
+import { imageUpload, fileCleanup } from "../middleware/multer.js";
 import { validateRequest } from "../middleware/validate.middleware.js";
 import { updateUserSchema } from "../validators/user.validator.js";
 
@@ -19,7 +19,8 @@ router.get("/", authorize("admin"), getAllUsers);
 router.get("/:user_id", getUserById);
 router.put(
     "/:user_id",
-    upload.single("avatar"),
+    imageUpload.single("avatar"),
+    fileCleanup,
     validateRequest(updateUserSchema),
     updateUser,
 );

@@ -1,5 +1,6 @@
 import { driveConfig, PARENT_FOLDER_ID } from "../config/drive.config.js";
 import fs from "fs";
+import { deleteFile } from "../utils/file.js";
 
 export const uploadToDrive = async (file, retries = 3) => {
     let lastError;
@@ -24,9 +25,7 @@ export const uploadToDrive = async (file, retries = 3) => {
                 requestBody: { role: "reader", type: "anyone" },
             });
 
-            if (file.path && fs.existsSync(file.path)) {
-                fs.unlinkSync(file.path);
-            }
+            await deleteFile(file.path);
 
             return { fileId };
         } catch (error) {
@@ -38,9 +37,7 @@ export const uploadToDrive = async (file, retries = 3) => {
         }
     }
     
-    if (file.path && fs.existsSync(file.path)) {
-        fs.unlinkSync(file.path);
-    }
+    await deleteFile(file.path);
     throw lastError;
 };
 

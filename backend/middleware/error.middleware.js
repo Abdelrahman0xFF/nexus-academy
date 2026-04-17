@@ -1,16 +1,15 @@
 import fs from "fs";
 import { errorResponse } from "../utils/response.js";
+import { deleteFile } from "../utils/file.js";
 
-const errorHandler = (err, req, res, next) => {
-    if (req.file && fs.existsSync(req.file.path)) {
-        try { fs.unlinkSync(req.file.path); } catch (e) { console.error("Error deleting file:", e); }
+const errorHandler = async (err, req, res, next) => {
+    if (req.file) {
+        await deleteFile(req.file.path);
     }
     if (req.files && Array.isArray(req.files)) {
-        req.files.forEach((file) => {
-            if (fs.existsSync(file.path)) {
-                try { fs.unlinkSync(file.path); } catch (e) { console.error("Error deleting file:", e); }
-            }
-        });
+        for (const file of req.files) {
+            await deleteFile(file.path);
+        }
     }
 
     const statusCode = err.statusCode || 500;

@@ -24,7 +24,7 @@ import {
     courseSchema,
     updateCourseSchema,
 } from "../validators/course.validator.js";
-import upload from "../middleware/multer.js";
+import { imageUpload, fileCleanup } from "../middleware/multer.js";
 
 const router = Router();
 
@@ -62,7 +62,8 @@ router.post(
     "/",
     authenticate,
     authorize("instructor"),
-    upload.single("thumbnail"),
+    imageUpload.single("thumbnail"),
+    fileCleanup,
     validateRequest(courseSchema),
     createCourse,
 );
@@ -71,7 +72,8 @@ router.put(
     "/:course_id",
     authenticate,
     authorize("instructor", "admin"),
-    upload.single("thumbnail"),
+    imageUpload.single("thumbnail"),
+    fileCleanup,
     validateRequest(updateCourseSchema),
     updateCourse,
 );

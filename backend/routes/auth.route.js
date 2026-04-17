@@ -7,7 +7,7 @@ import {
     me,
     changePassword,
 } from "../controllers/auth.controller.js";
-import upload from "../middleware/multer.js";
+import { imageUpload, fileCleanup } from "../middleware/multer.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { validateRequest } from "../middleware/validate.middleware.js";
 import {
@@ -21,7 +21,8 @@ const router = Router();
 
 router.post(
     "/register",
-    upload.single("avatar"),
+    imageUpload.single("avatar"),
+    fileCleanup,
     validateRequest(registerSchema),
     register,
 );

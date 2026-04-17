@@ -1,6 +1,7 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { deleteFile } from "../utils/file.js";
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -8,7 +9,9 @@ const storage = multer.diskStorage({
             ? "public/uploads/videos"
             : "public/uploads/images";
 
-        fs.mkdirSync(folder, { recursive: true });
+        if (!fs.existsSync(folder)) {
+            fs.mkdirSync(folder, { recursive: true });
+        }
         cb(null, folder);
     },
     filename: (req, file, cb) => {
@@ -35,5 +38,36 @@ const upload = multer({
         }
     },
 });
+
+export const imageUpload = multer({
+    storage,
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith("image/")) {
+            cb(null, true);
+        } else {
+            cb(new Error("Only images are allowed."), false);
+        }
+    },
+});
+
+export const videoUpload = multer({
+    storage,
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith("video/")) {
+            cb(null, true);
+        } else {
+            cb(new Error("Only videos are allowed."), false);
+        }
+    },
+});
+
+export const fileCleanup = (req, res, next) => {
+    res.on("finish", async () => {
+        if (res.statusCode >= 400 && req.file && req.file.path) {
+            await deleteFile(req.file.path);
+        }
+    });
+    next();
+};
 
 export default upload;

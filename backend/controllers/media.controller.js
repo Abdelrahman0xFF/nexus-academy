@@ -7,6 +7,7 @@ import { driveConfig } from "../config/drive.config.js";
 import { successResponse, errorResponse } from "../utils/response.js";
 import fs from "fs";
 import asyncHandler from "../utils/asyncHandler.js";
+import { deleteFile } from "../utils/file.js";
 
 export const uploadMedia = asyncHandler(async (req, res, next) => {
     req.setTimeout(0);
@@ -15,9 +16,7 @@ export const uploadMedia = asyncHandler(async (req, res, next) => {
     req.setTimeout(0);
     const result = await uploadToDrive(req.file);
 
-    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
-    }
+    await deleteFile(req.file.path);
 
     return successResponse(res, result, "Media uploaded successfully", 201);
 });

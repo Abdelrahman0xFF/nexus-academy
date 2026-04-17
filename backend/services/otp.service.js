@@ -12,7 +12,7 @@ export const generateAndSendOTP = async (email) => {
     const hashedOtp = await hashPassword(otp);
 
     try {
-        let html = fs.readFileSync(templatePath, "utf8");
+        let html = await fs.promises.readFile(templatePath, "utf8");
         html = html.replace("{{otp}}", otp);
         
         await sendEmail(email, "NexsusAcademy - One-Time Password (OTP)", html);

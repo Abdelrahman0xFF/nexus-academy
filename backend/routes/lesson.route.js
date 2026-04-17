@@ -8,7 +8,7 @@ import {
 } from "../controllers/lesson.controller.js";
 import { authenticate, authorize } from "../middleware/auth.middleware.js";
 import { verifyEnrollment } from "../middleware/enrollment.middleware.js";
-import upload from "../middleware/multer.js";
+import { videoUpload, fileCleanup } from "../middleware/multer.js";
 import { validateRequest } from "../middleware/validate.middleware.js";
 import {
     lessonSchema,
@@ -23,7 +23,8 @@ router.post(
     "/",
     authenticate,
     authorize("instructor", "admin"),
-    upload.single("video"),
+    videoUpload.single("video"),
+    fileCleanup,
     validateRequest(lessonSchema),
     createLesson
 );
@@ -32,7 +33,8 @@ router.put(
     "/:course_id/:section_order/:lesson_order",
     authenticate,
     authorize("instructor", "admin"),
-    upload.single("video"),
+    videoUpload.single("video"),
+    fileCleanup,
     validateRequest(updateLessonSchema),
     updateLesson
 );

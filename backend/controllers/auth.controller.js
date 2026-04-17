@@ -6,10 +6,15 @@ import { generateAndSendOTP } from "../services/otp.service.js";
 import { successResponse, errorResponse } from "../utils/response.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
+import { deleteFile } from "../utils/file.js";
+
 const register = asyncHandler(async (req, res) => {
     let avatarUrl = null;
     const existingUser = await User.findByEmail(req.body.email);
     if (existingUser) {
+        if (req.file) {
+            await deleteFile(req.file.path);
+        }
         if (!existingUser.is_verified) {
             const { hashedOtp, otpExpires } = await generateAndSendOTP(
                 req.body.email,
