@@ -80,7 +80,7 @@ class User {
         }
     }
 
-    static async find(page, limit, sortBy = "user_id", order = "ASC") {
+    static async find(page, limit, sortBy = "created_at", order = "ASC") {
         try {
             const offset = (page - 1) * limit;
             const pool = await poolPromise;

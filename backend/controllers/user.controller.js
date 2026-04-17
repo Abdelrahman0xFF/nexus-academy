@@ -31,7 +31,7 @@ const getUserById = asyncHandler(async (req, res) => {
 });
 
 const getAllUsers = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, sortBy = "ID", order = "ASC" } = req.query;
+    const { page = 1, limit = 10, sortBy = "Time", order = "ASC" } = req.query;
 
     const sortMap = {
         FirstName: "first_name",

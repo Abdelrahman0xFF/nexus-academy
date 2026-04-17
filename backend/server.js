@@ -2,9 +2,15 @@ import "dotenv/config";
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import swaggerUi from "swagger-ui-express";
+import { readFileSync } from "fs";
 import router from "./routes/router.js";
 import errorHandler from "./middleware/error.middleware.js";
 import requestLogger from "./middleware/logger.middleware.js";
+
+const swaggerDocument = JSON.parse(
+    readFileSync(new URL("./swagger.json", import.meta.url)),
+);
 
 const app = express();
 app.use(requestLogger);
@@ -17,6 +23,7 @@ app.use(
     }),
 );
 
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use("/api", router);
 
 app.use(errorHandler);
