@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 const VerifyOTP = () => {
   const { toast } = useToast();
   const [otp, setOtp] = useState("");
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(120);
   const [isTimerActive, setIsTimerActive] = useState(true);
 
   useEffect(() => {
