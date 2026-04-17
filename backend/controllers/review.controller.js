@@ -60,15 +60,19 @@ export const updateReview = asyncHandler(async (req, res) => {
 
 export const deleteReview = asyncHandler(async (req, res) => {
     const { course_id } = req.params;
-    const user_id = req.user.user_id;
+    const { user_id: target_user_id } = req.query;
+    const requester_id = req.user.user_id;
+    const isAdmin = req.user.role === "admin";
 
-    const review = await Review.find(user_id, course_id);
+    const userIdToDelete = (isAdmin && target_user_id) ? target_user_id : requester_id;
+
+    const review = await Review.find(userIdToDelete, course_id);
     if (!review) return errorResponse(res, "Review not found", 404);
 
-    if (review.user_id !== user_id && req.user.role !== "admin") {
-        return errorResponse(res, "Forbidden", 403);
+    if (review.user_id !== requester_id && !isAdmin) {
+        return errorResponse(res, "Forbidden: You can only delete your own reviews", 403);
     }
 
-    await Review.delete(user_id, course_id);
+    await Review.delete(userIdToDelete, course_id);
     return successResponse(res, null, "Review deleted successfully");
 });

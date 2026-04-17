@@ -39,29 +39,34 @@ const createLesson = asyncHandler(async (req, res, next) => {
         );
 
     if (req.file) {
-        const duration = await getVideoDuration(req.file.path);
+        let videoUrl = null;
+        try {
+            const duration = await getVideoDuration(req.file.path);
+            const uploadResult = await uploadToDrive(req.file);
+            videoUrl = uploadResult.fileId;
 
-        const uploadResult = await uploadToDrive(req.file);
-        const videoUrl = uploadResult.fileId;
+            const newLessonData = {
+                ...req.body,
+                video_url: videoUrl,
+                duration: duration,
+            };
 
-        const newLessonData = {
-            ...req.body,
-            video_url: videoUrl,
-            duration: duration,
-        };
+            const newLesson = await Lesson.create(newLessonData);
 
-        const newLesson = await Lesson.create(newLessonData);
-
-        if (req.file && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
+            return successResponse(
+                res,
+                newLesson,
+                "Lesson created successfully",
+                201,
+            );
+        } catch (err) {
+            if (videoUrl) {
+                await deleteFromDrive(videoUrl).catch((cleanupErr) =>
+                    console.error("Failed to cleanup uploaded video after error:", cleanupErr)
+                );
+            }
+            throw err;
         }
-
-        return successResponse(
-            res,
-            newLesson,
-            "Lesson created successfully",
-            201,
-        );
     } else {
         return errorResponse(res, "Video file is required", 400);
     }
@@ -108,41 +113,47 @@ const updateLesson = asyncHandler(async (req, res, next) => {
     const updateData = { ...req.body };
 
     let newVideoUrl = null;
-    if (req.file) {
-        const duration = await getVideoDuration(req.file.path);
+    try {
+        if (req.file) {
+            const duration = await getVideoDuration(req.file.path);
 
-        const uploadResult = await uploadToDrive(req.file);
-        newVideoUrl = uploadResult.fileId;
+            const uploadResult = await uploadToDrive(req.file);
+            newVideoUrl = uploadResult.fileId;
 
-        updateData.video_url = newVideoUrl;
-        updateData.duration = duration;
-
-        if (req.file && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
+            updateData.video_url = newVideoUrl;
+            updateData.duration = duration;
         }
-    }
 
-    const result = await Lesson.update(
-        course_id,
-        section_order,
-        lesson_order,
-        updateData,
-    );
-    if (result) {
-        if (newVideoUrl && existingLesson.video_url) {
-            try {
-                await deleteFromDrive(existingLesson.video_url);
-            } catch (err) {
-                console.error(
-                    "Failed to delete old video from drive:",
-                    err,
+        const result = await Lesson.update(
+            course_id,
+            section_order,
+            lesson_order,
+            updateData,
+        );
+        if (result) {
+            if (newVideoUrl && existingLesson.video_url) {
+                try {
+                    await deleteFromDrive(existingLesson.video_url);
+                } catch (err) {
+                    console.error("Failed to delete old video from drive:", err);
+                }
+            }
+            return successResponse(res, null, "Lesson updated successfully");
+        } else {
+            if (newVideoUrl) {
+                await deleteFromDrive(newVideoUrl).catch((err) =>
+                    console.error("Failed to cleanup uploaded video:", err),
                 );
             }
+            return errorResponse(res, "Lesson not found", 404);
         }
-        return successResponse(res, null, "Lesson updated successfully");
-    } else {
-        if (newVideoUrl) await deleteFromDrive(newVideoUrl);
-        return errorResponse(res, "Lesson not found", 404);
+    } catch (err) {
+        if (newVideoUrl) {
+            await deleteFromDrive(newVideoUrl).catch((cleanupErr) =>
+                console.error("Failed to cleanup uploaded video after error:", cleanupErr),
+            );
+        }
+        throw err;
     }
 });
 

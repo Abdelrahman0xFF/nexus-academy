@@ -8,7 +8,7 @@ export const enroll = asyncHandler(async (req, res) => {
         return errorResponse(res, "Only students can enroll in courses", 403);
     }
 
-    const { course_id, payment_method, payment_status } = req.body;
+    const { course_id, payment_method } = req.body;
     const user_id = req.user.user_id;
 
     const course = await Course.findById(course_id);
@@ -29,7 +29,6 @@ export const enroll = asyncHandler(async (req, res) => {
         user_id,
         course_id,
         payment_method,
-        payment_status,
     );
 
     if (result) {

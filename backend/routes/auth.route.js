@@ -3,6 +3,7 @@ import {
     login,
     register,
     verifyOtp,
+    resendOtp,
     me,
     changePassword,
 } from "../controllers/auth.controller.js";
@@ -12,6 +13,7 @@ import { validateRequest } from "../middleware/validate.middleware.js";
 import {
     registerSchema,
     loginSchema,
+    resendOtpSchema,
     changePasswordSchema,
 } from "../validators/user.validator.js";
 
@@ -24,6 +26,7 @@ router.post(
     register,
 );
 router.post("/verify-otp", verifyOtp);
+router.post("/resend-otp", validateRequest(resendOtpSchema), resendOtp);
 router.post("/login", validateRequest(loginSchema), login);
 
 router.get("/me", authenticate, me);

@@ -89,7 +89,7 @@ class User {
                 .input("limit", sql.Int, limit)
                 .input("offset", sql.Int, offset)
                 .query(
-                    "SELECT * FROM users ORDER BY user_id OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY",
+                    "SELECT user_id, first_name, last_name, email, role, avatar_url, title, bio, is_verified, created_at FROM users ORDER BY user_id OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY",
                 );
             return result.recordset;
         } catch (err) {
@@ -105,10 +105,23 @@ class User {
 
             request.input("user_id", sql.Int, user_id);
 
+            const allowedUpdates = [
+                "first_name",
+                "last_name",
+                "avatar_url",
+                "role",
+                "title",
+                "bio",
+                "is_verified",
+                "hashed_password",
+                "otp",
+                "otp_expires",
+            ];
+
             let query = "UPDATE users SET ";
             const updates = [];
             for (const [key, value] of Object.entries(updatedUser)) {
-                if (value !== undefined && key !== "user_id") {
+                if (value !== undefined && allowedUpdates.includes(key)) {
                     if (key === "is_verified") {
                         request.input(key, sql.Bit, value ? 1 : 0);
                     } else {

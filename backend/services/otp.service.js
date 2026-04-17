@@ -1,6 +1,10 @@
 import crypto from "crypto";
-import { otpTemplate } from "../templates/otp.template.js";
-import { hashPassword, comparePassword } from "../utils/hash.js";
+import fs from "fs";
+import path from "path";
+import { sendEmail } from "../utils/sendEmail.js";
+import { hashPassword } from "../utils/hash.js";
+
+const templatePath = path.resolve("templates", "otp.html");
 
 export const generateAndSendOTP = async (email) => {
     const otp = crypto.randomInt(100000, 999999).toString();
@@ -8,7 +12,10 @@ export const generateAndSendOTP = async (email) => {
     const hashedOtp = await hashPassword(otp);
 
     try {
-        await otpTemplate(email, otp); 
+        let html = fs.readFileSync(templatePath, "utf8");
+        html = html.replace("{{otp}}", otp);
+        
+        await sendEmail(email, "NexsusAcademy - One-Time Password (OTP)", html);
     } catch (error) {
         console.error("Failed to send OTP email:", error);
         throw new Error("Failed to send OTP email");

@@ -35,7 +35,7 @@ const register = asyncHandler(async (req, res) => {
 
     try {
         await User.create({
-            ...req.body,
+            ...userData,
             hashed_password: hashedPassword,
             avatar_url: avatarUrl,
             otp: hashedOtp,
@@ -73,21 +73,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
         return errorResponse(res, "User already verified", 400);
 
     if (Date.now() > user.otp_expires) {
-        const avatarUrl = user.avatar_url;
-        await User.deleteUnverified(email);
-
-        if (avatarUrl) {
-            try {
-                await deleteFromDrive(avatarUrl);
-            } catch (err) {
-                console.error(
-                    "Failed to delete unverified user avatar from drive:",
-                    err,
-                );
-            }
-        }
-
-        return errorResponse(res, "OTP expired. Please register again.", 400);
+        return errorResponse(res, "OTP expired. Please resend the code.", 400);
     }
 
     const isOtpValid = await comparePassword(otp, user.otp);
@@ -96,6 +82,22 @@ const verifyOtp = asyncHandler(async (req, res) => {
     await User.verify(email);
 
     return successResponse(res, null, "User registered successfully", 201);
+});
+
+const resendOtp = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+
+    const user = await User.findByEmail(email);
+    if (!user) return errorResponse(res, "User not found", 404);
+
+    if (user.is_verified) {
+        return errorResponse(res, "Email already verified. Please log in.", 400);
+    }
+
+    const { hashedOtp, otpExpires } = await generateAndSendOTP(email);
+    await User.updateOTP(email, hashedOtp, otpExpires);
+
+    return successResponse(res, null, "OTP resent successfully.");
 });
 
 const login = asyncHandler(async (req, res) => {
@@ -167,4 +169,4 @@ const changePassword = asyncHandler(async (req, res) => {
     return successResponse(res, null, "Password updated successfully");
 });
 
-export { register, login, verifyOtp, me, changePassword };
+export { register, login, verifyOtp, resendOtp, me, changePassword };

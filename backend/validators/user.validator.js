@@ -18,6 +18,10 @@ const loginSchema = Joi.object({
     password: Joi.string().required(),
 });
 
+const resendOtpSchema = Joi.object({
+    email: Joi.string().email().required(),
+});
+
 const changePasswordSchema = Joi.object({
     old_password: Joi.string().required(),
     new_password: Joi.string().min(6).required(),
@@ -37,4 +41,10 @@ const updateUserSchema = Joi.object({
     role: Joi.string().valid("user", "instructor", "admin"),
 });
 
-export { registerSchema, loginSchema, changePasswordSchema, updateUserSchema };
+export {
+    registerSchema,
+    loginSchema,
+    resendOtpSchema,
+    changePasswordSchema,
+    updateUserSchema,
+};

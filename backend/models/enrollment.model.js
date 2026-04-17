@@ -1,21 +1,20 @@
 import { sql, poolPromise } from "../config/db.config.js";
 
 class Enrollment {
-    static async create(user_id, course_id, payment_method, payment_status) {
+    static async create(user_id, course_id, payment_method) {
         try {
             const pool = await poolPromise;
             const result = await pool
                 .request()
                 .input("user_id", sql.Int, user_id)
                 .input("course_id", sql.Int, course_id)
-                .input("payment_method", sql.NVarChar, payment_method)
-                .input("payment_status", sql.NVarChar, payment_status).query(`
+                .input("payment_method", sql.NVarChar, payment_method).query(`
                     INSERT INTO enrollments (course_id, user_id, payment_method, payment_status, enrollment_cost)
                     SELECT 
                         @course_id, 
                         @user_id, 
                         ISNULL(@payment_method, 'card'),
-                        ISNULL(@payment_status, 'paid'),
+                        'paid',
                         ISNULL(price, original_price)
                     FROM courses
                     WHERE course_id = @course_id;

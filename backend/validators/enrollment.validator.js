@@ -5,7 +5,6 @@ const enrollmentSchema = Joi.object({
     payment_method: Joi.string()
         .optional()
         .valid("card", "paypal", "bank_transfer"),
-    payment_status: Joi.string().optional().valid("paid", "pending", "failed"),
 });
 
 export { enrollmentSchema };
