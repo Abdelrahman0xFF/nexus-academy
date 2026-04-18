@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { authApi } from "@/lib/auth-api";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
@@ -32,6 +34,10 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await authApi.login(form);
+      
+      // Update the auth-user query data
+      queryClient.setQueryData(["auth-user"], response.data);
+
       toast({ 
         title: "Login successful", 
         description: `Welcome back, ${response.data.first_name}!` 

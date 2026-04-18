@@ -2,6 +2,7 @@ import { Users, Clock, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import RatingStars from "./RatingStars";
 import type { Course } from "@/lib/data";
+import { getMediaUrl } from "@/lib/utils";
 
 interface CourseCardProps {
   course: Course;
@@ -9,15 +10,27 @@ interface CourseCardProps {
 }
 
 const CourseCard = ({ course, showProgress = false }: CourseCardProps) => {
+  const imageUrl = getMediaUrl(course.image);
+
   return (
     <Link to={`/courses/${course.id}`} className="block group">
       <div className="bg-card rounded-card card-shadow hover-lift overflow-hidden h-full flex flex-col">
         {/* Image */}
         <div className="relative h-44 overflow-hidden bg-muted">
-          <div className="absolute inset-0 gradient-primary opacity-80" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <BookOpen className="text-primary-foreground" size={48} strokeWidth={1} />
-          </div>
+          {imageUrl ? (
+            <img 
+              src={imageUrl} 
+              alt={course.title} 
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <>
+              <div className="absolute inset-0 gradient-primary opacity-80" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <BookOpen className="text-primary-foreground" size={48} strokeWidth={1} />
+              </div>
+            </>
+          )}
           <div className="absolute top-3 left-3">
             <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-card/90 text-foreground backdrop-blur-sm">
               {course.level}

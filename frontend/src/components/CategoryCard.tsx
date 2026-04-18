@@ -16,10 +16,17 @@ const CategoryCard = ({ category, to }: CategoryCardProps) => {
                     {category.name}
                 </h3>
                 <div className="mt-4 flex items-center gap-2">
-                    <span className="h-px w-8 bg-primary/30 group-hover:w-12 transition-all duration-300" />
-                    {category.course_count && (
-                        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                            {category.course_count} Courses
+                    {category.course_count !== undefined && (
+                        <>
+                            <span className="h-px w-8 bg-primary/30 group-hover:w-12 transition-all duration-300" />
+                            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                                {category.course_count} Courses
+                            </p>
+                        </>
+                    )}
+                    {category.course_count === undefined && (
+                         <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                            Explore Courses
                         </p>
                     )}
                 </div>

@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import MainLayout from "@/layouts/MainLayout";
 import RatingStars from "@/components/RatingStars";
 import { courses, curriculum, initialReviews, Review } from "@/lib/data";
+import { getMediaUrl } from "@/lib/utils";
 import {
     Accordion,
     AccordionContent,
@@ -47,6 +48,8 @@ const CourseDetails = () => {
     );
     
     const course = courses.find((c) => c.id === id) || courses[0];
+    const courseImageUrl = getMediaUrl(course.image);
+    const instructorAvatarUrl = getMediaUrl(course.instructorAvatar);
 
     const handleEnroll = () => {
         setIsEnrolling(true);
@@ -120,13 +123,17 @@ const CourseDetails = () => {
                                 </span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center">
-                                    <span className="text-small font-bold">
-                                        {course.instructor
-                                            .split(" ")
-                                            .map((n) => n[0])
-                                            .join("")}
-                                    </span>
+                                <div className="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center overflow-hidden">
+                                    {instructorAvatarUrl ? (
+                                        <img src={instructorAvatarUrl} alt={course.instructor} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-small font-bold">
+                                            {course.instructor
+                                                .split(" ")
+                                                .map((n) => n[0])
+                                                .join("")}
+                                        </span>
+                                    )}
                                 </div>
                                 <div>
                                     <div className="text-small font-medium text-primary-foreground">
@@ -276,13 +283,17 @@ const CourseDetails = () => {
                                 Your Instructor
                             </h2>
                             <div className="flex items-start gap-4">
-                                <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center shrink-0">
-                                    <span className="text-xl font-bold text-primary-foreground">
-                                        {course.instructor
-                                            .split(" ")
-                                            .map((n) => n[0])
-                                            .join("")}
-                                    </span>
+                                <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center shrink-0 overflow-hidden">
+                                    {instructorAvatarUrl ? (
+                                        <img src={instructorAvatarUrl} alt={course.instructor} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-xl font-bold text-primary-foreground">
+                                            {course.instructor
+                                                .split(" ")
+                                                .map((n) => n[0])
+                                                .join("")}
+                                        </span>
+                                    )}
                                 </div>
                                 <div>
                                     <h3 className="text-body font-semibold text-card-foreground">
@@ -411,11 +422,17 @@ const CourseDetails = () => {
                     {/* Sticky Purchase Card */}
                     <div className="lg:col-span-1">
                         <div className="sticky top-24 bg-card rounded-card elevated-shadow p-6 space-y-5">
-                            <div className="aspect-video rounded-lg bg-muted gradient-primary opacity-80 flex items-center justify-center">
-                                <PlayCircle
-                                    size={56}
-                                    className="text-primary-foreground/90"
-                                />
+                            <div className="aspect-video rounded-lg bg-muted overflow-hidden flex items-center justify-center relative">
+                                {courseImageUrl ? (
+                                    <img src={courseImageUrl} alt={course.title} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="absolute inset-0 gradient-primary opacity-80 flex items-center justify-center">
+                                        <PlayCircle
+                                            size={56}
+                                            className="text-primary-foreground/90"
+                                        />
+                                    </div>
+                                )}
                             </div>
                             <div className="flex items-baseline gap-3">
                                 <span className="text-3xl font-bold text-primary">

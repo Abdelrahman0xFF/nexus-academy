@@ -1,3 +1,8 @@
+export interface Category {
+  category_id: number,
+  name: string,
+  course_count?: number
+}
 export interface Course {
   id: string;
   title: string;

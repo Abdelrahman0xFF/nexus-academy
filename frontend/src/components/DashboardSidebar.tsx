@@ -15,7 +15,10 @@ import {
   Users,
   DollarSign,
   MessageSquare,
+  Loader2,
 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { getMediaUrl } from "@/lib/utils";
 
 interface DashboardSidebarProps {
   type: "student" | "instructor" | "admin";
@@ -51,6 +54,7 @@ const adminLinks = [
 
 const DashboardSidebar = ({ type }: DashboardSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
+  const { user, logout, isLoggingOut } = useAuth();
   const location = useLocation();
 
   let links = studentLinks;
@@ -84,7 +88,7 @@ const DashboardSidebar = ({ type }: DashboardSidebarProps) => {
       </div>
 
       {/* Links */}
-      <nav className="flex-1 py-4 px-3 space-y-1">
+      <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
         {links.map((link) => {
           const isActive = location.pathname === link.path;
           return (
@@ -105,15 +109,38 @@ const DashboardSidebar = ({ type }: DashboardSidebarProps) => {
         })}
       </nav>
 
-      {/* Logout */}
-      <div className="p-3 border-t border-border">
+      {/* User Info & Logout */}
+      <div className="p-3 border-t border-border space-y-1">
+        {user && !collapsed && (
+          <div className="px-3 py-2 flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-white shadow-sm overflow-hidden shrink-0">
+              {user.avatar_url ? (
+                <img src={getMediaUrl(user.avatar_url)} alt={user.first_name} className="w-full h-full object-cover" />
+              ) : (
+                `${user.first_name[0]}${user.last_name[0]}`
+              )}
+            </div>
+            <div className="flex flex-col overflow-hidden">
+              <span className="text-xs font-bold truncate">{user.first_name} {user.last_name}</span>
+              <span className="text-[10px] text-muted-foreground truncate uppercase tracking-wider">{user.role}</span>
+            </div>
+          </div>
+        )}
+        
         <button
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-button text-small font-medium text-[#F24848] hover:text-destructive hover:bg-destructive/10 transition-colors w-full ${
+          onClick={() => logout()}
+          disabled={isLoggingOut}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-button text-small font-medium text-[#F24848] hover:text-destructive hover:bg-destructive/10 transition-colors w-full disabled:opacity-50 ${
             collapsed ? "justify-center" : ""
           }`}
+          title={collapsed ? "Log Out" : undefined}
         >
-          <LogOut size={20} />
-          {!collapsed && <span> Log Out</span>}
+          {isLoggingOut ? (
+            <Loader2 size={20} className="animate-spin" />
+          ) : (
+            <LogOut size={20} />
+          )}
+          {!collapsed && <span>{isLoggingOut ? " Logging Out..." : " Log Out"}</span>}
         </button>
       </div>
     </aside>
