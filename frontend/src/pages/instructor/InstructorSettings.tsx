@@ -4,6 +4,61 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 import { AppSelect } from "@/components/ui/app-select";
 
 const InstructorSettings = () => {
+<<<<<<< Updated upstream
+=======
+  const [formData, setFormData] = useState({
+    firstName: "Mohamed",
+    lastName: "Ehab",
+    email: "ehab@nexusacademy.com",
+    bio: "Senior Full-Stack Developer with 5- years of experience building scalable web applications.",
+    title: "Senior Full-Stack Developer",
+    website: "https://mohamedehab.dev",
+    avatar: "",
+  });
+
+  const [displayedProfile, setDisplayedProfile] = useState({ ...formData });
+
+  const [passwords, setPasswords] = useState({
+    old: "",
+    new: "",
+    confirm: "",
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, avatar: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const passwordCriteria = {
+    length: passwords.new.length >= 6,
+    hasUpper: /[A-Z]/.test(passwords.new),
+    hasLower: /[a-z]/.test(passwords.new),
+    hasNumber: /[0-9]/.test(passwords.new),
+    hasSymbol: /[@%*]/.test(passwords.new),
+    match: passwords.new === passwords.confirm && passwords.new !== "",
+  };
+
+  const isPasswordValid = Object.values(passwordCriteria).every(Boolean);
+  const canSave = passwords.new === "" ? true : isPasswordValid;
+
+  const handleSave = () => {
+    setDisplayedProfile({ ...formData });
+    setPasswords({ old: "", new: "", confirm: "" });
+  };
+
+>>>>>>> Stashed changes
   return (
     <DashboardLayout type="instructor">
       <div className="mb-8">
@@ -27,8 +82,17 @@ const InstructorSettings = () => {
               <div className="text-small text-muted-foreground">Senior Full-Stack Developer</div>
             </div>
           </div>
+<<<<<<< Updated upstream
           <div className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
+=======
+
+          <div className="bg-card rounded-card card-shadow p-6">
+            <h2 className="text-h3 text-card-foreground mb-6 flex items-center gap-2">
+              <Shield size={20} className="text-primary" /> Security & Password
+            </h2>
+            <div className="space-y-4">
+>>>>>>> Stashed changes
               <div>
                 <label className="text-small font-medium text-foreground block mb-1.5">First Name</label>
                 <input type="text" defaultValue="Sarah"                   className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20" />

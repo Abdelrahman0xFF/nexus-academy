@@ -4,6 +4,63 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
 const AdminSettings = () => {
+<<<<<<< Updated upstream
+=======
+  const [formData, setFormData] = useState({
+    firstName: "Zeyad",
+    lastName: "Mostafa",
+    nickname: "El ZooZ",
+    email: "zeyad.mostafa@nexusacademy.com",
+    // bio: "Full-stack developer and platform administrator.",
+    bio: "Tager rozBlabn ad eldonya.",
+    title: "Chief Administrator",
+    avatar: "",
+  });
+
+  const [displayedProfile, setDisplayedProfile] = useState({ ...formData });
+
+  const [passwords, setPasswords] = useState({
+    old: "",
+    new: "",
+    confirm: "",
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, avatar: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSave = () => {
+    setDisplayedProfile({ ...formData });
+    setPasswords({ old: "", new: "", confirm: "" });
+  };
+
+  const passwordCriteria = {
+    length: passwords.new.length >= 6,
+    hasUpper: /[A-Z]/.test(passwords.new),
+    hasLower: /[a-z]/.test(passwords.new),
+    hasNumber: /[0-9]/.test(passwords.new),
+    hasSymbol: /[@%*]/.test(passwords.new),
+    match: passwords.new === passwords.confirm && passwords.new !== "",
+  };
+
+  const isPasswordValid = Object.values(passwordCriteria).every(Boolean);
+
+  const canSave = passwords.new === "" ? true : isPasswordValid;
+
+>>>>>>> Stashed changes
   return (
     <DashboardLayout type="admin">
       <div className="mb-8">
