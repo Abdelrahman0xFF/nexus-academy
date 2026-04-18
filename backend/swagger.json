@@ -451,6 +451,24 @@
                 }
             }
         },
+        "/auth/logout": {
+            "post": {
+                "tags": ["Auth"],
+                "summary": "Logout",
+                "responses": {
+                    "200": {
+                        "description": "Logged out",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/me": {
             "get": {
                 "tags": ["Auth"],
@@ -1490,6 +1508,25 @@
                 "tags": ["Certificates"],
                 "summary": "Get my certificates",
                 "responses": { "200": { "description": "List" } }
+            }
+        },
+        "/certificates/{course_id}": {
+            "get": {
+                "tags": ["Certificates"],
+                "summary": "Get certificate",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "HTML Certificate" },
+                    "403": { "$ref": "#/components/responses/Forbidden" },
+                    "404": { "$ref": "#/components/responses/NotFound" }
+                }
             }
         },
         "/certificates/verify/{certificate_id}": {
