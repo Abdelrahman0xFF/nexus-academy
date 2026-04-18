@@ -13,6 +13,24 @@ const StudentCourses = () => {
         <p className="text-body text-muted-foreground mt-1">All your enrolled courses in one place</p>
       </div>
 
+      {/* Search & Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search your courses..."
+            className="w-full pl-10 pr-4 py-2.5 text-small bg-card rounded-button border border-border outline-none focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+        <div>
+          <AppSelect
+            options={["All Status", "Completed", "In Progress", "Not Started"]}
+            defaultValue="All Status"
+          />
+        </div>
+      </div>
+
       {/* Course List */}
       <div className="space-y-4">
         {studentCourses.map((c) => (

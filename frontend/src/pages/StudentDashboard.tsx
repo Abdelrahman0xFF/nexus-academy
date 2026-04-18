@@ -19,7 +19,7 @@ const StudentDashboard = () => {
     <DashboardLayout type="student">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-h1 text-foreground">Welcome back, Mazen! 👋</h1>
+        <h1 className="text-h1 text-foreground">Welcome back, Alex! 👋</h1>
         <p className="text-body text-muted-foreground mt-1">Continue where you left off</p>
       </div>
 

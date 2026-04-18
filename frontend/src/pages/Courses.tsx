@@ -66,6 +66,72 @@ const Courses = () => {
                     </p>
                 </div>
 
+                {/* Filters */}
+                <div className="bg-card rounded-card card-shadow p-4 mb-8">
+                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                        {/* Search */}
+                        <div className="relative flex-1">
+                            <Search
+                                size={16}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                            />
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                    setPage(1);
+                                }}
+                                placeholder="Search courses or instructors..."
+                                className="w-full pl-10 pr-4 py-2.5 text-small bg-muted rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                            />
+                        </div>
+
+                        {/* Filters */}
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <AppSelect
+                                value={selectedCategory}
+                                onValueChange={(val) => {
+                                    setSelectedCategory(val);
+                                    setPage(1);
+                                }}
+                                options={allCategories}
+                                triggerClassName="w-full min-w-[140px]"
+                            />
+
+                            <AppSelect
+                                value={selectedLevel}
+                                onValueChange={(val) => {
+                                    setSelectedLevel(val);
+                                    setPage(1);
+                                }}
+                                options={levels}
+                                triggerClassName="w-full min-w-[140px]"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Category pills */}
+                    <div className="flex gap-2 mt-4 flex-wrap">
+                        {allCategories.map((c) => (
+                            <button
+                                key={c}
+                                onClick={() => {
+                                    setSelectedCategory(c);
+                                    setPage(1);
+                                }}
+                                className={`px-4 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                                    selectedCategory === c
+                                        ? "gradient-primary text-primary-foreground"
+                                        : "bg-muted text-muted-foreground hover:text-foreground"
+                                }`}
+                            >
+                                {c}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
                 {/* Results */}
                 <div className="flex items-center justify-between mb-6">
                     <p className="text-small text-muted-foreground">

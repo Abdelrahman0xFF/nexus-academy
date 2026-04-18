@@ -15,11 +15,11 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 
 const StudentSettings = () => {
   const [formData, setFormData] = useState({
-    firstName: "Mazen",
-    lastName: "Fawzy",
-    email: "mazen@example.com",
+    firstName: "Alex",
+    lastName: "Johnson",
+    email: "alex@example.com",
     avatar: "",
-    title: "Retired Student",
+    title: "Junior Full-Stack Developer",
     bio: "Full-stack developer with 1+ years of experience building scalable web applications.",
   });
 
