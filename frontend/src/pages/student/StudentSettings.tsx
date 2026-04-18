@@ -190,56 +190,6 @@ const StudentSettings = () => {
           </div>
 
           <div className="bg-card rounded-card card-shadow p-6">
-            <div className="flex items-center gap-2 mb-5">
-              <Bell size={20} className="text-primary" />
-              <h2 className="text-h3 text-card-foreground">Notifications</h2>
-            </div>
-            <div className="space-y-4">
-              {[
-                {
-                  label: "Course updates",
-                  description: "When courses you're enrolled in are updated",
-                  checked: true,
-                },
-                {
-                  label: "Progress reminders",
-                  description: "Daily reminders to continue learning",
-                  checked: true,
-                },
-                {
-                  label: "New course recommendations",
-                  description: "Personalized course suggestions",
-                  checked: false,
-                },
-                {
-                  label: "Promotional emails",
-                  description: "Sales and special offers",
-                  checked: false,
-                },
-              ].map((n) => (
-                <label
-                  key={n.label}
-                  className="flex items-center justify-between py-2 cursor-pointer"
-                >
-                  <div>
-                    <div className="text-small font-medium text-foreground">
-                      {n.label}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {n.description}
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    defaultChecked={n.checked}
-                    className="w-5 h-5 rounded accent-[hsl(var(--primary))]"
-                  />
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-card rounded-card card-shadow p-6">
             <div className="flex items-center gap-2 mb-6">
               <Shield size={20} className="text-primary" />
               <h2 className="text-h3 text-card-foreground">

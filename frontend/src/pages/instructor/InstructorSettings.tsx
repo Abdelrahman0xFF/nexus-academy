@@ -205,56 +205,6 @@ const InstructorSettings = () => {
           </div>
 
           <div className="bg-card rounded-card card-shadow p-6">
-            <div className="flex items-center gap-2 mb-5">
-              <Bell size={20} className="text-primary" />
-              <h2 className="text-h3 text-card-foreground">Notifications</h2>
-            </div>
-            <div className="space-y-4">
-              {[
-                {
-                  label: "New enrollment alerts",
-                  description: "Get notified when a student enrolls",
-                  checked: true,
-                },
-                {
-                  label: "Review notifications",
-                  description: "Get notified when you receive a review",
-                  checked: true,
-                },
-                {
-                  label: "Payout notifications",
-                  description: "Get notified when a payout is processed",
-                  checked: true,
-                },
-                {
-                  label: "Marketing emails",
-                  description: "Receive tips and platform updates",
-                  checked: false,
-                },
-              ].map((n) => (
-                <label
-                  key={n.label}
-                  className="flex items-center justify-between py-2 cursor-pointer"
-                >
-                  <div>
-                    <div className="text-small font-medium text-foreground">
-                      {n.label}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {n.description}
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    defaultChecked={n.checked}
-                    className="w-5 h-5 rounded accent-[hsl(var(--primary))]"
-                  />
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-card rounded-card card-shadow p-6">
             <h2 className="text-h3 text-card-foreground mb-6 flex items-center gap-2">
               <Shield size={20} className="text-primary" /> Security & Password
             </h2>
