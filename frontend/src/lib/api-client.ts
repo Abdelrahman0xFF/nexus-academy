@@ -3,6 +3,12 @@ import Cookies from "js-cookie";
 
 const API_BASE_URL = "http://localhost:4000/api";
 
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -13,10 +19,8 @@ export const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = Cookies.get("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    // With credentials: true, the browser automatically sends HttpOnly cookies.
+    // Manual extraction is not needed and doesn't work for HttpOnly cookies.
     return config;
   },
   (error) => {

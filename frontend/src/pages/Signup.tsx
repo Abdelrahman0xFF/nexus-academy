@@ -6,17 +6,20 @@ import {
   GraduationCap,
   CheckCircle2,
   XCircle,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { authApi } from "@/lib/auth-api";
 
 const Signup = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{
     firstName?: string;
     lastName?: string;
@@ -64,7 +67,7 @@ const Signup = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validate()) {
@@ -76,14 +79,34 @@ const Signup = () => {
       return;
     }
 
-    toast({
-      title: "Account created successfully!",
-      description: "Redirecting to email verification...",
-    });
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("first_name", form.firstName);
+      formData.append("last_name", form.lastName);
+      formData.append("email", form.email);
+      formData.append("password", form.password);
+      formData.append("confirm_password", form.confirm);
 
-    setTimeout(() => {
+      await authApi.register(formData);
+      
+      localStorage.setItem("verify_email", form.email);
+      
+      toast({
+        title: "OTP Sent",
+        description: "Verification code sent to your email.",
+      });
+
       navigate("/verify-otp");
-    }, 1500);
+    } catch (error: any) {
+      toast({
+        title: "Registration Failed",
+        description: error.message || "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -120,6 +143,7 @@ const Signup = () => {
                 onChange={(e) =>
                   setForm({ ...form, firstName: e.target.value })
                 }
+                disabled={loading}
                 className={
                   errors.firstName
                     ? "border-destructive focus-visible:ring-destructive"
@@ -139,6 +163,7 @@ const Signup = () => {
                 placeholder="Johnson"
                 value={form.lastName}
                 onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                disabled={loading}
                 className={
                   errors.lastName
                     ? "border-destructive focus-visible:ring-destructive"
@@ -161,6 +186,7 @@ const Signup = () => {
               placeholder="name@example.com"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
+              disabled={loading}
               className={
                 errors.email
                   ? "border-destructive focus-visible:ring-destructive"
@@ -183,6 +209,7 @@ const Signup = () => {
                 placeholder="create a strong password"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
+                disabled={loading}
                 className={
                   errors.password ? "border-destructive pr-10" : "pr-10"
                 }
@@ -191,6 +218,7 @@ const Signup = () => {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                disabled={loading}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -205,6 +233,7 @@ const Signup = () => {
               placeholder="confirm your password"
               value={form.confirm}
               onChange={(e) => setForm({ ...form, confirm: e.target.value })}
+              disabled={loading}
               className={errors.confirm ? "border-destructive" : ""}
             />
             {errors.confirm && (
@@ -267,10 +296,16 @@ const Signup = () => {
 
           <Button
             type="submit"
-            disabled={!isPasswordValid || !form.confirm}
+            disabled={!isPasswordValid || !form.confirm || loading}
             className="w-full gradient-primary border-0 text-primary-foreground font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50"
           >
-            Create Account
+            {loading ? (
+              <>
+                <Loader2 size={18} className="mr-2 animate-spin" /> Creating Account...
+              </>
+            ) : (
+              "Create Account"
+            )}
           </Button>
         </form>
 

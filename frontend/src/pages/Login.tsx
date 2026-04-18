@@ -1,14 +1,17 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Eye, EyeOff, GraduationCap } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, GraduationCap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { authApi } from "@/lib/auth-api";
 
 const Login = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [form, setForm] = useState({ email: "", password: "" });
 
@@ -22,10 +25,36 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    toast({ title: "Login submitted", description: "Authentication not yet connected." });
+
+    setLoading(true);
+    try {
+      const response = await authApi.login(form);
+      toast({ 
+        title: "Login successful", 
+        description: `Welcome back, ${response.data.first_name}!` 
+      });
+      
+      // Redirect based on role
+      const role = response.data.role;
+      if (role === "admin") {
+        navigate("/admin");
+      } else if (role === "instructor") {
+        navigate("/instructor");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid email or password",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,6 +83,7 @@ const Login = () => {
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               className={errors.email ? "border-destructive" : ""}
+              disabled={loading}
             />
             {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
           </div>
@@ -68,11 +98,13 @@ const Login = () => {
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 className={errors.password ? "border-destructive pr-10" : "pr-10"}
+                disabled={loading}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                disabled={loading}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -80,8 +112,18 @@ const Login = () => {
             {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
           </div>
 
-          <Button type="submit" className="w-full gradient-primary border-0 text-primary-foreground hover:opacity-90">
-            Sign In
+          <Button 
+            type="submit" 
+            className="w-full gradient-primary border-0 text-primary-foreground hover:opacity-90 disabled:opacity-70"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2 size={18} className="mr-2 animate-spin" /> Signing In...
+              </>
+            ) : (
+              "Sign In"
+            )}
           </Button>
         </form>
 

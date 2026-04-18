@@ -129,8 +129,8 @@ const login = asyncHandler(async (req, res) => {
 
     res.cookie("token", token, {
         httpOnly: true,
-        secure: true,
-        sameSite: "Strict",
+        secure: false, 
+        sameSite: "Lax",
     });
 
     return successResponse(
@@ -174,4 +174,9 @@ const changePassword = asyncHandler(async (req, res) => {
     return successResponse(res, null, "Password updated successfully");
 });
 
-export { register, login, verifyOtp, resendOtp, me, changePassword };
+const logout = asyncHandler(async (req, res) => {
+    res.clearCookie("token");
+    return successResponse(res, null, "Logged out successfully");
+});
+
+export { register, login, verifyOtp, resendOtp, me, changePassword, logout };

@@ -6,6 +6,7 @@ import {
     resendOtp,
     me,
     changePassword,
+    logout,
 } from "../controllers/auth.controller.js";
 import { imageUpload, fileCleanup } from "../middleware/multer.js";
 import { authenticate } from "../middleware/auth.middleware.js";
@@ -29,6 +30,7 @@ router.post(
 router.post("/verify-otp", verifyOtp);
 router.post("/resend-otp", validateRequest(resendOtpSchema), resendOtp);
 router.post("/login", validateRequest(loginSchema), login);
+router.post("/logout", logout);
 
 router.get("/me", authenticate, me);
 router.put(

@@ -1,4 +1,4 @@
-import { api } from "./api-client";
+import { api, ApiResponse } from "./api-client";
 
 export interface Category {
   category_id: number;
@@ -7,18 +7,22 @@ export interface Category {
 
 export const categoryApi = {
   getAll: async (): Promise<Category[]> => {
-    return api.get("/categories");
+    const response = await api.get<any, ApiResponse<Category[]>>("/categories");
+    return response.data;
   },
 
   create: async (name: string): Promise<Category> => {
-    return api.post("/categories", { name });
+    const response = await api.post<any, ApiResponse<Category>>("/categories", { name });
+    return response.data;
   },
 
   update: async (id: number, name: string): Promise<{ message: string }> => {
-    return api.put(`/categories/${id}`, { name });
+    const response = await api.put<any, ApiResponse<null>>(`/categories/${id}`, { name });
+    return { message: response.message };
   },
 
   delete: async (id: number): Promise<boolean> => {
-    return api.delete(`/categories/${id}`);
+    const response = await api.delete<any, ApiResponse<null>>(`/categories/${id}`);
+    return response.success;
   },
 };
