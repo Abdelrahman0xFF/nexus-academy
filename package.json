@@ -1,0 +1,22 @@
+{
+  "name": "nexus-academy",
+  "version": "1.0.0",
+  "description": "A modern **Learning Management System (LMS)** designed to deliver structured online courses, manage instructors and students, and track learning progress.\r The platform aims to provide an intuitive experience for both learners and instructors while maintaining a scalable backend architecture.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abdelrahman0xFF/nexus-academy.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Abdelrahman0xFF/nexus-academy/issues"
+  },
+  "homepage": "https://github.com/Abdelrahman0xFF/nexus-academy#readme",
+  "dependencies": {
+    "axios": "^1.15.0"
+  }
+}
