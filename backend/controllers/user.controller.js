@@ -1,4 +1,6 @@
 import User from "../models/user.model.js";
+import Course from "../models/course.model.js";
+import Lesson from "../models/lesson.model.js";
 import { uploadToDrive, deleteFromDrive } from "../services/drive.service.js";
 import { successResponse, errorResponse } from "../utils/response.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -123,6 +125,26 @@ const deleteUser = asyncHandler(async (req, res) => {
     const user = await User.findById(user_id);
     if (!user) {
         return errorResponse(res, "User not found", 404);
+    }
+
+    // If instructor, cleanup their courses from Drive
+    if (user.role === "instructor") {
+        const courses = await Course.findByInstructorId(user_id, user_id, true);
+        for (const course of courses) {
+            if (course.thumbnail_url) {
+                await deleteFromDrive(course.thumbnail_url).catch((err) =>
+                    console.error("Failed to delete course thumbnail:", err),
+                );
+            }
+            const lessons = await Lesson.findByCourseId(course.course_id);
+            for (const lesson of lessons) {
+                if (lesson.video_url) {
+                    await deleteFromDrive(lesson.video_url).catch((err) =>
+                        console.error("Failed to delete lesson video:", err),
+                    );
+                }
+            }
+        }
     }
 
     const result = await User.delete(user_id);

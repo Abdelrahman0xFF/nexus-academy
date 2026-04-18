@@ -173,6 +173,16 @@ class User {
             const result = await pool
                 .request()
                 .input("user_id", sql.Int, user_id).query(`
+                    DELETE FROM reviews WHERE user_id = @user_id;
+                    
+                    DELETE FROM reviews WHERE course_id IN (SELECT course_id FROM courses WHERE instructor_id = @user_id);
+                    DELETE FROM user_lessons WHERE course_id IN (SELECT course_id FROM courses WHERE instructor_id = @user_id);
+                    DELETE FROM lessons WHERE course_id IN (SELECT course_id FROM courses WHERE instructor_id = @user_id);
+                    DELETE FROM sections WHERE course_id IN (SELECT course_id FROM courses WHERE instructor_id = @user_id);
+                    DELETE FROM certificates WHERE course_id IN (SELECT course_id FROM courses WHERE instructor_id = @user_id);
+                    DELETE FROM enrollments WHERE course_id IN (SELECT course_id FROM courses WHERE instructor_id = @user_id);
+                    DELETE FROM courses WHERE instructor_id = @user_id;
+
                     DELETE FROM certificates WHERE user_id = @user_id;
                     DELETE FROM user_lessons WHERE user_id = @user_id;
                     DELETE FROM enrollments WHERE user_id = @user_id;

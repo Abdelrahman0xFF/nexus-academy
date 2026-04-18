@@ -66,7 +66,18 @@ class Certificate {
         try {
             const pool = await poolPromise;
 
-            const [NEX, user_id, course_id] = certificate_id.split("-");
+            const parts = certificate_id.split("-");
+            let user_id, course_id;
+
+            if (parts.length === 3 && parts[0] === "NEX") {
+                user_id = parts[1];
+                course_id = parts[2];
+            } else if (parts.length === 2) {
+                user_id = parts[0];
+                course_id = parts[1];
+            } else {
+                return null;
+            }
 
             if (!user_id || !course_id) return null;
 

@@ -21,7 +21,7 @@ const generateCertificateHtml = async (user_id, course_id) => {
     let template = fs.readFileSync(templatePath, "utf8");
 
     return template
-        .replace("{{certificateId}}", `${cert.user_id}-${cert.course_id}`)
+        .replace("{{certificateId}}", `NEX-${cert.user_id}-${cert.course_id}`)
         .replace("{{studentName}}", `${cert.first_name} ${cert.last_name}`)
         .replace("{{courseName}}", cert.course_name)
         .replace("{{date}}", new Date(cert.issue_date).toLocaleDateString())
@@ -133,10 +133,23 @@ export const verifyCertificate = asyncHandler(async (req, res) => {
 
 export const getAllUserCertificates = asyncHandler(async (req, res) => {
     const user_id = req.user.user_id;
+    
+    const enrollments = await Enrollment.findByUserId(user_id, 1, 100);
+    
+    for (const enrollment of enrollments) {
+        if (enrollment.progress >= 95) {
+            const certExists = await Certificate.getByStudentAndCourse(user_id, enrollment.course_id);
+            if (!certExists) {
+                await Certificate.issue(user_id, enrollment.course_id);
+            }
+        }
+    }
+
     const certs = await Certificate.getByStudent(user_id);
 
     const certsWithLinks = certs.map((cert) => ({
         ...cert,
+        certificate_id: `NEX-${cert.user_id}-${cert.course_id}`,
         download_url: `/api/certificates/download/${cert.course_id}`,
     }));
 
