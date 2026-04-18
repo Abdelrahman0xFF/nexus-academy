@@ -15,11 +15,11 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 
 const StudentSettings = () => {
   const [formData, setFormData] = useState({
-    firstName: "Alex",
-    lastName: "Johnson",
-    email: "alex@example.com",
+    firstName: "Mazen",
+    lastName: "Fawzy",
+    email: "mazen@example.com",
     avatar: "",
-    title: "Junior Full-Stack Developer",
+    title: "Retired Student",
     bio: "Full-stack developer with 1+ years of experience building scalable web applications.",
   });
 
@@ -186,56 +186,6 @@ const StudentSettings = () => {
                   className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background h-28 resize-none"
                 />
               </div>
-            </div>
-          </div>
-
-          <div className="bg-card rounded-card card-shadow p-6">
-            <div className="flex items-center gap-2 mb-5">
-              <Bell size={20} className="text-primary" />
-              <h2 className="text-h3 text-card-foreground">Notifications</h2>
-            </div>
-            <div className="space-y-4">
-              {[
-                {
-                  label: "Course updates",
-                  description: "When courses you're enrolled in are updated",
-                  checked: true,
-                },
-                {
-                  label: "Progress reminders",
-                  description: "Daily reminders to continue learning",
-                  checked: true,
-                },
-                {
-                  label: "New course recommendations",
-                  description: "Personalized course suggestions",
-                  checked: false,
-                },
-                {
-                  label: "Promotional emails",
-                  description: "Sales and special offers",
-                  checked: false,
-                },
-              ].map((n) => (
-                <label
-                  key={n.label}
-                  className="flex items-center justify-between py-2 cursor-pointer"
-                >
-                  <div>
-                    <div className="text-small font-medium text-foreground">
-                      {n.label}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {n.description}
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    defaultChecked={n.checked}
-                    className="w-5 h-5 rounded accent-[hsl(var(--primary))]"
-                  />
-                </label>
-              ))}
             </div>
           </div>
 
