@@ -1376,6 +1376,47 @@
                 "responses": { "200": { "description": "Progress" } }
             }
         },
+        "/enrollments/": {
+            "delete": {
+                "tags": ["Enrollments"],
+                "summary": "Admin or Instructor unenroll a user",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["course_id", "user_id"],
+                                "properties": {
+                                    "course_id": {
+                                        "type": "integer",
+                                        "example": 12
+                                    },
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 46
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User unenrolled successfully"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Enrollment not found"
+                    }
+                }
+            }
+        },
         "/reviews/{course_id}": {
             "get": {
                 "tags": ["Reviews"],

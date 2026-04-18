@@ -25,11 +25,7 @@ export const enroll = asyncHandler(async (req, res) => {
         return errorResponse(res, "Already enrolled in this course", 400);
     }
 
-    const result = await Enrollment.create(
-        user_id,
-        course_id,
-        payment_method,
-    );
+    const result = await Enrollment.create(user_id, course_id, payment_method);
 
     if (result) {
         return successResponse(res, null, "Enrolled successfully", 201);
@@ -71,9 +67,9 @@ export const getEnrollmentsByCourseId = asyncHandler(async (req, res) => {
     }
 
     const sortMap = {
-        "Time": "enrolled_at",
-        "User": "user_id",
-        "Cost": "enrollment_cost"
+        Time: "enrolled_at",
+        User: "user_id",
+        Cost: "enrollment_cost",
     };
 
     const sortColumn = sortMap[sortBy] || "enrolled_at";
@@ -93,9 +89,9 @@ export const getMyEnrollments = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, sortBy = "Time", order = "DESC" } = req.query;
 
     const sortMap = {
-        "Time": "enrolled_at",
-        "Course": "course_id",
-        "Cost": "enrollment_cost"
+        Time: "enrolled_at",
+        Course: "course_id",
+        Cost: "enrollment_cost",
     };
 
     const sortColumn = sortMap[sortBy] || "enrolled_at";
@@ -111,8 +107,7 @@ export const getMyEnrollments = asyncHandler(async (req, res) => {
 });
 
 export const unenroll = asyncHandler(async (req, res) => {
-    const { course_id } = req.params;
-    const user_id = req.user.user_id;
+    const { user_id, course_id } = req.body;
 
     const enrolled = await Enrollment.isEnrolled(user_id, course_id);
     if (!enrolled) {
