@@ -6,24 +6,33 @@ import {
   CheckCircle2,
   XCircle,
   Mail,
-  User,
+  User as UserIcon,
   Briefcase,
+  Loader2,
 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import DashboardLayout from "@/layouts/DashboardLayout";
+import { useAuth } from "@/hooks/use-auth";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { authApi } from "@/lib/auth-api";
+import { useToast } from "@/hooks/use-toast";
+import { getMediaUrl } from "@/lib/utils";
 
 const StudentSettings = () => {
-  const [formData, setFormData] = useState({
-    firstName: "Alex",
-    lastName: "Johnson",
-    email: "alex@example.com",
-    avatar: "",
-    title: "Junior Full-Stack Developer",
-    bio: "Full-stack developer with 1+ years of experience building scalable web applications.",
-  });
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
 
-  const [displayedProfile, setDisplayedProfile] = useState({ ...formData });
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    title: "",
+    bio: "",
+  });
 
   const [passwords, setPasswords] = useState({
     old: "",
@@ -33,6 +42,59 @@ const StudentSettings = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.first_name || "",
+        lastName: user.last_name || "",
+        email: user.email || "",
+        title: user.title || "",
+        bio: user.bio || "",
+      });
+      if (user.avatar_url) {
+        setAvatarPreview(getMediaUrl(user.avatar_url));
+      }
+    }
+  }, [user]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: (data: FormData) => authApi.updateProfile(user!.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["auth-user"] });
+      toast({
+        title: "Profile updated",
+        description: "Your profile information has been successfully updated.",
+      });
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : "Something went wrong while updating your profile.";
+      toast({
+        title: "Update failed",
+        description: message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: authApi.changePassword,
+    onSuccess: () => {
+      setPasswords({ old: "", new: "", confirm: "" });
+      toast({
+        title: "Password updated",
+        description: "Your password has been successfully changed.",
+      });
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : "Something went wrong while updating your profile.";
+      toast({
+        title: "Update failed",
+        description: message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleImageClick = () => {
     fileInputRef.current?.click();
   };
@@ -40,9 +102,10 @@ const StudentSettings = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setAvatarFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData({ ...formData, avatar: reader.result as string });
+        setAvatarPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -58,12 +121,40 @@ const StudentSettings = () => {
   };
 
   const isPasswordValid = Object.values(passwordCriteria).every(Boolean);
-  const canSave = passwords.new === "" ? true : isPasswordValid;
+  const canSavePassword = passwords.new === "" ? false : isPasswordValid;
 
-  const handleSave = () => {
-    setDisplayedProfile({ ...formData });
-    setPasswords({ old: "", new: "", confirm: "" });
+  const handleSave = async () => {
+    // Save Profile Info
+    const profileFormData = new FormData();
+    profileFormData.append("first_name", formData.firstName);
+    profileFormData.append("last_name", formData.lastName);
+    profileFormData.append("title", formData.title);
+    profileFormData.append("bio", formData.bio);
+    if (avatarFile) {
+      profileFormData.append("avatar", avatarFile);
+    }
+
+    updateProfileMutation.mutate(profileFormData);
+
+    // Save Password if provided
+    if (passwords.old && passwords.new) {
+      changePasswordMutation.mutate({
+        old_password: passwords.old,
+        new_password: passwords.new,
+        confirm_password: passwords.confirm,
+      });
+    }
   };
+
+  if (isAuthLoading) {
+    return (
+      <DashboardLayout type="student">
+        <div className="flex items-center justify-center h-[60vh]">
+          <Loader2 className="animate-spin text-primary" size={40} />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout type="student">
@@ -79,22 +170,22 @@ const StudentSettings = () => {
           <div className="bg-card rounded-card card-shadow p-6">
             <h2 className="text-h3 text-card-foreground mb-8 flex items-center gap-2">
               Personal Information
-              <User size={20} className="text-muted-foreground" />
+              <UserIcon size={20} className="text-muted-foreground" />
             </h2>
 
             <div className="flex flex-col md:flex-row gap-8 items-start mb-8">
               <div className="relative group">
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-sm flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD]">
-                  {formData.avatar ? (
+                  {avatarPreview ? (
                     <img
-                      src={formData.avatar}
+                      src={avatarPreview}
                       alt="Profile"
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <span className="text-white text-4xl font-bold tracking-tighter">
-                      {formData.firstName[0]}
-                      {formData.lastName[0]}
+                      {formData.firstName?.[0]}
+                      {formData.lastName?.[0]}
                     </span>
                   )}
                 </div>
@@ -282,22 +373,22 @@ const StudentSettings = () => {
         <div className="space-y-6">
           <div className="bg-card rounded-card card-shadow p-6 text-center border-b-4 border-primary overflow-hidden relative">
             <div className="w-28 h-28 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-md flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD]">
-              {displayedProfile.avatar ? (
+              {avatarPreview ? (
                 <img
-                  src={displayedProfile.avatar}
+                  src={avatarPreview}
                   alt="Preview"
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <span className="text-white text-3xl font-bold tracking-tighter">
-                  {displayedProfile.firstName[0]}
-                  {displayedProfile.lastName[0]}
+                  {formData.firstName?.[0]}
+                  {formData.lastName?.[0]}
                 </span>
               )}
             </div>
 
             <h3 className="text-h3 font-black text-foreground truncate">
-              {displayedProfile.firstName} {displayedProfile.lastName}
+              {formData.firstName} {formData.lastName}
             </h3>
             <p className="text-[10px] font-black text-primary mb-4 uppercase tracking-[0.2em]">
               Student Account
@@ -306,17 +397,26 @@ const StudentSettings = () => {
             <div className="py-2.5 px-4 bg-muted/40 rounded-xl flex items-center justify-center gap-2 text-[11px] text-muted-foreground border border-border shadow-sm">
               <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
               <span className="font-medium truncate">
-                {displayedProfile.email}
+                {formData.email}
               </span>
             </div>
           </div>
 
           <Button
             onClick={handleSave}
-            disabled={!canSave}
+            disabled={
+              updateProfileMutation.isPending || 
+              changePasswordMutation.isPending ||
+              (passwords.new !== "" && !canSavePassword)
+            }
             className="w-full gradient-primary border-0 text-primary-foreground font-black rounded-button shadow-xl py-6 hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save size={20} className="mr-2" /> Save Changes
+            {(updateProfileMutation.isPending || changePasswordMutation.isPending) ? (
+              <Loader2 className="animate-spin mr-2" size={20} />
+            ) : (
+              <Save size={20} className="mr-2" />
+            )}
+            Save Changes
           </Button>
         </div>
       </div>

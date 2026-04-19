@@ -1,6 +1,7 @@
 import { api, ApiResponse } from "./api-client";
 
 export interface User {
+  id: number;
   first_name: string;
   last_name: string;
   email: string;
@@ -14,6 +15,12 @@ export interface User {
 export interface AuthCredentials {
   email: string;
   password?: string;
+}
+
+export interface ChangePasswordData {
+  old_password: string;
+  new_password: string;
+  confirm_password: string;
 }
 
 export const authApi = {
@@ -39,6 +46,18 @@ export const authApi = {
   
   me: async (): Promise<ApiResponse<User>> => {
     return api.get<never, ApiResponse<User>>("/auth/me");
+  },
+
+  updateProfile: async (userId: number, formData: FormData): Promise<ApiResponse<null>> => {
+    return api.put<FormData, ApiResponse<null>>(`/users/${userId}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+
+  changePassword: async (data: ChangePasswordData): Promise<ApiResponse<null>> => {
+    return api.put<ChangePasswordData, ApiResponse<null>>("/auth/change-password", data);
   },
 
   logout: async (): Promise<ApiResponse<null>> => {

@@ -136,6 +136,7 @@ const login = asyncHandler(async (req, res) => {
     return successResponse(
         res,
         {
+            id: user.user_id,
             first_name: user.first_name,
             last_name: user.last_name,
             email: user.email,
@@ -158,7 +159,7 @@ const me = asyncHandler(async (req, res) => {
         is_verified,
         ...userData
     } = req.user;
-    return successResponse(res, userData);
+    return successResponse(res, { id: user_id, ...userData });
 });
 
 const changePassword = asyncHandler(async (req, res) => {
