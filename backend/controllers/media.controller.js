@@ -40,6 +40,7 @@ export const streamMedia = asyncHandler(async (req, res, next) => {
         res.writeHead(200, {
             "Content-Length": streamConfig.fileSize,
             "Content-Type": streamConfig.mimeType,
+            "Cache-Control": "public, max-age=86400"
         });
     }
 

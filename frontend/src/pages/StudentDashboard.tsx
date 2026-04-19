@@ -6,34 +6,45 @@ import {
   TrendingUp,
   ArrowRight,
   PlayCircle,
+  Loader2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import CourseCard from "@/components/CourseCard";
 import ProgressBar from "@/components/ProgressBar";
-import { studentCourses, courses } from "@/lib/data";
+import { courses } from "@/lib/data";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { enrollmentApi } from "@/lib/enrollment-api";
+import { certificatesApi } from "@/lib/certificates-api";
 import { getMediaUrl } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
 
 const StudentDashboard = () => {
   const { user } = useAuth();
-  const { data: enrollments, isLoading } = useQuery({
+  
+  const { data: enrollments, isLoading: isEnrollmentsLoading } = useQuery({
     queryKey: ["my-enrollments"],
-    queryFn: () => enrollmentApi.getMyEnrollments(1, 4),
+    queryFn: () => enrollmentApi.getMyEnrollments(1, 100),
+  });
+
+  const { data: certificatesRes, isLoading: isCertsLoading } = useQuery({
+    queryKey: ["my-certificates"],
+    queryFn: () => certificatesApi.getMyCertificates(),
   });
 
   const enrollmentData = enrollments?.data || [];
+  const certificatesCount = certificatesRes?.data?.length || 0;
+  const completedCount = enrollmentData.filter(e => e.progress >= 95).length;
 
   const stats = [
     { icon: BookOpen, label: "Enrolled Courses", value: enrollmentData.length.toString(), color: "bg-primary/10 text-primary" },
     { icon: Clock, label: "Hours Learned", value: "86", color: "bg-secondary/10 text-secondary" },
-    { icon: Trophy, label: "Completed", value: enrollmentData.filter(e => e.progress >= 100).length.toString(), color: "bg-amber-500/10 text-amber-600" },
-    { icon: Award, label: "Certificates", value: enrollmentData.filter(e => e.progress >= 100).length.toString(), color: "bg-emerald-500/10 text-emerald-600" },
+    { icon: Trophy, label: "Completed", value: completedCount.toString(), color: "bg-amber-500/10 text-amber-600" },
+    { icon: Award, label: "Certificates", value: certificatesCount.toString(), color: "bg-emerald-500/10 text-emerald-600" },
   ];
+
+  const isLoading = isEnrollmentsLoading || isCertsLoading;
 
   return (
     <DashboardLayout type="student">
@@ -76,7 +87,7 @@ const StudentDashboard = () => {
         ) : enrollmentData.length > 0 ? (
           <div className="space-y-4">
             {enrollmentData.slice(0, 3).map((c) => (
-              <Link key={c.course_id} to={`/courses/${c.course_id}`} className="flex items-center gap-4 p-4 rounded-lg hover:bg-muted/50 transition-colors group">
+              <Link key={c.course_id} to={`/learn/${c.course_id}`} className="flex items-center gap-4 p-4 rounded-lg hover:bg-muted/50 transition-colors group">
                 <div className="w-16 h-16 rounded-lg gradient-primary flex items-center justify-center shrink-0 overflow-hidden">
                   {c.thumbnail_url ? (
                     <img src={getMediaUrl(c.thumbnail_url)} alt={c.title} className="w-full h-full object-cover" />

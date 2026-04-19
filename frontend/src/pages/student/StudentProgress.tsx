@@ -1,7 +1,6 @@
 import { Trophy, Target, Clock, Flame, Loader2 } from "lucide-react";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import ProgressBar from "@/components/ProgressBar";
-import { studentCourses } from "@/lib/data";
 import { useQuery } from "@tanstack/react-query";
 import { enrollmentApi } from "@/lib/enrollment-api";
 
@@ -15,7 +14,7 @@ const StudentProgress = () => {
   const totalProgress = enrollmentData.length > 0 
     ? Math.round(enrollmentData.reduce((a, c) => a + c.progress, 0) / enrollmentData.length)
     : 0;
-  const completed = enrollmentData.filter((c) => c.progress >= 100).length;
+  const completed = enrollmentData.filter((c) => c.progress >= 95).length;
 
   if (isLoading) {
     return (
