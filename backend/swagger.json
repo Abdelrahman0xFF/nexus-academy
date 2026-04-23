@@ -469,6 +469,30 @@
                 }
             }
         },
+        "/auth/google": {
+            "get": {
+                "tags": ["Auth"],
+                "summary": "Initiate Google OAuth login",
+                "security": [],
+                "responses": {
+                    "302": {
+                        "description": "Redirects to Google login page"
+                    }
+                }
+            }
+        },
+        "/auth/google/callback": {
+            "get": {
+                "tags": ["Auth"],
+                "summary": "Google OAuth callback",
+                "security": [],
+                "responses": {
+                    "302": {
+                        "description": "Redirects to frontend with token set in cookie"
+                    }
+                }
+            }
+        },
         "/auth/me": {
             "get": {
                 "tags": ["Auth"],

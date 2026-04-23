@@ -96,7 +96,11 @@ const resendOtp = asyncHandler(async (req, res) => {
     if (!user) return errorResponse(res, "User not found", 404);
 
     if (user.is_verified) {
-        return errorResponse(res, "Email already verified. Please log in.", 400);
+        return errorResponse(
+            res,
+            "Email already verified. Please log in.",
+            400,
+        );
     }
 
     const { hashedOtp, otpExpires } = await generateAndSendOTP(email);
@@ -129,7 +133,7 @@ const login = asyncHandler(async (req, res) => {
 
     res.cookie("token", token, {
         httpOnly: true,
-        secure: false, 
+        secure: false,
         sameSite: "Lax",
     });
 
@@ -180,4 +184,30 @@ const logout = asyncHandler(async (req, res) => {
     return successResponse(res, null, "Logged out successfully");
 });
 
-export { register, login, verifyOtp, resendOtp, me, changePassword, logout };
+const googleAuthCallback = asyncHandler(async (req, res) => {
+    const user = req.user;
+
+    const token = generateJWTToken({
+        id: user.user_id,
+        role: user.role,
+    });
+
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "Lax",
+    });
+
+    res.redirect(process.env.FRONTEND_URL);
+});
+
+export {
+    register,
+    login,
+    verifyOtp,
+    resendOtp,
+    me,
+    changePassword,
+    logout,
+    googleAuthCallback,
+};

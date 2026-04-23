@@ -7,6 +7,7 @@ import {
     me,
     changePassword,
     logout,
+    googleAuthCallback,
 } from "../controllers/auth.controller.js";
 import { imageUpload, fileCleanup } from "../middleware/multer.js";
 import { authenticate } from "../middleware/auth.middleware.js";
@@ -17,6 +18,7 @@ import {
     resendOtpSchema,
     changePasswordSchema,
 } from "../validators/user.validator.js";
+import passport from "../config/passport.config.js";
 
 const router = Router();
 
@@ -38,6 +40,18 @@ router.put(
     authenticate,
     validateRequest(changePasswordSchema),
     changePassword,
+);
+
+// Google OAuth routes
+router.get(
+    "/google",
+    passport.authenticate("google", { scope: ["profile", "email"] }),
+);
+
+router.get(
+    "/google/callback",
+    passport.authenticate("google", { session: false, failureRedirect: "/login" }),
+    googleAuthCallback,
 );
 
 export default router;

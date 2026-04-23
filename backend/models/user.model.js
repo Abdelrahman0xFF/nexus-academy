@@ -13,6 +13,7 @@ class User {
         this.is_verified = user.is_verified ?? false;
         this.otp = user.otp ?? null;
         this.otp_expires = user.otp_expires ?? null;
+        this.google_id = user.google_id ?? null;
     }
 
     static async create(newUser) {
@@ -23,19 +24,21 @@ class User {
                 .input("first_name", sql.NVarChar, newUser.first_name)
                 .input("last_name", sql.NVarChar, newUser.last_name)
                 .input("email", sql.NVarChar, newUser.email)
-                .input("hashed_password", sql.NVarChar, newUser.hashed_password)
+                .input("hashed_password", sql.NVarChar, newUser.hashed_password || null)
                 .input("avatar_url", sql.NVarChar, newUser.avatar_url)
                 .input("title", sql.NVarChar, newUser.title)
                 .input("bio", sql.NVarChar, newUser.bio)
                 .input("otp", sql.NVarChar, newUser.otp)
-                .input("otp_expires", sql.BigInt, newUser.otp_expires).query(`
+                .input("otp_expires", sql.BigInt, newUser.otp_expires)
+                .input("google_id", sql.NVarChar, newUser.google_id)
+                .input("is_verified", sql.Bit, newUser.is_verified ? 1 : 0).query(`
                     INSERT INTO users (
                         first_name, last_name, email, hashed_password,
-                        avatar_url, title, bio, otp, otp_expires
+                        avatar_url, title, bio, otp, otp_expires, google_id, is_verified
                     )
                     VALUES (
                         @first_name, @last_name, @email, @hashed_password,
-                        @avatar_url, @title, @bio, @otp, @otp_expires
+                        @avatar_url, @title, @bio, @otp, @otp_expires, @google_id, @is_verified
                     );
 
                     SELECT user_id, role, is_verified FROM users WHERE user_id = SCOPE_IDENTITY();
@@ -76,6 +79,20 @@ class User {
             return result.recordset[0];
         } catch (err) {
             console.error("Error finding user by email: ", err);
+            throw err;
+        }
+    }
+
+    static async findByGoogleId(google_id) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool
+                .request()
+                .input("google_id", sql.NVarChar, google_id)
+                .query("SELECT * FROM users WHERE google_id = @google_id");
+            return result.recordset[0];
+        } catch (err) {
+            console.error("Error finding user by Google ID: ", err);
             throw err;
         }
     }

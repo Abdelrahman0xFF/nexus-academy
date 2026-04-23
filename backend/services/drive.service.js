@@ -1,6 +1,50 @@
 import { driveConfig, PARENT_FOLDER_ID } from "../config/drive.config.js";
 import fs from "fs";
 import { deleteFile } from "../utils/file.js";
+import axios from "axios";
+
+export const uploadUrlToDrive = async (url, fileName, retries = 3) => {
+    let lastError;
+    for (let i = 0; i < retries; i++) {
+        try {
+            const responseStream = await axios({
+                method: "get",
+                url: url,
+                responseType: "stream",
+            });
+
+            const mimeType = responseStream.headers["content-type"];
+
+            const response = await driveConfig.files.create({
+                requestBody: {
+                    name: fileName,
+                    parents: [PARENT_FOLDER_ID],
+                },
+                media: {
+                    mimeType: mimeType,
+                    body: responseStream.data,
+                },
+                fields: "id",
+            });
+
+            const fileId = response.data.id;
+
+            await driveConfig.permissions.create({
+                fileId,
+                requestBody: { role: "reader", type: "anyone" },
+            });
+
+            return { fileId };
+        } catch (error) {
+            lastError = error;
+            console.warn(`Drive URL upload failed, retrying (${i + 1}/${retries})...`);
+            if (i < retries - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+            }
+        }
+    }
+    throw lastError;
+};
 
 export const uploadToDrive = async (file, retries = 3) => {
     let lastError;

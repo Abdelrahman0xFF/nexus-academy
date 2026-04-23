@@ -19,6 +19,7 @@
     },
     "homepage": "https://github.com/Abdelrahman-Ashraf-Fathey/courses-platform#readme",
     "dependencies": {
+        "axios": "^1.15.2",
         "bcrypt": "^6.0.0",
         "cookie-parser": "^1.4.7",
         "cors": "^2.8.6",
@@ -30,6 +31,8 @@
         "mssql": "^12.2.1",
         "multer": "^2.1.1",
         "nodemailer": "^8.0.5",
+        "passport": "^0.7.0",
+        "passport-google-oauth20": "^2.0.0",
         "puppeteer": "^24.41.0",
         "swagger-ui-express": "^5.0.1"
     }

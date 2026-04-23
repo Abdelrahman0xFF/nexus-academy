@@ -62,5 +62,9 @@ export const authApi = {
 
   logout: async (): Promise<ApiResponse<null>> => {
     return api.post<never, ApiResponse<null>>("/auth/logout");
+  },
+
+  getGoogleAuthUrl: () => {
+    return `${api.defaults.baseURL}/auth/google`;
   }
 };
