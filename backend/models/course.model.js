@@ -31,7 +31,7 @@ class Course {
                     sql.Decimal(10, 2),
                     newCourse.original_price,
                 )
-                .input("thumbnail_url", sql.NVarChar, newCourse.thumbnail_url)
+                .input("thumbnail_url", sql.VarChar, newCourse.thumbnail_url)
                 .input("level", sql.NVarChar, newCourse.level)
                 .input("is_available", sql.Bit, newCourse.is_available ?? 1)
                 .query(`

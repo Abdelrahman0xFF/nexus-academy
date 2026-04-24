@@ -21,7 +21,7 @@ class Lesson {
                 .input("lesson_order", sql.Int, newLesson.lesson_order)
                 .input("title", sql.NVarChar, newLesson.title)
                 .input("description", sql.NVarChar, newLesson.description)
-                .input("video_url", sql.NVarChar, newLesson.video_url)
+                .input("video_url", sql.VarChar, newLesson.video_url)
                 .input("duration", sql.Int, newLesson.duration).query(`
                     INSERT INTO lessons (course_id, section_order, lesson_order, title, description, video_url, duration)
                     VALUES (@course_id, @section_order, @lesson_order, @title, @description, @video_url, @duration);

@@ -24,13 +24,13 @@ class User {
                 .input("first_name", sql.NVarChar, newUser.first_name)
                 .input("last_name", sql.NVarChar, newUser.last_name)
                 .input("email", sql.NVarChar, newUser.email)
-                .input("hashed_password", sql.NVarChar, newUser.hashed_password || null)
-                .input("avatar_url", sql.NVarChar, newUser.avatar_url)
+                .input("hashed_password", sql.VarChar, newUser.hashed_password || null)
+                .input("avatar_url", sql.VarChar, newUser.avatar_url)
                 .input("title", sql.NVarChar, newUser.title)
                 .input("bio", sql.NVarChar, newUser.bio)
-                .input("otp", sql.NVarChar, newUser.otp)
+                .input("otp", sql.VarChar, newUser.otp)
                 .input("otp_expires", sql.BigInt, newUser.otp_expires)
-                .input("google_id", sql.NVarChar, newUser.google_id)
+                .input("google_id", sql.VarChar, newUser.google_id)
                 .input("is_verified", sql.Bit, newUser.is_verified ? 1 : 0).query(`
                     INSERT INTO users (
                         first_name, last_name, email, hashed_password,
