@@ -65,9 +65,10 @@ class Course {
                 .input("userId", sql.Int, userId)
                 .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
                     SELECT c.*, cat.name as category_name, (u.first_name + ' ' + u.last_name) as instructor_name,
-                    (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
+                    u.avatar_url as instructor_avatar,
+                    (SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
                     (SELECT COUNT(*) FROM reviews r WHERE r.course_id = c.course_id) AS review_count,
-                    ISNULL((SELECT SUM(duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration,
+                    ISNULL((SELECT SUM(l.duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration,
                     (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.course_id) AS students_count,
                     CASE 
                         WHEN @userId IS NOT NULL AND EXISTS (SELECT 1 FROM enrollments WHERE user_id = @userId AND course_id = @course_id) THEN 1
@@ -124,28 +125,37 @@ class Course {
                 whereClause += " AND c.level = @level";
             }
 
-            const allowedSortColumns = ["title", "price", "rating", "duration", "created_at"];
-            if (!allowedSortColumns.includes(sortBy)) {
-                sortBy = "created_at";
-            }
+            const sortColumnMap = {
+                title: "c.title",
+                price: "c.price",
+                rating: "c.rating",
+                duration: "c.duration",
+                created_at: "c.created_at"
+            };
+            const sortColumn = sortColumnMap[sortBy] || "c.created_at";
             const validOrder = ["ASC", "DESC"].includes(order.toUpperCase()) ? order.toUpperCase() : "ASC";
 
             const query = `
                 SELECT c.*, cat.name as category_name, (u.first_name + ' ' + u.last_name) as instructor_name,
-                (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
+                (SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
                 (SELECT COUNT(*) FROM reviews r WHERE r.course_id = c.course_id) AS review_count,
-                ISNULL((SELECT SUM(duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration,
+                ISNULL((SELECT SUM(l.duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration,
                 (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.course_id) AS students_count
                 FROM courses c
                 LEFT JOIN categories cat ON c.category_id = cat.category_id
                 LEFT JOIN users u ON c.instructor_id = u.user_id
                 ${whereClause}
-                ORDER BY ${sortBy} ${validOrder} 
-                OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
+                ORDER BY ${sortColumn} ${validOrder} 
+                OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
+
+                SELECT COUNT(*) as total FROM courses c ${whereClause};
             `;
 
             const result = await request.query(query);
-            return result.recordset;
+            return {
+                courses: result.recordsets[0],
+                total: result.recordsets[1][0].total
+            };
         } catch (err) {
             console.error("Error finding courses: ", err);
             throw err;
@@ -170,8 +180,8 @@ class Course {
                 .input("userId", sql.Int, userId)
                 .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
                     SELECT c.*, 
-                    (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
-                    ISNULL((SELECT SUM(duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration
+                    (SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
+                    ISNULL((SELECT SUM(l.duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration
                     FROM courses c
                     WHERE c.category_id = @category_id
                     AND (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)
@@ -198,8 +208,8 @@ class Course {
                 .input("userId", sql.Int, userId)
                 .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
                     SELECT c.*, 
-                    (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
-                    ISNULL((SELECT SUM(duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration
+                    (SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
+                    ISNULL((SELECT SUM(l.duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration
                     FROM courses c
                     WHERE c.instructor_id = @instructor_id
                     AND (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)
@@ -282,7 +292,7 @@ class Course {
                     SELECT 
                         COUNT(e.user_id) as students,
                         SUM(e.enrollment_cost) as revenue,
-                        (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = @course_id) as rating
+                        (SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r WHERE r.course_id = @course_id) as rating
                     FROM enrollments e
                     WHERE e.course_id = @course_id
                 `);

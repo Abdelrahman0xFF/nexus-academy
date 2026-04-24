@@ -17,6 +17,7 @@ export interface Course {
   created_at: string;
   category_name?: string;
   instructor_name?: string;
+  instructor_avatar?: string;
   students_count?: number;
   is_enrolled?: boolean;
 }
@@ -65,8 +66,8 @@ export const coursesApi = {
     level?: string;
     sortBy?: string;
     order?: string;
-  }): Promise<Course[]> => {
-    const response = await api.get<any, ApiResponse<Course[]>>("/courses", { params });
+  }): Promise<{ courses: Course[]; total: number }> => {
+    const response = await api.get<any, ApiResponse<{ courses: Course[]; total: number }>>("/courses", { params });
     return response.data;
   },
 
@@ -94,6 +95,16 @@ export const coursesApi = {
 
   getById: async (id: number): Promise<Course> => {
     const response = await api.get<any, ApiResponse<Course>>(`/courses/${id}`);
+    return response.data;
+  },
+
+  getMyCourses: async (): Promise<Course[]> => {
+    const response = await api.get<any, ApiResponse<Course[]>>("/courses/my");
+    return response.data;
+  },
+
+  getStats: async (id: number): Promise<{ students: number; revenue: number; rating: number }> => {
+    const response = await api.get<any, ApiResponse<{ students: number; revenue: number; rating: number }>>(`/courses/${id}/stats`);
     return response.data;
   },
 

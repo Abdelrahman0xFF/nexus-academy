@@ -51,7 +51,7 @@ class Review {
                 .input("course_id", sql.Int, course_id)
                 .input("limit", sql.Int, limit)
                 .input("offset", sql.Int, offset).query(`
-                    SELECT r.*, u.first_name, u.last_name 
+                    SELECT r.*, u.first_name, u.last_name, u.avatar_url 
                     FROM reviews r
                     JOIN users u ON r.user_id = u.user_id
                     WHERE r.course_id = @course_id

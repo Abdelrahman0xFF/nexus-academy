@@ -79,10 +79,6 @@ const Navbar = () => {
                         <div className="w-8 h-8 rounded-full bg-muted animate-pulse hidden md:block" />
                     ) : user ? (
                         <div className="hidden md:flex items-center gap-2">
-                            <Button variant="ghost" size="icon" className="text-muted-foreground">
-                                <Bell size={18} />
-                            </Button>
-                            
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <button className="flex items-center gap-2 p-1 rounded-full hover:bg-muted transition-colors outline-none group">

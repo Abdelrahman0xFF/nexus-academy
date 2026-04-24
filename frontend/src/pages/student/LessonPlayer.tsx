@@ -33,8 +33,9 @@ import {
 } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { coursesApi, lessonsApi } from "@/lib/courses-api";
-import { reviewApi } from "@/lib/reviews-api";
+import { reviewApi, Review } from "@/lib/reviews-api";
 import { getMediaUrl } from "@/lib/utils";
+import { api, ApiResponse } from "@/lib/api-client";
 
 const LessonPlayer = () => {
     const { id } = useParams();
@@ -79,6 +80,23 @@ const LessonPlayer = () => {
     const [reviewOpen, setReviewOpen] = useState(false);
     const [userRating, setUserRating] = useState(5);
     const [reviewComment, setReviewComment] = useState("");
+    const [isEditingReview, setIsEditingReview] = useState(false);
+
+    const { data: userReviewRes } = useQuery({
+        queryKey: ["user-review", courseId],
+        queryFn: () => api.get<any, ApiResponse<Review>>(`/reviews/${courseId}/me`),
+        enabled: !!courseId,
+    });
+
+    const userReview = userReviewRes?.data;
+
+    useEffect(() => {
+        if (userReview) {
+            setUserRating(userReview.rating);
+            setReviewComment(userReview.comment);
+            setIsEditingReview(true);
+        }
+    }, [userReview]);
 
     const currentSection = content?.sections[currentSectionIdx];
     const currentLesson = currentSection?.lessons[currentLessonIdx];
@@ -90,17 +108,20 @@ const LessonPlayer = () => {
             lessonsApi.complete(courseId, sectionOrder, lessonOrder),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["course-content", courseId] });
-            toast.success("Lesson completed! 🎉");
+            toast.success("Lesson completed!");
         }
     });
 
     const reviewMutation = useMutation({
-        mutationFn: (data: { rating: number; comment: string }) => reviewApi.create(courseId, data),
+        mutationFn: (data: { rating: number; comment: string }) => 
+            isEditingReview 
+                ? reviewApi.update(courseId, data) 
+                : reviewApi.create(courseId, data),
         onSuccess: () => {
-            toast.success("Thank you! Your review has been submitted.");
+            toast.success(isEditingReview ? "Review updated successfully!" : "Thank you! Your review has been submitted.");
             setReviewOpen(false);
-            setReviewComment("");
             queryClient.invalidateQueries({ queryKey: ["course-reviews", courseId] });
+            queryClient.invalidateQueries({ queryKey: ["user-review", courseId] });
         },
         onError: (error: any) => {
             toast.error(error.response?.data?.message || "Failed to submit review");
@@ -396,17 +417,17 @@ const LessonPlayer = () => {
                         <DialogTrigger asChild>
                             <Button
                                 variant="outline"
-                                className="w-full mb-6 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary font-bold text-[10px] h-9 transition-all tracking-widest"
+                                className="w-full mb-6 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary font-bold text-[10px] h-9 transition-all tracking-widest uppercase"
                             >
                                 <Star size={12} className="mr-2 fill-primary" />{" "}
-                                LEAVE A REVIEW
+                                {isEditingReview ? "Edit your Review" : "Leave a Review"}
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[400px]">
                             <DialogHeader>
-                                <DialogTitle>Rate this Course</DialogTitle>
+                                <DialogTitle>{isEditingReview ? "Edit your review" : "Rate this Course"}</DialogTitle>
                                 <DialogDescription>
-                                    Share your thoughts about this course.
+                                    {isEditingReview ? "Update your thoughts about this course." : "Share your thoughts about this course."}
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="py-4 space-y-4">
@@ -443,7 +464,7 @@ const LessonPlayer = () => {
                                     disabled={reviewMutation.isPending}
                                     className="w-full gradient-primary border-0 text-primary-foreground font-bold h-11 rounded-xl"
                                 >
-                                    {reviewMutation.isPending ? "Submitting..." : "Submit"}
+                                    {reviewMutation.isPending ? "Submitting..." : (isEditingReview ? "Update" : "Submit")}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>

@@ -83,7 +83,7 @@ const getAllCourses = asyncHandler(async (req, res, next) => {
 
     const sortColumn = sortMap[sortBy] || "created_at";
 
-    const courses = await Course.find(
+    const { courses, total } = await Course.find(
         Number(page),
         Number(limit),
         userId,
@@ -92,7 +92,7 @@ const getAllCourses = asyncHandler(async (req, res, next) => {
         sortColumn,
         order,
     );
-    return successResponse(res, courses);
+    return successResponse(res, { courses, total });
 });
 
 const getMyCourses = asyncHandler(async (req, res, next) => {

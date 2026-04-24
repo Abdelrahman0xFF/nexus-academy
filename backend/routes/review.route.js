@@ -12,7 +12,8 @@ import { reviewSchema } from "../validators/review.validator.js";
 
 const router = Router();
 
-router.get("/:course_id/", authenticate, getReview);
+router.get("/:course_id", getCourseReviews);
+router.get("/:course_id/me", authenticate, getReview);
 router.post(
     "/:course_id",
     authenticate,

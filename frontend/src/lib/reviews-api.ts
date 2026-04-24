@@ -8,6 +8,7 @@ export interface Review {
   reviewed_at: string;
   first_name: string;
   last_name: string;
+  avatar_url?: string;
 }
 
 export const reviewApi = {

@@ -117,6 +117,7 @@ class Enrollment {
                     c.title, 
                     c.thumbnail_url, 
                     c.instructor_id,
+                    cat.name AS category_name,
                     u.first_name AS instructor_first_name, 
                     u.last_name AS instructor_last_name,
                     ISNULL((
@@ -131,6 +132,7 @@ class Enrollment {
                 FROM enrollments e
                 JOIN courses c ON e.course_id = c.course_id
                 JOIN users u ON c.instructor_id = u.user_id
+                LEFT JOIN categories cat ON c.category_id = cat.category_id
                 WHERE e.user_id = @user_id
                 ORDER BY e.${sortBy} ${validOrder}
                 OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY

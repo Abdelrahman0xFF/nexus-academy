@@ -2,7 +2,6 @@ import { BookOpen, PlayCircle, Search, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import ProgressBar from "@/components/ProgressBar";
-import { studentCourses } from "@/lib/data";
 import { AppSelect } from "@/components/ui/app-select";
 import { useQuery } from "@tanstack/react-query";
 import { enrollmentApi } from "@/lib/enrollment-api";
@@ -12,15 +11,21 @@ import { Button } from "@/components/ui/button";
 
 const StudentCourses = () => {
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All Status");
   const { data: enrollments, isLoading } = useQuery({
     queryKey: ["my-enrollments-all"],
     queryFn: () => enrollmentApi.getMyEnrollments(1, 100),
   });
 
   const enrollmentData = enrollments?.data || [];
-  const filteredEnrollments = enrollmentData.filter(e => 
-    e.title.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredEnrollments = enrollmentData.filter(e => {
+    const matchesSearch = e.title.toLowerCase().includes(search.toLowerCase());
+    let matchesStatus = true;
+    if (statusFilter === "Completed") matchesStatus = e.progress === 100;
+    if (statusFilter === "In Progress") matchesStatus = e.progress > 0 && e.progress < 100;
+    if (statusFilter === "Not Started") matchesStatus = e.progress === 0;
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <DashboardLayout type="student">
@@ -45,6 +50,8 @@ const StudentCourses = () => {
           <AppSelect
             options={["All Status", "Completed", "In Progress", "Not Started"]}
             defaultValue="All Status"
+            value={statusFilter}
+            onValueChange={setStatusFilter}
           />
         </div>
       </div>

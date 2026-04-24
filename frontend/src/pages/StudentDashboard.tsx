@@ -1,23 +1,22 @@
 import {
   BookOpen,
-  Clock,
   Trophy,
   Award,
-  TrendingUp,
   ArrowRight,
   PlayCircle,
   Loader2,
+  TrendingUp,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import CourseCard from "@/components/CourseCard";
 import ProgressBar from "@/components/ProgressBar";
-import { courses } from "@/lib/data";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { enrollmentApi } from "@/lib/enrollment-api";
 import { certificatesApi } from "@/lib/certificates-api";
+import { coursesApi } from "@/lib/courses-api";
 import { getMediaUrl } from "@/lib/utils";
 
 const StudentDashboard = () => {
@@ -33,13 +32,24 @@ const StudentDashboard = () => {
     queryFn: () => certificatesApi.getMyCertificates(),
   });
 
+  const { data: recommendedRes, isLoading: isCoursesLoading } = useQuery({
+    queryKey: ["recommended-courses"],
+    queryFn: () => coursesApi.getAll({ limit: 3, sortBy: "Rating", order: "DESC" }),
+  });
+
   const enrollmentData = enrollments?.data || [];
+  const recommendedCourses = (recommendedRes?.courses || []).filter(
+    (rc) => !enrollmentData.some((e) => e.course_id === rc.course_id)
+  );
   const certificatesCount = certificatesRes?.data?.length || 0;
   const completedCount = enrollmentData.filter(e => e.progress >= 95).length;
+  const totalProgress = enrollmentData.length > 0 
+    ? Math.round(enrollmentData.reduce((a, c) => a + c.progress, 0) / enrollmentData.length)
+    : 0;
 
   const stats = [
     { icon: BookOpen, label: "Enrolled Courses", value: enrollmentData.length.toString(), color: "bg-primary/10 text-primary" },
-    { icon: Clock, label: "Hours Learned", value: "86", color: "bg-secondary/10 text-secondary" },
+    { icon: TrendingUp, label: "Overall Progress", value: `${totalProgress}%`, color: "bg-secondary/10 text-secondary" },
     { icon: Trophy, label: "Completed", value: completedCount.toString(), color: "bg-amber-500/10 text-amber-600" },
     { icon: Award, label: "Certificates", value: certificatesCount.toString(), color: "bg-emerald-500/10 text-emerald-600" },
   ];
@@ -121,9 +131,17 @@ const StudentDashboard = () => {
       <div>
         <h2 className="text-h3 text-foreground mb-5">Recommended for You</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.slice(4, 7).map((c) => (
-            <CourseCard key={c.id} course={c} />
-          ))}
+          {isCoursesLoading ? (
+             Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-64 rounded-card bg-muted animate-pulse" />
+            ))
+          ) : recommendedCourses.length > 0 ? (
+            recommendedCourses.map((c) => (
+              <CourseCard key={c.course_id} course={c} />
+            ))
+          ) : (
+            <p className="text-muted-foreground text-small">No recommendations at the moment.</p>
+          )}
         </div>
       </div>
     </DashboardLayout>

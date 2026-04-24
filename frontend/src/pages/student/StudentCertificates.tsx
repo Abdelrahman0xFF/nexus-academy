@@ -196,9 +196,6 @@ const StudentCertificates = () => {
               >
                 <Download size={14} className="mr-2" /> Download PDF
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setIsViewing(false)} className="h-9 px-3 text-xs">
-                Close
-              </Button>
             </div>
           </DialogHeader>
 
