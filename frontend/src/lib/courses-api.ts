@@ -12,8 +12,32 @@ export interface Course {
   level: "Beginner" | "Intermediate" | "Advanced";
   is_available: boolean;
   rating: number;
+  review_count?: number;
   duration: number;
   created_at: string;
+  category_name?: string;
+  instructor_name?: string;
+  students_count?: number;
+  is_enrolled?: boolean;
+}
+
+export interface CourseContent {
+  course_id: number;
+  title: string;
+  duration: number;
+  is_enrolled: boolean;
+  sections: {
+    section_order: number;
+    title: string;
+    lessons: {
+      lesson_order: number;
+      title: string;
+      duration: number;
+      is_completed?: boolean;
+      video_url?: string;
+      description?: string;
+    }[];
+  }[];
 }
 
 export interface Section {
@@ -33,6 +57,19 @@ export interface Lesson {
 }
 
 export const coursesApi = {
+  getAll: async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    category_id?: number;
+    level?: string;
+    sortBy?: string;
+    order?: string;
+  }): Promise<Course[]> => {
+    const response = await api.get<any, ApiResponse<Course[]>>("/courses", { params });
+    return response.data;
+  },
+
   create: async (formData: FormData): Promise<Course> => {
     const response = await api.post<any, ApiResponse<Course>>("/courses", formData, {
       headers: {
@@ -57,6 +94,11 @@ export const coursesApi = {
 
   getById: async (id: number): Promise<Course> => {
     const response = await api.get<any, ApiResponse<Course>>(`/courses/${id}`);
+    return response.data;
+  },
+
+  getCourseContent: async (id: number): Promise<CourseContent> => {
+    const response = await api.get<any, ApiResponse<CourseContent>>(`/courses/${id}/content`);
     return response.data;
   },
 };
@@ -96,5 +138,9 @@ export const lessonsApi = {
 
   delete: async (courseId: number, sectionOrder: number, lessonOrder: number): Promise<void> => {
     await api.delete<any, ApiResponse<null>>(`/lessons/${courseId}/${sectionOrder}/${lessonOrder}`);
+  },
+
+  complete: async (courseId: number, sectionOrder: number, lessonOrder: number): Promise<void> => {
+    await api.post<any, ApiResponse<null>>(`/lessons/${courseId}/${sectionOrder}/${lessonOrder}/complete`);
   },
 };

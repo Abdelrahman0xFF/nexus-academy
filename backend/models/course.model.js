@@ -64,10 +64,18 @@ class Course {
                 .input("course_id", sql.Int, course_id)
                 .input("userId", sql.Int, userId)
                 .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
-                    SELECT c.*, 
+                    SELECT c.*, cat.name as category_name, (u.first_name + ' ' + u.last_name) as instructor_name,
                     (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
-                    ISNULL((SELECT SUM(duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration
+                    (SELECT COUNT(*) FROM reviews r WHERE r.course_id = c.course_id) AS review_count,
+                    ISNULL((SELECT SUM(duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration,
+                    (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.course_id) AS students_count,
+                    CASE 
+                        WHEN @userId IS NOT NULL AND EXISTS (SELECT 1 FROM enrollments WHERE user_id = @userId AND course_id = @course_id) THEN 1
+                        ELSE 0
+                    END AS is_enrolled
                     FROM courses c
+                    LEFT JOIN categories cat ON c.category_id = cat.category_id
+                    LEFT JOIN users u ON c.instructor_id = u.user_id
                     WHERE c.course_id = @course_id
                     AND (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)
                 `);
@@ -123,11 +131,14 @@ class Course {
             const validOrder = ["ASC", "DESC"].includes(order.toUpperCase()) ? order.toUpperCase() : "ASC";
 
             const query = `
-                SELECT c.*, cat.name as category_name,
+                SELECT c.*, cat.name as category_name, (u.first_name + ' ' + u.last_name) as instructor_name,
                 (SELECT AVG(CAST(rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
-                ISNULL((SELECT SUM(duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration
+                (SELECT COUNT(*) FROM reviews r WHERE r.course_id = c.course_id) AS review_count,
+                ISNULL((SELECT SUM(duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration,
+                (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.course_id) AS students_count
                 FROM courses c
                 LEFT JOIN categories cat ON c.category_id = cat.category_id
+                LEFT JOIN users u ON c.instructor_id = u.user_id
                 ${whereClause}
                 ORDER BY ${sortBy} ${validOrder} 
                 OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY

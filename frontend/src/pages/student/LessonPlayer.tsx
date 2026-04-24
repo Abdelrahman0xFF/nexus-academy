@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
     CheckCircle,
     ChevronLeft,
@@ -16,9 +16,9 @@ import {
     Maximize,
     RotateCcw,
     RotateCw,
+    Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { curriculum, courses } from "@/lib/data";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
@@ -31,15 +31,32 @@ import {
     DialogTrigger,
     DialogFooter,
 } from "@/components/ui/dialog";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { coursesApi, lessonsApi } from "@/lib/courses-api";
+import { reviewApi } from "@/lib/reviews-api";
+import { getMediaUrl } from "@/lib/utils";
 
 const LessonPlayer = () => {
     const { id } = useParams();
-    const course = courses.find((c) => c.id === id) || courses[0];
+    const courseId = Number(id);
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
     const [currentLessonIdx, setCurrentLessonIdx] = useState(0);
-    const [completedLessons, setCompletedLessons] = useState<string[]>([]);
+
+    const { data: course, isLoading: isCourseLoading } = useQuery({
+        queryKey: ["course", courseId],
+        queryFn: () => coursesApi.getById(courseId),
+        enabled: !!courseId,
+    });
+
+    const { data: content, isLoading: isContentLoading } = useQuery({
+        queryKey: ["course-content", courseId],
+        queryFn: () => coursesApi.getCourseContent(courseId),
+        enabled: !!courseId,
+    });
 
     // Custom Video State
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -63,24 +80,32 @@ const LessonPlayer = () => {
     const [userRating, setUserRating] = useState(5);
     const [reviewComment, setReviewComment] = useState("");
 
-    const currentSection = curriculum[currentSectionIdx];
-    const currentLesson = currentSection.lessons[currentLessonIdx];
-    const currentLessonKey = `${currentSectionIdx}-${currentLessonIdx}`;
+    const currentSection = content?.sections[currentSectionIdx];
+    const currentLesson = currentSection?.lessons[currentLessonIdx];
 
-    useEffect(() => {
-        const initialCompleted: string[] = [];
-        curriculum.forEach((section, sIdx) => {
-            section.lessons.forEach((lesson, lIdx) => {
-                if (lesson.completed) initialCompleted.push(`${sIdx}-${lIdx}`);
-            });
-        });
-        setCompletedLessons(initialCompleted);
-    }, []);
+    const videoUrl = currentLesson?.video_url ? getMediaUrl(currentLesson.video_url) : "";
 
-    const backendUrl = "http://localhost:4000";
-    const videoUrl = currentLesson.videoId
-        ? `${backendUrl}/api/media/1WU6wva-cOoDGJzvHEKxKvUizEIc2vtFC`
-        : "https://vjs.zencdn.net/v/oceans.mp4";
+    const completeMutation = useMutation({
+        mutationFn: ({ sectionOrder, lessonOrder }: { sectionOrder: number, lessonOrder: number }) => 
+            lessonsApi.complete(courseId, sectionOrder, lessonOrder),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["course-content", courseId] });
+            toast.success("Lesson completed! 🎉");
+        }
+    });
+
+    const reviewMutation = useMutation({
+        mutationFn: (data: { rating: number; comment: string }) => reviewApi.create(courseId, data),
+        onSuccess: () => {
+            toast.success("Thank you! Your review has been submitted.");
+            setReviewOpen(false);
+            setReviewComment("");
+            queryClient.invalidateQueries({ queryKey: ["course-reviews", courseId] });
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || "Failed to submit review");
+        }
+    });
 
     const triggerFeedback = (type: string) => {
         setActionFeedback(type);
@@ -112,15 +137,6 @@ const LessonPlayer = () => {
         }
     };
 
-    const handleCompleteLesson = (key: string) => {
-        if (!completedLessons.includes(key)) {
-            setCompletedLessons((prev) => [...prev, key]);
-            toast.success("Lesson completed! 🎉", {
-                description: `You've finished: ${currentLesson.title}`,
-            });
-        }
-    };
-
     const handleTimeUpdate = () => {
         if (videoRef.current) {
             const current = videoRef.current.currentTime;
@@ -136,9 +152,13 @@ const LessonPlayer = () => {
             if (
                 total > 0 &&
                 progress >= 0.95 &&
-                !completedLessons.includes(currentLessonKey)
+                !currentLesson?.is_completed &&
+                !completeMutation.isPending
             ) {
-                handleCompleteLesson(currentLessonKey);
+                completeMutation.mutate({ 
+                    sectionOrder: currentSection!.section_order, 
+                    lessonOrder: currentLesson!.lesson_order 
+                });
             }
         }
     };
@@ -272,9 +292,10 @@ const LessonPlayer = () => {
     };
 
     const handleNextLesson = () => {
-        if (currentLessonIdx < currentSection.lessons.length - 1) {
+        if (!content) return;
+        if (currentLessonIdx < currentSection!.lessons.length - 1) {
             setCurrentLessonIdx(currentLessonIdx + 1);
-        } else if (currentSectionIdx < curriculum.length - 1) {
+        } else if (currentSectionIdx < content.sections.length - 1) {
             setCurrentSectionIdx(currentSectionIdx + 1);
             setCurrentLessonIdx(0);
         } else {
@@ -288,12 +309,17 @@ const LessonPlayer = () => {
         } else if (currentSectionIdx > 0) {
             const prevSectionIdx = currentSectionIdx - 1;
             setCurrentSectionIdx(prevSectionIdx);
-            setCurrentLessonIdx(curriculum[prevSectionIdx].lessons.length - 1);
+            setCurrentLessonIdx(content!.sections[prevSectionIdx].lessons.length - 1);
         }
     };
 
     const handleVideoEnded = () => {
-        handleCompleteLesson(currentLessonKey);
+        if (!currentLesson?.is_completed) {
+            completeMutation.mutate({ 
+                sectionOrder: currentSection!.section_order, 
+                lessonOrder: currentLesson!.lesson_order 
+            });
+        }
         setTimeout(() => handleNextLesson(), 1500);
     };
 
@@ -302,13 +328,29 @@ const LessonPlayer = () => {
             toast.error("Please enter a comment");
             return;
         }
-        toast.success("Thank you! Your review has been submitted.");
-        setReviewOpen(false);
-        setReviewComment("");
+        reviewMutation.mutate({ rating: userRating, comment: reviewComment });
     };
 
-    const totalLessons = curriculum.reduce((a, s) => a + s.lessons.length, 0);
-    const progressPercent = (completedLessons.length / totalLessons) * 100;
+    const totalLessons = useMemo(() => content?.sections.reduce((a, s) => a + s.lessons.length, 0) || 0, [content]);
+    const completedCount = useMemo(() => content?.sections.reduce((a, s) => a + s.lessons.filter(l => l.is_completed).length, 0) || 0, [content]);
+    const progressPercent = totalLessons > 0 ? (completedCount / totalLessons) * 100 : 0;
+
+    if (isCourseLoading || isContentLoading) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-background">
+                <Loader2 className="animate-spin text-primary" size={48} />
+            </div>
+        );
+    }
+
+    if (!course || !content) {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen bg-background gap-4">
+                <h2 className="text-h2">Course content not found</h2>
+                <Button onClick={() => navigate("/dashboard/courses")}>Back to Dashboard</Button>
+            </div>
+        );
+    }
 
     return (
         <div
@@ -398,9 +440,10 @@ const LessonPlayer = () => {
                             <DialogFooter>
                                 <Button
                                     onClick={handleSubmitReview}
+                                    disabled={reviewMutation.isPending}
                                     className="w-full gradient-primary border-0 text-primary-foreground font-bold h-11 rounded-xl"
                                 >
-                                    Submit
+                                    {reviewMutation.isPending ? "Submitting..." : "Submit"}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -423,21 +466,19 @@ const LessonPlayer = () => {
                 </div>
 
                 <ScrollArea className="flex-1 px-4 py-4">
-                    {curriculum.map((section, sIdx) => (
+                    {content.sections.map((section, sIdx) => (
                         <div key={sIdx} className="mb-6 last:mb-0">
                             <div className="flex items-center gap-2 px-3 mb-2 opacity-50">
                                 <span className="text-[10px] font-bold text-foreground uppercase tracking-widest">
-                                    {section.section}
+                                    {section.title}
                                 </span>
                             </div>
                             <div className="space-y-1">
                                 {section.lessons.map((lesson, lIdx) => {
-                                    const key = `${sIdx}-${lIdx}`;
                                     const isActive =
                                         sIdx === currentSectionIdx &&
                                         lIdx === currentLessonIdx;
-                                    const isFinished =
-                                        completedLessons.includes(key);
+                                    const isFinished = lesson.is_completed;
                                     return (
                                         <button
                                             key={lIdx}
@@ -473,7 +514,7 @@ const LessonPlayer = () => {
                                                     {lesson.title}
                                                 </p>
                                                 <span className="text-[10px] font-bold text-muted-foreground mt-0.5 block">
-                                                    {lesson.duration}
+                                                    {Math.floor(lesson.duration / 60)}m {lesson.duration % 60}s
                                                 </span>
                                             </div>
                                         </button>
@@ -507,6 +548,7 @@ const LessonPlayer = () => {
                             >
                                 <video
                                     ref={videoRef}
+                                    key={videoUrl}
                                     src={videoUrl}
                                     className="w-full h-full object-contain cursor-pointer"
                                     onTimeUpdate={handleTimeUpdate}
@@ -638,7 +680,6 @@ const LessonPlayer = () => {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <div className="relative group/speed">
-                                                {/* Hover Bridge */}
                                                 <div className="absolute bottom-full right-0 w-full h-4 bg-transparent pointer-events-auto" />
                                                 <button className="text-[10px] font-bold text-white/70 hover:text-white px-2 py-1 rounded bg-white/10 transition-all relative z-10">
                                                     {activeRate}x
@@ -684,13 +725,13 @@ const LessonPlayer = () => {
                                                 size={12}
                                                 strokeWidth={3}
                                             />{" "}
-                                            {currentSection.section}
+                                            {currentSection?.title}
                                         </div>
                                         <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight tracking-tight">
-                                            {currentLesson.title}
+                                            {currentLesson?.title}
                                         </h1>
                                         <p className="mt-4 text-muted-foreground ">
-                                            {currentLesson.description ||
+                                            {currentLesson?.description ||
                                                 "No description provided for this lesson."}
                                         </p>
                                     </div>
@@ -715,8 +756,8 @@ const LessonPlayer = () => {
                                     <div className="hidden sm:block text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] opacity-50">
                                         Next:{" "}
                                         {currentLessonIdx <
-                                        currentSection.lessons.length - 1
-                                            ? currentSection.lessons[
+                                        currentSection!.lessons.length - 1
+                                            ? currentSection!.lessons[
                                                   currentLessonIdx + 1
                                               ].title
                                             : "End"}
@@ -726,9 +767,9 @@ const LessonPlayer = () => {
                                         onClick={handleNextLesson}
                                         disabled={
                                             currentSectionIdx ===
-                                                curriculum.length - 1 &&
+                                                content.sections.length - 1 &&
                                             currentLessonIdx ===
-                                                currentSection.lessons.length -
+                                                currentSection!.lessons.length -
                                                     1
                                         }
                                         className="font-bold hover:text-primary text-xs h-10 px-4 rounded-lg hover:bg-card transition-all uppercase tracking-widest"
