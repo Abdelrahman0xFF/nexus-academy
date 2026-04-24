@@ -26,6 +26,8 @@ const Courses = () => {
     const selectedCategoryId = searchParams.get("category_id") ?? "All";
     const selectedLevel = searchParams.get("level") ?? "All Levels";
     const search = searchParams.get("search") ?? "";
+    const sortBy = searchParams.get("sortBy") ?? "Time";
+    const order = searchParams.get("order") ?? "DESC";
     
     const perPage = 8;
 
@@ -34,14 +36,14 @@ const Courses = () => {
         queryFn: () => categoryApi.getAll(),
     });
 
-    const { data, isLoading: loading, isFetching } = useQuery({
-        queryKey: ["courses-explore", page, search, selectedCategoryId, selectedLevel],
+    const { data, status, isFetching, isPlaceholderData } = useQuery({
+        queryKey: ["courses-explore", page, search, selectedCategoryId, selectedLevel, sortBy, order],
         queryFn: () => {
             const params: any = {
                 page,
                 limit: perPage,
-                sortBy: "Time",
-                order: "DESC"
+                sortBy,
+                order
             };
             if (search) params.search = search;
             if (selectedCategoryId !== "All") params.category_id = parseInt(selectedCategoryId);
@@ -53,6 +55,9 @@ const Courses = () => {
 
     const courses = data?.courses ?? [];
     const totalCourses = data?.total ?? 0;
+
+    const totalPages = Math.ceil(totalCourses / perPage);
+    const showInitialLoading = status === "pending" && !isPlaceholderData;
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -83,8 +88,40 @@ const Courses = () => {
         updateParams({ level: val, page: "1" });
     };
 
+    const handleSortChange = (val: string) => {
+        const [newSortBy, newOrder] = val.split("-");
+        updateParams({ sortBy: newSortBy, order: newOrder, page: "1" });
+    };
+
     const handlePageChange = (p: number) => {
-        updateParams({ page: p.toString() });
+        if (p >= 1 && p <= totalPages) {
+            updateParams({ page: p.toString() });
+        }
+    };
+
+    const renderPageButtons = () => {
+        const buttons = [];
+        let startPage = Math.max(1, page - 2);
+        const endPage = Math.min(totalPages, startPage + 4);
+        
+        if (endPage - startPage < 4) {
+            startPage = Math.max(1, endPage - 4);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            buttons.push(
+                <Button
+                    key={i}
+                    variant={page === i ? "default" : "outline"}
+                    size="sm"
+                    className={`w-9 h-9 rounded-button p-0 font-bold ${page === i ? 'gradient-primary border-0' : ''}`}
+                    onClick={() => handlePageChange(i)}
+                >
+                    {i}
+                </Button>
+            );
+        }
+        return buttons;
     };
 
     return (
@@ -120,6 +157,19 @@ const Courses = () => {
 
                         {/* Filters */}
                         <div className="flex flex-col sm:flex-row gap-2">
+                            <AppSelect
+                                value={`${sortBy}-${order}`}
+                                onValueChange={handleSortChange}
+                                options={[
+                                    { label: "Newest", value: "Time-DESC" },
+                                    { label: "Oldest", value: "Time-ASC" },
+                                    { label: "Price: Low to High", value: "Price-ASC" },
+                                    { label: "Price: High to Low", value: "Price-DESC" },
+                                    { label: "Highest Rated", value: "Rating-DESC" },
+                                ]}
+                                triggerClassName="w-full min-w-[160px]"
+                            />
+
                             <AppSelect
                                 value={selectedCategoryId}
                                 onValueChange={handleCategoryChange}
@@ -170,11 +220,11 @@ const Courses = () => {
                 {/* Results */}
                 <div className="flex items-center justify-between mb-6">
                     <p className="text-small text-muted-foreground">
-                        {isFetching ? "Syncing..." : `Showing ${courses.length} courses`}
+                        {isFetching ? "Syncing..." : `Showing ${courses.length} of ${totalCourses} courses`}
                     </p>
                 </div>
 
-                {loading ? (
+                {showInitialLoading ? (
                     <div className="flex items-center justify-center py-20">
                         <Loader2 className="animate-spin text-primary" size={40} />
                     </div>
@@ -200,26 +250,28 @@ const Courses = () => {
                 )}
 
                 {/* Pagination */}
-                {!loading && (courses.length > 0 || page > 1) && (
+                {!showInitialLoading && totalPages > 1 && (
                     <div className="flex items-center justify-center gap-2 mt-10">
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-button"
-                            onClick={() => handlePageChange(Math.max(1, page - 1))}
+                            className="w-9 h-9 rounded-button p-0"
+                            onClick={() => handlePageChange(page - 1)}
                             disabled={page === 1}
                         >
                             <ChevronLeft size={16} />
                         </Button>
-                        <span className="text-small font-medium mx-2">
-                            Page {page}
-                        </span>
+                        
+                        <div className="flex items-center gap-1">
+                            {renderPageButtons()}
+                        </div>
+
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-button"
+                            className="w-9 h-9 rounded-button p-0"
                             onClick={() => handlePageChange(page + 1)}
-                            disabled={courses.length < perPage}
+                            disabled={page === totalPages}
                         >
                             <ChevronRight size={16} />
                         </Button>

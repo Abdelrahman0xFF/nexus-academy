@@ -11,7 +11,7 @@ const PageTransition = ({ children, className = "" }: PageTransitionProps) => {
 
   return (
     <div
-      key={location.key}
+      key={location.pathname}
       className={`animate-reveal w-full pb-8 -mb-8 ${className}`}
     >
       {children}
