@@ -66,10 +66,10 @@ class Course {
                 .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
                     SELECT c.*, cat.name as category_name, (u.first_name + ' ' + u.last_name) as instructor_name,
                     u.avatar_url as instructor_avatar,
-                    (SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
-                    (SELECT COUNT(*) FROM reviews r WHERE r.course_id = c.course_id) AS review_count,
-                    ISNULL((SELECT SUM(l.duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration,
-                    (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.course_id) AS students_count,
+                    r.rating,
+                    r.review_count,
+                    ISNULL(l.duration, 0) AS duration,
+                    e_count.students_count,
                     CASE 
                         WHEN @userId IS NOT NULL AND EXISTS (SELECT 1 FROM enrollments WHERE user_id = @userId AND course_id = @course_id) THEN 1
                         ELSE 0
@@ -77,6 +77,23 @@ class Course {
                     FROM courses c
                     LEFT JOIN categories cat ON c.category_id = cat.category_id
                     LEFT JOIN users u ON c.instructor_id = u.user_id
+                    LEFT JOIN (
+                        SELECT course_id, 
+                               AVG(CAST(rating AS FLOAT)) AS rating, 
+                               COUNT(*) AS review_count 
+                        FROM reviews 
+                        GROUP BY course_id
+                    ) r ON c.course_id = r.course_id
+                    LEFT JOIN (
+                        SELECT course_id, SUM(duration) AS duration 
+                        FROM lessons 
+                        GROUP BY course_id
+                    ) l ON c.course_id = l.course_id
+                    LEFT JOIN (
+                        SELECT course_id, COUNT(*) AS students_count 
+                        FROM enrollments 
+                        GROUP BY course_id
+                    ) e_count ON c.course_id = e_count.course_id
                     WHERE c.course_id = @course_id
                     AND (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)
                 `);
@@ -128,8 +145,8 @@ class Course {
             const sortColumnMap = {
                 title: "c.title",
                 price: "c.price",
-                rating: "c.rating",
-                duration: "c.duration",
+                rating: "rating",
+                duration: "duration",
                 created_at: "c.created_at"
             };
             const sortColumn = sortColumnMap[sortBy] || "c.created_at";
@@ -137,13 +154,30 @@ class Course {
 
             const query = `
                 SELECT c.*, cat.name as category_name, (u.first_name + ' ' + u.last_name) as instructor_name,
-                (SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
-                (SELECT COUNT(*) FROM reviews r WHERE r.course_id = c.course_id) AS review_count,
-                ISNULL((SELECT SUM(l.duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration,
-                (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.course_id) AS students_count
+                r.rating,
+                r.review_count,
+                ISNULL(l.duration, 0) AS duration,
+                e_count.students_count
                 FROM courses c
                 LEFT JOIN categories cat ON c.category_id = cat.category_id
                 LEFT JOIN users u ON c.instructor_id = u.user_id
+                LEFT JOIN (
+                    SELECT course_id, 
+                           AVG(CAST(rating AS FLOAT)) AS rating, 
+                           COUNT(*) AS review_count 
+                    FROM reviews 
+                    GROUP BY course_id
+                ) r ON c.course_id = r.course_id
+                LEFT JOIN (
+                    SELECT course_id, SUM(duration) AS duration 
+                    FROM lessons 
+                    GROUP BY course_id
+                ) l ON c.course_id = l.course_id
+                LEFT JOIN (
+                    SELECT course_id, COUNT(*) AS students_count 
+                    FROM enrollments 
+                    GROUP BY course_id
+                ) e_count ON c.course_id = e_count.course_id
                 ${whereClause}
                 ORDER BY ${sortColumn} ${validOrder} 
                 OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
@@ -180,9 +214,19 @@ class Course {
                 .input("userId", sql.Int, userId)
                 .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
                     SELECT c.*, 
-                    (SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
-                    ISNULL((SELECT SUM(l.duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration
+                    r.rating,
+                    ISNULL(l.duration, 0) AS duration
                     FROM courses c
+                    LEFT JOIN (
+                        SELECT course_id, AVG(CAST(rating AS FLOAT)) AS rating 
+                        FROM reviews 
+                        GROUP BY course_id
+                    ) r ON c.course_id = r.course_id
+                    LEFT JOIN (
+                        SELECT course_id, SUM(duration) AS duration 
+                        FROM lessons 
+                        GROUP BY course_id
+                    ) l ON c.course_id = l.course_id
                     WHERE c.category_id = @category_id
                     AND (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)
                     ORDER BY c.course_id 
@@ -208,9 +252,19 @@ class Course {
                 .input("userId", sql.Int, userId)
                 .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
                     SELECT c.*, 
-                    (SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r WHERE r.course_id = c.course_id) AS rating,
-                    ISNULL((SELECT SUM(l.duration) FROM lessons l WHERE l.course_id = c.course_id), 0) AS duration
+                    r.rating,
+                    ISNULL(l.duration, 0) AS duration
                     FROM courses c
+                    LEFT JOIN (
+                        SELECT course_id, AVG(CAST(rating AS FLOAT)) AS rating 
+                        FROM reviews 
+                        GROUP BY course_id
+                    ) r ON c.course_id = r.course_id
+                    LEFT JOIN (
+                        SELECT course_id, SUM(duration) AS duration 
+                        FROM lessons 
+                        GROUP BY course_id
+                    ) l ON c.course_id = l.course_id
                     WHERE c.instructor_id = @instructor_id
                     AND (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)
                 `);
@@ -233,7 +287,7 @@ class Course {
             for (const [key, value] of Object.entries(updatedCourse)) {
                 if (
                     value !== undefined &&
-                    !["course_id", "duration"].includes(key)
+                    !["course_id", "duration", "rating"].includes(key)
                 ) {
                     if (key === "is_available") {
                         request.input(key, sql.Bit, value ? 1 : 0);
@@ -290,11 +344,22 @@ class Course {
                 .request()
                 .input("course_id", sql.Int, course_id).query(`
                     SELECT 
-                        COUNT(e.user_id) as students,
-                        SUM(e.enrollment_cost) as revenue,
-                        (SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r WHERE r.course_id = @course_id) as rating
-                    FROM enrollments e
-                    WHERE e.course_id = @course_id
+                        ISNULL(e.students, 0) AS students,
+                        ISNULL(e.revenue, 0) AS revenue,
+                        r.rating
+                    FROM (SELECT 1 as dummy) d
+                    LEFT JOIN (
+                        SELECT course_id, COUNT(user_id) as students, SUM(enrollment_cost) as revenue
+                        FROM enrollments
+                        WHERE course_id = @course_id
+                        GROUP BY course_id
+                    ) e ON 1=1
+                    LEFT JOIN (
+                        SELECT course_id, AVG(CAST(rating AS FLOAT)) as rating
+                        FROM reviews
+                        WHERE course_id = @course_id
+                        GROUP BY course_id
+                    ) r ON 1=1
                 `);
             return result.recordset[0];
         } catch (err) {
