@@ -34,93 +34,249 @@ import ScrollToTopOnNavigation from "./components/ScrollToTopOnNavigation";
 import PageTransition from "./components/PageTransition";
 import MainLayout from "./layouts/MainLayout";
 import VerifyOTP from "./pages/VerifyOTP";
+import VerifyCertificate from "./pages/VerifyCertificate";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ScrollToTopOnNavigation />
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route
-            path="/login"
-            element={
-              <PageTransition>
-                <Login />
-              </PageTransition>
-            }
-          />
-          <Route
-            path="/signup"
-            element={
-              <PageTransition>
-                <Signup />
-              </PageTransition>
-            }
-          />
-          <Route path="/verify-otp" element={<VerifyOTP />} />
-          <Route path="/courses" element={<Courses />} />
-          <Route path="/courses/:id" element={<CourseDetails />} />
-          <Route
-            path="/help"
-            element={
-              <MainLayout>
-                <HelpCenter />
-              </MainLayout>
-            }
-          />
-          {/* Student Dashboard */}
-          <Route path="/dashboard" element={<StudentDashboard />} />
-          <Route path="/dashboard/courses" element={<StudentCourses />} />
-          <Route path="/dashboard/progress" element={<StudentProgress />} />
-          <Route
-            path="/dashboard/certificates"
-            element={<StudentCertificates />}
-          />
-          <Route path="/dashboard/settings" element={<StudentSettings />} />
-          <Route
-            path="/learn/:id"
-            element={
-              <PageTransition>
-                <LessonPlayer />
-              </PageTransition>
-            }
-          />
-          {/* Instructor Dashboard */}
-          <Route path="/instructor" element={<InstructorDashboard />} />
-          <Route path="/instructor/courses" element={<InstructorCourses />} />
-          <Route path="/instructor/upload" element={<UploadCourse />} />
-          <Route
-            path="/instructor/analytics"
-            element={<InstructorAnalytics />}
-          />
-          <Route path="/instructor/students" element={<InstructorStudents />} />
-          <Route path="/instructor/revenue" element={<InstructorRevenue />} />
-          <Route path="/instructor/settings" element={<InstructorSettings />} />
-          {/* Admin Dashboard */}
-          <Route path="/admin" element={<AdminOverview />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/admin/categories" element={<AdminCategories />} />
-          <Route path="/admin/courses" element={<AdminCourses />} />
-          <Route path="/admin/payments" element={<AdminPayments />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
-          <Route path="/admin/reviews" element={<AdminReviews />} />
-          <Route
-            path="*"
-            element={
-              <PageTransition>
-                <NotFound />
-              </PageTransition>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+                <ScrollToTopOnNavigation />
+                <Routes>
+                    <Route path="/" element={<Landing />} />
+                    <Route
+                        path="/login"
+                        element={
+                            <PageTransition>
+                                <Login />
+                            </PageTransition>
+                        }
+                    />
+                    <Route
+                        path="/signup"
+                        element={
+                            <PageTransition>
+                                <Signup />
+                            </PageTransition>
+                        }
+                    />
+                    <Route path="/verify-otp" element={<VerifyOTP />} />
+                    <Route path="/verify-certificate" element={<VerifyCertificate />} />
+                    <Route path="/courses" element={<Courses />} />
+                    <Route path="/courses/:id" element={<CourseDetails />} />
+                    <Route
+                        path="/help"
+                        element={
+                            <MainLayout>
+                                <HelpCenter />
+                            </MainLayout>
+                        }
+                    />
+                    {/* Student Dashboard */}
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <ProtectedRoute
+                                allowedRoles={["user", "instructor", "admin"]}
+                            >
+                                <StudentDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/dashboard/courses"
+                        element={
+                            <ProtectedRoute
+                                allowedRoles={["user", "instructor", "admin"]}
+                            >
+                                <StudentCourses />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/dashboard/progress"
+                        element={
+                            <ProtectedRoute
+                                allowedRoles={["user", "instructor", "admin"]}
+                            >
+                                <StudentProgress />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/dashboard/certificates"
+                        element={
+                            <ProtectedRoute
+                                allowedRoles={["user", "instructor", "admin"]}
+                            >
+                                <StudentCertificates />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/dashboard/settings"
+                        element={
+                            <ProtectedRoute
+                                allowedRoles={["user", "instructor", "admin"]}
+                            >
+                                <StudentSettings />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/learn/:id"
+                        element={
+                            <ProtectedRoute>
+                                <PageTransition>
+                                    <LessonPlayer />
+                                </PageTransition>
+                            </ProtectedRoute>
+                        }
+                    />
+                    {/* Instructor Dashboard */}
+                    <Route
+                        path="/instructor"
+                        element={
+                            <ProtectedRoute
+                                allowedRoles={["instructor"]}
+                            >
+                                <InstructorDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/instructor/courses"
+                        element={
+                            <ProtectedRoute
+                                allowedRoles={["instructor"]}
+                            >
+                                <InstructorCourses />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/instructor/upload"
+                        element={
+                            <ProtectedRoute
+                                allowedRoles={["instructor"]}
+                            >
+                                <UploadCourse />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/instructor/analytics"
+                        element={
+                            <ProtectedRoute
+                                allowedRoles={["instructor"]}
+                            >
+                                <InstructorAnalytics />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/instructor/students"
+                        element={
+                            <ProtectedRoute
+                                allowedRoles={["instructor"]}
+                            >
+                                <InstructorStudents />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/instructor/revenue"
+                        element={
+                            <ProtectedRoute
+                                allowedRoles={["instructor"]}
+                            >
+                                <InstructorRevenue />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/instructor/settings"
+                        element={
+                            <ProtectedRoute
+                                allowedRoles={["instructor"]}
+                            >
+                                <InstructorSettings />
+                            </ProtectedRoute>
+                        }
+                    />
+                    {/* Admin Dashboard */}
+                    <Route
+                        path="/admin"
+                        element={
+                            <ProtectedRoute allowedRoles={["admin"]}>
+                                <AdminOverview />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/users"
+                        element={
+                            <ProtectedRoute allowedRoles={["admin"]}>
+                                <AdminUsers />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/categories"
+                        element={
+                            <ProtectedRoute allowedRoles={["admin"]}>
+                                <AdminCategories />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/courses"
+                        element={
+                            <ProtectedRoute allowedRoles={["admin"]}>
+                                <AdminCourses />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/payments"
+                        element={
+                            <ProtectedRoute allowedRoles={["admin"]}>
+                                <AdminPayments />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/settings"
+                        element={
+                            <ProtectedRoute allowedRoles={["admin"]}>
+                                <AdminSettings />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/reviews"
+                        element={
+                            <ProtectedRoute allowedRoles={["admin"]}>
+                                <AdminReviews />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="*"
+                        element={
+                            <PageTransition>
+                                <NotFound />
+                            </PageTransition>
+                        }
+                    />
+                </Routes>
+            </BrowserRouter>
+        </TooltipProvider>
+    </QueryClientProvider>
 );
 
 export default App;

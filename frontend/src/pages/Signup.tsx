@@ -125,8 +125,9 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
-      <div className="w-full max-w-md space-y-8">
+    <div className="h-screen overflow-y-auto custom-scrollbar bg-background">
+      <div className="min-h-full flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <Link to="/" className="inline-flex items-center gap-2 mb-6 group">
             <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center transition-transform group-hover:scale-110">
@@ -360,6 +361,7 @@ const Signup = () => {
         </p>
       </div>
     </div>
+  </div>
   );
 };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, GraduationCap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,24 +12,30 @@ import { useAuth } from "@/hooks/use-auth";
 const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { user, isLoading: authLoading } = useAuth();
+
+  const from = location.state?.from?.pathname || null;
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      if (from) {
+        navigate(from, { replace: true });
+      } else if (user.role === "admin") {
+        navigate("/admin", { replace: true });
+      } else if (user.role === "instructor") {
+        navigate("/instructor", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [user, authLoading, navigate, from]);
+
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [form, setForm] = useState({ email: "", password: "" });
-
-  useEffect(() => {
-    if (!authLoading && user) {
-      if (user.role === "admin") {
-        navigate("/admin");
-      } else if (user.role === "instructor") {
-        navigate("/instructor");
-      } else {
-        navigate("/dashboard");
-      }
-    }
-  }, [user, authLoading, navigate]);
 
   const validate = () => {
     const newErrors: typeof errors = {};
@@ -57,14 +63,16 @@ const Login = () => {
         description: `Welcome back, ${response.data.first_name}!` 
       });
       
-      // Redirect based on role
+      // Redirect to 'from' location or based on role
       const role = response.data.role;
-      if (role === "admin") {
-        navigate("/admin");
+      if (from) {
+        navigate(from, { replace: true });
+      } else if (role === "admin") {
+        navigate("/admin", { replace: true });
       } else if (role === "instructor") {
-        navigate("/instructor");
+        navigate("/instructor", { replace: true });
       } else {
-        navigate("/dashboard");
+        navigate("/dashboard", { replace: true });
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Something went wrong while updating your profile.";
@@ -79,8 +87,9 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="h-screen overflow-y-auto custom-scrollbar bg-background">
+      <div className="min-h-full flex items-center justify-center px-4">
+        <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
             <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
@@ -181,6 +190,7 @@ const Login = () => {
         </p>
       </div>
     </div>
+  </div>
   );
 };
 

@@ -61,7 +61,7 @@ const Landing = () => {
                         <div className="animate-reveal">
                             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-small font-medium mb-6">
                                 <TrendingUp size={14} /> #1 Learning Platform in
-                                2025
+                                {" " + new Date().getFullYear()}
                             </div>
                             <h1 className="text-h1 lg:text-5xl font-extrabold text-foreground leading-tight mb-6">
                                 Unlock Your Potential with{" "}

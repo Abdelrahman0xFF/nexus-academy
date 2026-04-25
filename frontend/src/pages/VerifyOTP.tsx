@@ -97,8 +97,9 @@ const VerifyOTP = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="h-screen overflow-y-auto custom-scrollbar bg-background">
+      <div className="min-h-full flex items-center justify-center px-4">
+        <div className="w-full max-w-md space-y-8">
         {/* Logo & Header */}
         <div className="text-center">
           <Link
@@ -187,6 +188,7 @@ const VerifyOTP = () => {
         </div>
       </div>
     </div>
+  </div>
   );
 };
 
