@@ -575,24 +575,33 @@ const CourseDetails = () => {
                             </div>
                             <div className="flex items-baseline gap-3">
                                 <span className="text-3xl font-bold text-primary">
-                                    ${course.price}
+                                    {course.price === 0 ? (
+                                        <span className="text-green-600">
+                                            Free
+                                        </span>
+                                    ) : (
+                                        `$${course.price ?? course.original_price}`
+                                    )}
                                 </span>
-                                {course.original_price > course.price && (
-                                    <>
-                                        <span className="text-body text-muted-foreground line-through">
-                                            ${course.original_price}
-                                        </span>
-                                        <span className="text-xs font-bold text-destructive bg-destructive/10 px-2 py-0.5 rounded-full">
-                                            {Math.round(
-                                                (1 -
-                                                    course.price /
-                                                        course.original_price) *
-                                                    100,
-                                            )}
-                                            % OFF
-                                        </span>
-                                    </>
-                                )}
+
+                                {course.price !== null &&
+                                    course.price !== undefined &&
+                                    course.price < course.original_price && (
+                                        <>
+                                            <span className="text-body text-muted-foreground line-through">
+                                                ${course.original_price}
+                                            </span>
+                                            <span className="text-xs font-bold text-destructive bg-destructive/10 px-2 py-0.5 rounded-full">
+                                                {Math.round(
+                                                    (1 -
+                                                        course.price /
+                                                            course.original_price) *
+                                                        100,
+                                                )}
+                                                % OFF
+                                            </span>
+                                        </>
+                                    )}
                             </div>
 
                             {course.is_enrolled ? (

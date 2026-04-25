@@ -44,7 +44,7 @@ const CourseCard = ({ course, showProgress = false, progress }: CourseCardProps)
               {course.level}
             </span>
           </div>
-          {course.original_price > course.price && (
+          {course.price && (
             <div className="absolute top-3 right-3">
               <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-destructive text-destructive-foreground">
                 {Math.round((1 - course.price / course.original_price) * 100)}% OFF
@@ -88,9 +88,18 @@ const CourseCard = ({ course, showProgress = false, progress }: CourseCardProps)
           ) : (
             <div className="mt-auto pt-4 flex items-center justify-between">
               <div className="flex items-baseline gap-2">
-                <span className="text-lg font-bold text-primary">${course.price}</span>
-                {course.original_price > course.price && (
-                  <span className="text-small text-muted-foreground line-through">${course.original_price}</span>
+                {course.price === 0 ? (
+                  <span className="text-lg font-bold text-green-600">Free</span>
+                ) : course.price ? (
+                  <span className="text-lg font-bold text-primary">${course.price}</span>
+                ) : course.original_price ? (
+                  <span className="text-lg font-bold text-primary">${course.original_price}</span>
+                ) : null}
+
+                {course.price !== undefined && course.price !== null && course.price < course.original_price && (
+                  <span className="text-small text-muted-foreground line-through">
+                    ${course.original_price}
+                  </span>
                 )}
               </div>
               <span className="text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
