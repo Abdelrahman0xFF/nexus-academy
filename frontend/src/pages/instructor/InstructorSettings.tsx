@@ -202,18 +202,6 @@ const InstructorSettings = () => {
                       className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
                     />
                   </div>
-
-                  <div className="w-full">
-                    <label className="text-small font-medium text-foreground block mb-1.5 flex items-center gap-2">
-                      <Mail size={14} className="text-primary" /> Email Address
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      readOnly
-                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none bg-muted/30 cursor-not-allowed opacity-70"
-                    />
-                  </div>
                 </div>
               </div>
             </div>

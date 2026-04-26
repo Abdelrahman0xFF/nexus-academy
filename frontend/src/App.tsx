@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Courses from "./pages/Courses";
 import CourseDetails from "./pages/CourseDetails";
-import StudentDashboard from "./pages/StudentDashboard";
+import StudentDashboard from "./pages/student/StudentOverview";
 import StudentCourses from "./pages/student/StudentCourses";
 import StudentProgress from "./pages/student/StudentProgress";
 import StudentCertificates from "./pages/student/StudentCertificates";

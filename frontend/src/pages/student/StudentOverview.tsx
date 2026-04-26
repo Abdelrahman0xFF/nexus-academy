@@ -112,7 +112,7 @@ const StudentDashboard = () => {
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {c.instructor_first_name} {c.instructor_last_name} · {Math.round(c.progress)}% complete
                   </p>
-                  <ProgressBar value={c.progress} className="mt-2" />
+                  <ProgressBar value={Math.round(c.progress)} className="mt-2" />
                 </div>
               </Link>
             ))}

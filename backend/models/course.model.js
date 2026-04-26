@@ -65,12 +65,11 @@ class Course {
                 .input("userId", sql.Int, userId)
                 .input("isAdmin", sql.Bit, isAdmin ? 1 : 0).query(`
                     SELECT c.*, 
-                    u.first_name as instructor_first_name, 
-                    u.last_name as instructor_last_name,
-                    u.avatar_url as instructor_avatar_url,
+                    u.first_name + ' ' + u.last_name as instructor_name, 
+                    u.avatar_url as instructor_avatar,
                     cat.name as category_name,
                     r.rating,
-                    r.reviews_count,
+                    r.reviews_count as review_count,
                     ISNULL(l.duration, 0) AS duration,
                     ISNULL(e_count.students_count, 0) AS students_count
                     FROM courses c
@@ -142,8 +141,11 @@ class Course {
                     r.rating,
                     ISNULL(l.duration, 0) AS duration,
                     ISNULL(e_count.students_count, 0) AS students_count,
-                    cat.name as category_name
+                    cat.name as category_name,
+                    u.first_name + ' ' + u.last_name as instructor_name,
+                    u.avatar_url as instructor_avatar
                     FROM courses c
+                    JOIN users u ON c.instructor_id = u.user_id
                     LEFT JOIN categories cat ON c.category_id = cat.category_id
                     LEFT JOIN (
                         SELECT course_id, AVG(CAST(rating AS FLOAT)) AS rating 
@@ -224,11 +226,11 @@ class Course {
 
             const query = `
                 SELECT c.*, 
-                u.first_name as instructor_first_name, 
-                u.last_name as instructor_last_name,
+                u.first_name + ' ' + u.last_name as instructor_name, 
+                u.avatar_url as instructor_avatar,
                 cat.name as category_name,
                 r.rating,
-                r.reviews_count,
+                r.reviews_count as review_count,
                 ISNULL(l.duration, 0) AS duration,
                 ISNULL(e_count.students_count, 0) AS students_count
                 FROM courses c

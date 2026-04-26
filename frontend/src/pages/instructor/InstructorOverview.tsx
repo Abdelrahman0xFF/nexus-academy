@@ -116,49 +116,57 @@ const InstructorDashboard = () => {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-2 bg-card rounded-card card-shadow p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-h3 text-card-foreground">Revenue Overview</h2>
-          </div>
-          <div className="flex items-end gap-2 h-48 overflow-x-auto pb-2 custom-scrollbar">
-            {isAnalyticsLoading ? (
-              <div className="flex-1 flex items-center justify-center">
-                <Loader2 className="animate-spin text-primary" size={32} />
-              </div>
-            ) : analytics && analytics.length > 0 ? (
-              analytics.slice(-6).map((d, i) => {
-                const maxRevenue = Math.max(...analytics.slice(-6).map(item => item.revenue), 1);
-                const percentage = (d.revenue / maxRevenue) * 140; 
-                return (
-                  <div key={i} className="flex-1 flex flex-col items-center justify-end gap-1 min-w-[35px] group relative h-full">
-                    <div className="absolute -top-6 opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-primary-foreground text-[9px] font-bold px-1 py-0.5 rounded shadow-sm whitespace-nowrap z-10">
-                      ${(d.revenue || 0).toLocaleString()}
-                    </div>
-                    <div className="text-[12px] font-bold text-primary mb-1">
-                      {d.revenue > 0 ? `$${Math.round(d.revenue)}` : ""}
-                    </div>
-                    <div
-                      className="w-full rounded-t-sm gradient-primary opacity-80 hover:opacity-100 transition-all duration-300 cursor-pointer"
-                      style={{ height: `${percentage}%` }}
-                    />
-                    <span className="text-[10px] text-muted-foreground mt-1 shrink-0">
-                      {d.month}
-                    </span>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="flex-1 flex items-center justify-center text-muted-foreground text-small">
-                No revenue analytics available.
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-4 mt-4">
-            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-              <div className="w-2.5 h-2.5 rounded-sm gradient-primary" /> Revenue
-            </div>
-          </div>
+        <div className="lg:col-span-2 bg-card rounded-card card-shadow p-6 flex flex-col">
+    
+    <div className="flex items-center justify-between mb-6">
+      <h2 className="text-h3 text-card-foreground">Revenue Overview</h2>
+    </div>
+
+    <div className="flex-1 flex items-end gap-2 overflow-x-auto pb-2 custom-scrollbar min-h-[200px]">
+      {isAnalyticsLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="animate-spin text-primary" size={32} />
         </div>
+      ) : analytics && analytics.length > 0 ? (
+        analytics.slice(-6).map((d, i) => {
+          const maxRevenue = Math.max(...analytics.slice(-6).map(item => item.revenue), 1);
+          const percentage = (d.revenue / maxRevenue) * 100;
+
+          return (
+            <div key={i} className="flex-1 flex flex-col items-center justify-end gap-1 min-w-[35px] group relative h-full">
+              
+              <div className="absolute -top-6 opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-primary-foreground text-[9px] font-bold px-1 py-0.5 rounded shadow-sm whitespace-nowrap z-10">
+                ${(d.revenue || 0).toLocaleString()}
+              </div>
+
+              <div className="text-[12px] font-bold text-primary mb-1">
+                {d.revenue > 0 ? `$${Math.round(d.revenue)}` : ""}
+              </div>
+
+              <div
+                className="w-full rounded-t-sm gradient-primary opacity-80 hover:opacity-100 transition-all duration-300 cursor-pointer"
+                style={{ height: `${percentage}%` }}
+              />
+
+              <span className="text-[10px] text-muted-foreground mt-1 shrink-0">
+                {d.month}
+              </span>
+            </div>
+          );
+        })
+      ) : (
+        <div className="flex-1 flex items-center justify-center text-muted-foreground text-small">
+          No revenue analytics available.
+        </div>
+      )}
+    </div>
+
+    <div className="flex items-center gap-4 mt-4">
+      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+        <div className="w-2.5 h-2.5 rounded-sm gradient-primary" /> Revenue
+      </div>
+    </div>
+  </div>
 
         <div className="bg-card rounded-card card-shadow p-6">
           <h2 className="text-h3 text-card-foreground mb-4">

@@ -54,7 +54,11 @@ const getCourseById = asyncHandler(async (req, res, next) => {
 
     const course = await Course.findById(course_id, userId, isAdmin);
     if (course) {
-        return successResponse(res, course);
+        let is_enrolled = false;
+        if (userId) {
+            is_enrolled = isAdmin || course.instructor_id === userId || await Enrollment.isEnrolled(userId, course_id);
+        }
+        return successResponse(res, { ...course, is_enrolled });
     } else {
         return errorResponse(res, "Course not found", 404);
     }

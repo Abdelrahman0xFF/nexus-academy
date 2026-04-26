@@ -250,18 +250,6 @@ const StudentSettings = () => {
                     />
                   </div>
                 </div>
-
-                <div className="w-full">
-                  <label className="text-small font-medium text-foreground block mb-1.5 flex items-center gap-2">
-                    <Mail size={14} className="text-primary" /> Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    readOnly
-                    className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none bg-muted/30 cursor-not-allowed opacity-70"
-                  />
-                </div>
               </div>
             </div>
             <div className="space-y-4 pt-4 border-t border-border/50">
@@ -390,8 +378,8 @@ const StudentSettings = () => {
             <h3 className="text-h3 font-black text-foreground truncate">
               {formData.firstName} {formData.lastName}
             </h3>
-            <p className="text-[10px] font-black text-primary mb-4 uppercase tracking-[0.2em]">
-              Student Account
+            <p className="text-xs font-medium text-muted-foreground mb-4 px-2 line-clamp-1">
+              {formData.title}
             </p>
 
             <div className="py-2.5 px-4 bg-muted/40 rounded-xl flex items-center justify-center gap-2 text-[11px] text-muted-foreground border border-border shadow-sm">

@@ -68,11 +68,13 @@ const CourseDetails = () => {
         enabled: !!courseId,
     });
 
-    const { data: reviews = [], isLoading: isReviewsLoading } = useQuery({
+    const { data: reviewsRes, isLoading: isReviewsLoading } = useQuery({
         queryKey: ["course-reviews", courseId],
         queryFn: () => reviewApi.getByCourse(courseId),
         enabled: !!courseId,
     });
+
+    const reviews = reviewsRes?.reviews || [];
 
     const { data: userReviewRes } = useQuery({
         queryKey: ["user-review", courseId],
@@ -385,7 +387,7 @@ const CourseDetails = () => {
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
-                                        <span className="text-xl font-bold text-primary-foreground">
+                                        <span className="text-small font-bold">
                                             {course.instructor_name
                                                 ?.split(" ")
                                                 .map((n) => n[0])

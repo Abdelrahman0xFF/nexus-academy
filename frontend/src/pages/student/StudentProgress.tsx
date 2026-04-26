@@ -48,7 +48,7 @@ const StudentProgress = () => {
                     </p>
                   </div>
                 </div>
-                <ProgressBar value={c.progress} />
+                <ProgressBar value={Math.round(c.progress)} />
               </div>
             ))}
           </div>

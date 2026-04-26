@@ -102,7 +102,7 @@ const StudentCourses = () => {
           {new Date(c.enrolled_at).toLocaleDateString()}
         </p>
         <div className="mt-2 max-w-sm">
-          <ProgressBar value={c.progress} />
+          <ProgressBar value={Math.round(c.progress)} />
         </div>
       </div>
 
