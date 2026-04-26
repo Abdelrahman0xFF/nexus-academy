@@ -127,7 +127,7 @@ const Landing = () => {
                             <img
                                 src={heroImage}
                                 alt="Hero Illustration"
-                                className="w-full h-auto object-contain hover-lift transition-transform duration-500"
+                                className="w-full h-auto object-contain transition-transform duration-500"
                             />
                         </div>
                     </div>
