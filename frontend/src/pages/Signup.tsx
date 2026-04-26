@@ -146,8 +146,6 @@ const Signup = () => {
         </div>
 
         <div className="space-y-5 bg-card border border-border rounded-xl p-6 shadow-xl relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-full h-1 gradient-primary opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
           <Button
             type="button"
             variant="outline"
@@ -292,7 +290,7 @@ const Signup = () => {
             <Button
               type="submit"
               disabled={!isPasswordValid || !form.confirm || loading}
-              className="w-full gradient-primary border-0 text-primary-foreground py-6 rounded-button font-black text-small shadow-xl shadow-primary/20 hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+              className="gradient-primary border-0 text-white w-full hover:scale-[1.02] active:scale-[0.98] transition-all duration-150"
             >
               {loading ? (
                 <>

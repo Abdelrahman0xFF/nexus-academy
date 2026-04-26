@@ -25,6 +25,10 @@ export const reviewApi = {
     return response.data;
   },
 
+  getUserReview: async (courseId: number): Promise<ApiResponse<Review>> => {
+    return api.get<any, ApiResponse<Review>>(`/reviews/${courseId}/me`);
+  },
+
   getInstructorReviews: async (params?: { page?: number; limit?: number; course_id?: number | string; rating?: number | string; search?: string }): Promise<{ reviews: InstructorReview[]; total: number }> => {
     const response = await api.get<any, ApiResponse<{ reviews: InstructorReview[]; total: number }>>(`/reviews/instructor`, { params });
     return response.data;

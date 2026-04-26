@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
     Star,
     Clock,
@@ -9,26 +9,38 @@ import {
     Award,
     PlayCircle,
     CheckCircle,
-    ChevronRight,
+    ChevronDown,
+    CreditCard,
+    ShieldCheck,
+    Lock,
     Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MainLayout from "@/layouts/MainLayout";
 import RatingStars from "@/components/RatingStars";
+import { getMediaUrl } from "@/lib/utils";
+import { api, ApiResponse } from "@/lib/api-client";
 import {
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
-import { coursesApi } from "@/lib/courses-api";
-import { reviewApi, InstructorReview, Review } from "@/lib/reviews-api";
-import { enrollmentApi } from "@/lib/enrollment-api";
-import { useAuth } from "@/hooks/use-auth";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getMediaUrl } from "@/lib/utils";
-import { api, ApiResponse } from "@/lib/api-client";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { coursesApi } from "@/lib/courses-api";
+import { enrollmentApi } from "@/lib/enrollment-api";
+import { reviewApi, Review } from "@/lib/reviews-api";
+import { useAuth } from "@/hooks/use-auth";
 
 const CourseDetails = () => {
     const { id } = useParams();
@@ -37,530 +49,713 @@ const CourseDetails = () => {
     const queryClient = useQueryClient();
     const { user } = useAuth();
 
-    // const [isEnrolling, setIsEnrolling] = useState(false);
+    const [isEnrolling, setIsEnrolling] = useState(false);
     const [showReviewForm, setShowReviewForm] = useState(false);
-    const [userRating, setUserReviewRating] = useState(5);
-    const [userComment, setUserComment] = useState("");
+    const [userRating, setUserRating] = useState(5);
+    const [reviewComment, setReviewComment] = useState("");
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isEditingReview, setIsEditingReview] = useState(false);
 
-    const { data: courseRes, isLoading: isCourseLoading } = useQuery({
+    const { data: course, isLoading: isCourseLoading } = useQuery({
         queryKey: ["course", courseId],
         queryFn: () => coursesApi.getById(courseId),
         enabled: !!courseId,
     });
 
-    const course = courseRes;
-
-    const { data: contentRes, isLoading: isContentLoading } = useQuery({
+    const { data: content, isLoading: isContentLoading } = useQuery({
         queryKey: ["course-content", courseId],
-        queryFn: () => coursesApi.getContent(courseId),
+        queryFn: () => coursesApi.getCourseContent(courseId),
         enabled: !!courseId,
     });
 
-    const content = contentRes?.data;
-
-    const { data: reviewsRes, isLoading: isReviewsLoading } = useQuery({
+    const { data: reviewsData, isLoading: isReviewsLoading } = useQuery({
         queryKey: ["course-reviews", courseId],
         queryFn: () => reviewApi.getByCourse(courseId),
         enabled: !!courseId,
     });
 
-    const reviews = reviewsRes?.reviews || [];
+    const reviews = reviewsData?.reviews || [];
 
     const { data: userReviewRes } = useQuery({
         queryKey: ["user-review", courseId],
-        queryFn: () =>
-            api.get<any, ApiResponse<Review>>(`/reviews/${courseId}/me`),
+        queryFn: () => reviewApi.getUserReview(courseId),
         enabled: !!user && !!courseId && !!course?.is_enrolled,
+        retry: false,
     });
 
+    const userReview = userReviewRes?.data;
+
     useEffect(() => {
-        if (userReviewRes?.success && userReviewRes.data) {
-            setUserReviewRating(userReviewRes.data.rating);
-            setUserComment(userReviewRes.data.comment);
+        if (userReview) {
+            setUserRating(userReview.rating);
+            setReviewComment(userReview.comment);
             setIsEditingReview(true);
         }
-    }, [userReviewRes]);
+    }, [userReview]);
 
     const enrollMutation = useMutation({
-        mutationFn: () => enrollmentApi.enroll(courseId),
+        mutationFn: (paymentMethod: string) =>
+            enrollmentApi.enroll(courseId, paymentMethod),
         onSuccess: () => {
+            toast.success("Successfully enrolled in " + course?.title);
             queryClient.invalidateQueries({ queryKey: ["course", courseId] });
-            toast.success("Enrolled successfully!");
-            navigate(`/learn/${courseId}/1/1`);
+            queryClient.invalidateQueries({
+                queryKey: ["course-content", courseId],
+            });
+            queryClient.invalidateQueries({ queryKey: ["my-enrollments"] });
+            setIsDialogOpen(false);
+            navigate(`/learn/${courseId}`);
         },
-        onError: (err: any) => {
-            toast.error(err.message || "Failed to enroll");
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || "Enrollment failed");
+        },
+        onSettled: () => {
+            setIsEnrolling(false);
         },
     });
 
     const reviewMutation = useMutation({
-        mutationFn: (data: any) =>
+        mutationFn: (data: { rating: number; comment: string }) =>
             isEditingReview
                 ? reviewApi.update(courseId, data)
                 : reviewApi.create(courseId, data),
         onSuccess: () => {
+            toast.success(
+                isEditingReview
+                    ? "Review updated successfully!"
+                    : "Review submitted successfully!",
+            );
             queryClient.invalidateQueries({
                 queryKey: ["course-reviews", courseId],
             });
-            queryClient.invalidateQueries({ queryKey: ["user-review", courseId] });
-            toast.success(
-                isEditingReview ? "Review updated!" : "Review posted!",
-            );
+            queryClient.invalidateQueries({ queryKey: ["course", courseId] });
+            queryClient.invalidateQueries({
+                queryKey: ["user-review", courseId],
+            });
+            setReviewComment("");
             setShowReviewForm(false);
+        },
+        onError: (error: any) => {
+            toast.error(
+                error.response?.data?.message || "Failed to submit review",
+            );
         },
     });
 
     const handleEnroll = () => {
         if (!user) {
-            navigate("/login", { state: { from: { pathname: window.location.pathname } } });
+            toast.error("Please login to enroll in courses");
+            navigate("/login");
             return;
         }
-        if (course?.is_enrolled) {
-            navigate(`/learn/${courseId}/1/1`);
+        setIsEnrolling(true);
+        enrollMutation.mutate("card");
+    };
+
+    const handleSubmitReview = () => {
+        if (!reviewComment.trim()) {
+            toast.error("Please enter a comment");
             return;
         }
-        enrollMutation.mutate();
+        reviewMutation.mutate({ rating: userRating, comment: reviewComment });
     };
 
-    const handleReviewSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        reviewMutation.mutate({ rating: userRating, comment: userComment });
+    const formatDuration = (seconds: number) => {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        if (hours > 0) return `${hours}h ${minutes}m`;
+        return `${minutes}m`;
     };
 
-    if (isCourseLoading || !course || !content) {
+    if (isCourseLoading || isContentLoading) {
         return (
             <MainLayout>
                 <div className="flex items-center justify-center min-h-[60vh]">
-                    <Loader2 className="animate-spin text-primary" size={40} />
+                    <Loader2 className="animate-spin text-primary" size={48} />
                 </div>
             </MainLayout>
         );
     }
 
-    const isEnrolling = enrollMutation.isPending;
+    if (!course) {
+        return (
+            <MainLayout>
+                <div className="container mx-auto px-4 py-20 text-center">
+                    <h2 className="text-h2">Course not found</h2>
+                    <Button
+                        onClick={() => navigate("/courses")}
+                        className="mt-4"
+                    >
+                        Back to Courses
+                    </Button>
+                </div>
+            </MainLayout>
+        );
+    }
+
+    const totalLessons =
+        content?.sections.reduce((a, s) => a + s.lessons.length, 0) || 0;
+    const courseImageUrl = getMediaUrl(course.thumbnail_url);
 
     return (
         <MainLayout>
-            <div className="bg-card min-h-screen">
-                {/* Hero Section */}
-                <div className="gradient-primary text-primary-foreground py-12 lg:py-20 animate-in fade-in duration-700">
-                    <div className="container mx-auto px-4 lg:px-8">
-                        <div className="grid lg:grid-cols-3 gap-12 items-start">
-                            <div className="lg:col-span-2 animate-in fade-in slide-in-from-left-8 duration-700 delay-200 fill-mode-both">
-                                <div className="flex flex-wrap items-center gap-2 mb-6">
-                                    <Link
-                                        to="/courses"
-                                        className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-                                    >
-                                        Courses
-                                    </Link>
-                                    <ChevronRight
-                                        size={14}
-                                        className="text-primary-foreground/40"
+            {/* Hero Section */}
+            <section className="relative gradient-primary overflow-hidden pt-10 pb-16 lg:pt-16 lg:pb-40 border-b border-border/50 h-[calc(100dvh-60px)]">
+    <div className="container relative z-10 mx-auto px-4 lg:px-8 h-full flex items-center">
+        <div className="grid lg:grid-cols-3 gap-12 w-full">
+            <div className="lg:col-span-2 space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                {/* Badges */}
+                <div className="flex flex-wrap items-center gap-3">
+                    <span className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-full bg-white/20 text-white border border-white/30 shadow-sm">
+                        {course.category_name}
+                    </span>
+                    <span className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-full bg-white/10 text-white/80 border border-white/20 shadow-sm">
+                        {course.level}
+                    </span>
+                    {course.is_enrolled && (
+                        <span className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 shadow-sm flex items-center gap-1.5">
+                            <CheckCircle size={12} /> Enrolled
+                        </span>
+                    )}
+                </div>
+
+                {/* Title and Description */}
+                <div className="space-y-6">
+                    <h1 className="text-4xl lg:text-5xl font-extrabold text-white leading-[1.15] tracking-tight">
+                        {course.title}
+                    </h1>
+                    <p className="text-lg lg:text-xl text-white/70 leading-relaxed max-w-3xl">
+                        {course.description.split("\n")[0]}
+                    </p>
+                </div>
+
+                {/* Metadata & Instructor */}
+                <div className="flex flex-wrap items-center gap-6 lg:gap-10 pt-4">
+                    <div className="flex items-center gap-4 group cursor-pointer bg-white/10 hover:bg-white/20 px-4 py-2.5 rounded-2xl border border-white/20 shadow-sm transition-colors">
+                        <div className="w-12 h-12 rounded-full p-0.5 bg-white/30 overflow-hidden shadow-md group-hover:scale-105 transition-transform duration-300">
+                            <div className="w-full h-full rounded-full bg-white/20 overflow-hidden flex items-center justify-center">
+                                {course.instructor_avatar ? (
+                                    <img
+                                        src={getMediaUrl(course.instructor_avatar)}
+                                        alt={course.instructor_name}
+                                        className="w-full h-full object-cover"
                                     />
-                                    <span className="text-primary-foreground/90 font-medium">
-                                        {course.category_name}
+                                ) : (
+                                    <span className="text-base font-black text-white">
+                                        {course.instructor_name
+                                            ?.split(" ")
+                                            .map((n) => n[0])
+                                            .join("")}
                                     </span>
-                                </div>
-                                <h1 className="text-h1 lg:text-5xl font-black mb-6 leading-tight">
-                                    {course.title}
-                                </h1>
-                                <p className="text-lg lg:text-xl text-primary-foreground/80 mb-8 max-w-2xl leading-relaxed">
-                                    {course.description}
-                                </p>
-                                <div className="flex flex-wrap items-center gap-4 mb-6">
-                                    <RatingStars
-                                        rating={course.rating}
-                                        reviewCount={course.review_count || 0}
-                                        size={16}
-                                    />
-                                    <span className="flex items-center gap-1 text-small text-primary-foreground/70">
-                                        <Users size={14} />{" "}
-                                        {(
-                                            course.students_count || 0
-                                        ).toLocaleString()}{" "}
-                                        students
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-3 group cursor-default">
-                                    <div className="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center overflow-hidden transition-transform group-hover:scale-110">
-                                        {course.instructor_avatar ? (
-                                            <img
-                                                src={getMediaUrl(
-                                                    course.instructor_avatar,
-                                                )}
-                                                alt={course.instructor_name}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <span className="text-small font-bold">
-                                                {course.instructor_name
-                                                    ?.split(" ")
-                                                    .map((n) => n[0])
-                                                    .join("")}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <div className="text-small font-medium text-primary-foreground group-hover:text-white transition-colors">
-                                            {course.instructor_name}
-                                        </div>
-                                        <div className="text-xs text-primary-foreground/60">
-                                            Instructor
-                                        </div>
-                                    </div>
-                                </div>
+                                )}
                             </div>
-
-                            {/* Sidebar Card */}
-                            <div className="lg:col-span-1 animate-in fade-in slide-in-from-right-8 duration-700 delay-300 fill-mode-both">
-                                <div className="bg-card rounded-card shadow-2xl overflow-hidden sticky top-24 border border-border/50 group hover:shadow-primary/10 transition-all duration-500">
-                                    <div className="aspect-video relative overflow-hidden">
-                                        {course.thumbnail_url ? (
-                                            <img
-                                                src={getMediaUrl(
-                                                    course.thumbnail_url,
-                                                )}
-                                                alt={course.title}
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full bg-muted flex items-center justify-center">
-                                                <BookOpen
-                                                    size={48}
-                                                    className="text-muted-foreground/20"
-                                                />
-                                            </div>
-                                        )}
-                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center animate-pulse">
-                                                <PlayCircle size={40} className="text-white" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="p-8">
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <span className="text-4xl font-black text-foreground">
-                                                $
-                                                {course.price ??
-                                                    course.original_price}
-                                            </span>
-                                            {course.price !== null &&
-                                                course.price <
-                                                    course.original_price && (
-                                                    <span className="text-lg text-muted-foreground line-through">
-                                                        ${course.original_price}
-                                                    </span>
-                                                )}
-                                        </div>
-
-                                        <Button
-                                            onClick={handleEnroll}
-                                            disabled={isEnrolling}
-                                            className="w-full gradient-primary border-0 text-primary-foreground py-7 rounded-button font-black text-lg mb-4 hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-primary/20"
-                                        >
-                                            {isEnrolling ? (
-                                                <Loader2 className="animate-spin mr-2" />
-                                            ) : course.is_enrolled ? (
-                                                "Go to Course"
-                                            ) : (
-                                                "Enroll Now"
-                                            )}
-                                        </Button>
-
-                                        <p className="text-[10px] text-muted-foreground text-center mb-8 uppercase font-bold tracking-widest">
-                                            30-day money-back guarantee
-                                        </p>
-
-                                        <div className="space-y-4">
-                                            <h4 className="text-xs font-black text-foreground uppercase tracking-widest mb-4">
-                                                This course includes:
-                                            </h4>
-                                            {[
-                                                {
-                                                    icon: Clock,
-                                                    label: `${course.duration} minutes of video`,
-                                                },
-                                                {
-                                                    icon: BookOpen,
-                                                    label: "Full lifetime access",
-                                                },
-                                                {
-                                                    icon: Globe,
-                                                    label: "Access on mobile and TV",
-                                                },
-                                                {
-                                                    icon: Award,
-                                                    label: "Certificate of completion",
-                                                },
-                                            ].map((item, i) => (
-                                                <div
-                                                    key={i}
-                                                    className="flex items-center gap-3 text-small text-muted-foreground group/item"
-                                                >
-                                                    <item.icon
-                                                        size={16}
-                                                        className="text-primary group-hover/item:scale-110 transition-transform"
-                                                    />
-                                                    <span>{item.label}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
+                        </div>
+                        <div>
+                            <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-0.5">
+                                Instructor
                             </div>
+                            <div className="text-sm font-bold text-white group-hover:text-white/80 transition-colors">
+                                {course.instructor_name}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                        <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
+                            Course Rating
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg font-bold text-white">
+                                {course.rating?.toFixed(1) || "0.0"}
+                            </span>
+                            <RatingStars
+                                rating={course.rating}
+                                showValue={false}
+                                size={16}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="h-10 w-px bg-white/20 hidden sm:block" />
+
+                    <div className="flex flex-col gap-1.5">
+                        <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
+                            Active Students
+                        </div>
+                        <div className="flex items-center gap-2 text-white font-bold text-lg">
+                            <Users size={18} className="text-white/70" />
+                            {(course.students_count || 0).toLocaleString()}
                         </div>
                     </div>
                 </div>
 
-                {/* Content Section */}
-                <div className="container mx-auto px-4 lg:px-8 py-16">
-                    <div className="grid lg:grid-cols-3 gap-12">
-                        <div className="lg:col-span-2 space-y-12">
-                            {/* Course Content */}
-                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-400 fill-mode-both">
-                                <h2 className="text-h2 text-foreground mb-6">
-                                    Course Content
-                                </h2>
-                                <div className="space-y-3">
-                                    {content.sections.map((section, idx) => (
-                                        <div key={idx} className="animate-in fade-in slide-in-from-bottom-2 fill-mode-both" style={{ animationDelay: `${idx * 50 + 500}ms` }}>
-                                            <Accordion
-                                                type="single"
-                                                collapsible
-                                                className="bg-card rounded-card card-shadow border border-border/50 overflow-hidden hover:border-primary/20 transition-colors"
-                                            >
-                                                <AccordionItem
-                                                    value={`section-${idx}`}
-                                                    className="border-0"
+                {/* Quick Stats */}
+                <div className="flex flex-wrap gap-x-8 gap-y-4 pt-8 border-t border-white/20 text-[11px] font-bold uppercase tracking-wider text-white/60">
+                    <span className="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
+                        <Clock size={16} className="text-white/50 group-hover:scale-110 group-hover:text-white transition-all" />
+                        {formatDuration(course.duration)}
+                    </span>
+                    <span className="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
+                        <BookOpen size={16} className="text-white/50 group-hover:scale-110 group-hover:text-white transition-all" />
+                        {totalLessons} lessons
+                    </span>
+                    <span className="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
+                        <Award size={16} className="text-white/50 group-hover:scale-110 group-hover:text-white transition-all" />
+                        Certificate
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+            <div className="container relative z-20 mt-20 mx-auto px-4 lg:px-8 pb-20">
+                <div className="grid lg:grid-cols-3 gap-10">
+                    {/* Main Content */}
+                    <div className="lg:col-span-2 space-y-10 pt-4 lg:pt-10">
+                        {/* What you'll learn */}
+                        <div className="bg-card rounded-card card-shadow p-6">
+                            <h2 className="text-h3 text-card-foreground mb-4">
+                                Course Description
+                            </h2>
+                            <p className="text-small text-muted-foreground whitespace-pre-wrap">
+                                {course.description}
+                            </p>
+                        </div>
+
+                        {/* Curriculum */}
+                        <div>
+                            <h2 className="text-h3 text-foreground mb-4">
+                                Course Curriculum
+                            </h2>
+                            <p className="text-small text-muted-foreground mb-6">
+                                {content?.sections.length || 0} sections •{" "}
+                                {totalLessons} lessons •{" "}
+                                {formatDuration(course.duration)} total
+                            </p>
+                            <Accordion
+                                type="multiple"
+                                defaultValue={["section-1"]}
+                                className="space-y-3"
+                            >
+                                {content?.sections.map((section, i) => (
+                                    <AccordionItem
+                                        key={section.section_order}
+                                        value={`section-${section.section_order}`}
+                                        className="bg-card rounded-card card-shadow overflow-hidden border-0"
+                                    >
+                                        <AccordionTrigger className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors hover:no-underline [&>svg]:hidden">
+                                            <div className="flex items-center gap-3">
+                                                <BookOpen
+                                                    size={18}
+                                                    className="text-primary"
+                                                />
+                                                <span className="font-medium text-card-foreground text-small">
+                                                    {section.title}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-xs text-muted-foreground">
+                                                    {section.lessons.length}{" "}
+                                                    lessons
+                                                </span>
+                                                <ChevronDown
+                                                    size={16}
+                                                    className="shrink-0 transition-transform duration-200"
+                                                />
+                                            </div>
+                                        </AccordionTrigger>
+                                        <AccordionContent className="pb-0 border-t border-border">
+                                            {section.lessons.map((lesson) => (
+                                                <div
+                                                    key={lesson.lesson_order}
+                                                    className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors"
                                                 >
-                                                    <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30 transition-colors group">
-                                                        <div className="flex flex-col items-start gap-1">
-                                                            <span className="text-small font-black text-foreground group-hover:text-primary transition-colors">
-                                                                {section.title}
-                                                            </span>
-                                                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                                                                {section.lessons.length}{" "}
-                                                                lessons ·{" "}
-                                                                {section.lessons.reduce(
-                                                                    (a, b) =>
-                                                                        a +
-                                                                        (b.duration ||
-                                                                            0),
-                                                                    0,
-                                                                )}{" "}
-                                                                min
-                                                            </span>
-                                                        </div>
-                                                    </AccordionTrigger>
-                                                    <AccordionContent className="px-6 pb-4 pt-2">
-                                                        <div className="space-y-1">
-                                                            {section.lessons.map(
-                                                                (lesson, lIdx) => (
-                                                                    <div
-                                                                        key={lIdx}
-                                                                        className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors group/lesson"
-                                                                    >
-                                                                        <div className="flex items-center gap-3">
-                                                                            {lesson.is_completed ? (
-                                                                                <CheckCircle
-                                                                                    size={16}
-                                                                                    className="text-emerald-500"
-                                                                                />
-                                                                            ) : (
-                                                                                <PlayCircle
-                                                                                    size={16}
-                                                                                    className="text-muted-foreground group-hover/lesson:text-primary transition-colors"
-                                                                                />
-                                                                            )}
-                                                                            <span className="text-small font-medium text-foreground group-hover/lesson:text-primary transition-colors">
-                                                                                {
-                                                                                    lesson.title
-                                                                                }
-                                                                            </span>
-                                                                        </div>
-                                                                        <span className="text-[11px] text-muted-foreground tabular-nums">
-                                                                            {
-                                                                                lesson.duration
-                                                                            }{" "}
-                                                                            min
-                                                                        </span>
-                                                                    </div>
-                                                                ),
-                                                            )}
-                                                        </div>
-                                                    </AccordionContent>
-                                                </AccordionItem>
-                                            </Accordion>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                                                    <div className="flex items-center gap-3">
+                                                        {lesson.is_completed ? (
+                                                            <CheckCircle
+                                                                size={16}
+                                                                className="text-secondary"
+                                                            />
+                                                        ) : (
+                                                            <PlayCircle
+                                                                size={16}
+                                                                className="text-muted-foreground"
+                                                            />
+                                                        )}
+                                                        <span
+                                                            className={`text-small ${lesson.is_completed ? "text-muted-foreground" : "text-card-foreground"}`}
+                                                        >
+                                                            {lesson.title}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {formatDuration(
+                                                            lesson.duration,
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
+                        </div>
 
-                            {/* Instructor */}
-                            <div className="bg-card rounded-card card-shadow p-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both group">
-                                <h2 className="text-h3 text-card-foreground mb-4">
-                                    Your Instructor
-                                </h2>
-                                <div className="flex items-start gap-4">
-                                    <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center shrink-0 overflow-hidden transition-transform group-hover:scale-110">
-                                        {course.instructor_avatar ? (
-                                            <img
-                                                src={getMediaUrl(
-                                                    course.instructor_avatar,
-                                                )}
-                                                alt={course.instructor_name}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <span className="text-xl font-bold text-primary-foreground">
-                                                {course.instructor_name
-                                                    ?.split(" ")
-                                                    .map((n) => n[0])
-                                                    .join("")}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="text-body font-bold text-card-foreground group-hover:text-primary transition-colors">
-                                            {course.instructor_name}
-                                        </h3>
-                                        <p className="text-small text-muted-foreground mb-3">
-                                            Course Instructor
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Reviews */}
-                            <div id="reviews" className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-600 fill-mode-both">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-h2 text-foreground">
-                                        Student Reviews
-                                    </h2>
-                                    {(course.is_enrolled && (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="rounded-button transition-all hover:bg-muted"
-                                            onClick={() =>
-                                                setShowReviewForm(!showReviewForm)
-                                            }
-                                        >
-                                            {showReviewForm
-                                                ? "Cancel"
-                                                : isEditingReview
-                                                  ? "Edit your Review"
-                                                  : "Write a Review"}
-                                        </Button>
-                                    )) || (
-                                        <span className="text-small text-muted-foreground font-medium">
-                                            {course.review_count || 0} reviews
+                        {/* Instructor */}
+                        <div className="bg-card rounded-card card-shadow p-6">
+                            <h2 className="text-h3 text-card-foreground mb-4">
+                                Your Instructor
+                            </h2>
+                            <div className="flex items-start gap-4">
+                                <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center shrink-0 overflow-hidden">
+                                    {course.instructor_avatar ? (
+                                        <img
+                                            src={getMediaUrl(
+                                                course.instructor_avatar,
+                                            )}
+                                            alt={course.instructor_name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <span className="text-xl font-bold text-primary-foreground">
+                                            {course.instructor_name
+                                                ?.split(" ")
+                                                .map((n) => n[0])
+                                                .join("")}
                                         </span>
                                     )}
                                 </div>
+                                <div>
+                                    <h3 className="text-body font-semibold text-card-foreground">
+                                        {course.instructor_name}
+                                    </h3>
+                                    <p className="text-small text-muted-foreground mb-3">
+                                        Course Instructor
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
 
-                                {showReviewForm && (
-                                    <div className="bg-card rounded-card card-shadow p-6 mb-8 border-2 border-primary/20 animate-in zoom-in-95 duration-300">
-                                        <h3 className="text-body font-bold mb-4">
-                                            {isEditingReview
-                                                ? "Edit your review"
-                                                : "What do you think of this course?"}
-                                        </h3>
-                                        <form
-                                            onSubmit={handleReviewSubmit}
-                                            className="space-y-4"
-                                        >
-                                            <div className="flex gap-2">
-                                                {[1, 2, 3, 4, 5].map((s) => (
+                        {/* Reviews */}
+                        <div id="reviews">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-h3 text-foreground">
+                                    Student Reviews
+                                </h2>
+                                {(course.is_enrolled && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="rounded-button"
+                                        onClick={() =>
+                                            setShowReviewForm(!showReviewForm)
+                                        }
+                                    >
+                                        {showReviewForm
+                                            ? "Cancel"
+                                            : isEditingReview
+                                              ? "Edit your Review"
+                                              : "Write a Review"}
+                                    </Button>
+                                )) || (
+                                    <span className="text-small text-muted-foreground">
+                                        {course.review_count || 0} reviews
+                                    </span>
+                                )}
+                            </div>
+
+                            {showReviewForm && (
+                                <div className="bg-card rounded-card card-shadow p-6 mb-8 border border-primary/20 animate-in fade-in slide-in-from-top-4">
+                                    <h3 className="text-body font-bold mb-4">
+                                        {isEditingReview
+                                            ? "Edit your review"
+                                            : "Share your experience"}
+                                    </h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-xs font-medium text-muted-foreground block mb-2">
+                                                Rating
+                                            </label>
+                                            <div className="flex gap-1">
+                                                {[1, 2, 3, 4, 5].map((star) => (
                                                     <button
-                                                        key={s}
-                                                        type="button"
+                                                        key={star}
                                                         onClick={() =>
-                                                            setUserReviewRating(s)
+                                                            setUserRating(star)
                                                         }
-                                                        className="transition-transform hover:scale-125"
+                                                        className="focus:outline-none"
                                                     >
                                                         <Star
                                                             size={24}
-                                                            className={
-                                                                s <= userRating
-                                                                    ? "fill-amber-400 text-amber-400"
-                                                                    : "text-muted-foreground/30"
-                                                            }
+                                                            className={`${star <= userRating ? "text-amber-400 fill-amber-400" : "text-muted border-muted"} transition-colors`}
                                                         />
                                                     </button>
                                                 ))}
                                             </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-medium text-muted-foreground block mb-2">
+                                                Your Review
+                                            </label>
                                             <textarea
-                                                value={userComment}
+                                                rows={4}
+                                                value={reviewComment}
                                                 onChange={(e) =>
-                                                    setUserComment(
+                                                    setReviewComment(
                                                         e.target.value,
                                                     )
                                                 }
-                                                placeholder="Share your experience..."
-                                                className="w-full p-4 text-small bg-muted/30 border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 min-h-[120px] transition-all"
-                                                required
+                                                placeholder="What did you like or dislike about this course?"
+                                                className="w-full px-4 py-3 text-small border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary/20 bg-muted/30 resize-none"
                                             />
-                                            <Button
-                                                type="submit"
-                                                className="gradient-primary border-0 rounded-button px-8 font-bold transition-all hover:scale-105 active:scale-95"
-                                                disabled={reviewMutation.isPending}
-                                            >
-                                                {reviewMutation.isPending ? (
-                                                    <Loader2 className="animate-spin mr-2" />
-                                                ) : isEditingReview ? (
-                                                    "Update Review"
-                                                ) : (
-                                                    "Submit Review"
-                                                )}
-                                            </Button>
-                                        </form>
+                                        </div>
+                                        <Button
+                                            onClick={handleSubmitReview}
+                                            disabled={reviewMutation.isPending}
+                                            className="gradient-primary border-0 text-primary-foreground font-bold rounded-button"
+                                        >
+                                            {reviewMutation.isPending
+                                                ? "Submitting..."
+                                                : isEditingReview
+                                                  ? "Update Review"
+                                                  : "Submit Review"}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="space-y-4">
+                                {Array.isArray(reviews) &&
+                                    reviews.map((review, i) => (
+                                        <div
+                                            key={i}
+                                            className="bg-card rounded-card card-shadow p-5"
+                                        >
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                                                        {review.avatar_url ? (
+                                                            <img
+                                                                src={getMediaUrl(
+                                                                    review.avatar_url,
+                                                                )}
+                                                                alt={`${review.first_name} ${review.last_name}`}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <span className="text-xs font-bold text-muted-foreground">
+                                                                {
+                                                                    review
+                                                                        .first_name[0]
+                                                                }
+                                                                {
+                                                                    review
+                                                                        .last_name[0]
+                                                                }
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <span className="text-small font-medium text-card-foreground">
+                                                        {review.first_name}{" "}
+                                                        {review.last_name}
+                                                    </span>
+                                                </div>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {new Date(
+                                                        review.reviewed_at,
+                                                    ).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            <RatingStars
+                                                rating={review.rating}
+                                                size={14}
+                                                showValue={false}
+                                            />
+                                            <p className="text-small text-muted-foreground mt-2">
+                                                {review.comment}
+                                            </p>
+                                        </div>
+                                    ))}
+                                {reviews.length === 0 && (
+                                    <p className="text-center py-10 text-muted-foreground text-small">
+                                        No reviews yet. Be the first to review
+                                        this course!
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Sticky Purchase Card */}
+                    <div className="lg:col-span-1">
+                        <div className="sticky top-24 bg-card rounded-card elevated-shadow p-6 space-y-5">
+                            <div className="aspect-video rounded-lg bg-muted overflow-hidden flex items-center justify-center relative">
+                                {courseImageUrl ? (
+                                    <img
+                                        src={courseImageUrl}
+                                        alt={course.title}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="absolute inset-0 gradient-primary opacity-80 flex items-center justify-center">
+                                        <PlayCircle
+                                            size={56}
+                                            className="text-primary-foreground/90"
+                                        />
                                     </div>
                                 )}
+                            </div>
+                            <div className="flex items-baseline gap-3">
+                                <span className="text-3xl font-bold text-primary">
+                                    {course.price === 0 ? (
+                                        <span className="text-green-600">
+                                            Free
+                                        </span>
+                                    ) : (
+                                        `$${course.price ?? course.original_price}`
+                                    )}
+                                </span>
 
-                                <div className="grid gap-4">
-                                    {(reviews.length > 0 &&
-                                        reviews.map((r, idx) => (
-                                            <div
-                                                key={idx}
-                                                className="bg-card rounded-card card-shadow p-6 transition-all hover:shadow-md hover:-translate-y-1 animate-in fade-in duration-500 fill-mode-both"
-                                                style={{ animationDelay: `${idx * 100}ms` }}
-                                            >
-                                                <div className="flex items-center gap-4 mb-4">
-                                                    <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center shrink-0 text-primary-foreground font-bold border-2 border-white shadow-sm transition-transform hover:scale-110">
-                                                        {r.first_name[0]}
-                                                        {r.last_name[0]}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="text-small font-bold text-foreground truncate">
-                                                            {r.first_name} {r.last_name}
-                                                        </div>
-                                                        <div className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                                                            {new Date(
-                                                                r.reviewed_at,
-                                                            ).toLocaleDateString()}
-                                                        </div>
-                                                    </div>
-                                                    <RatingStars
-                                                        rating={r.rating}
-                                                        showValue={false}
-                                                        size={12}
+                                {course.price !== null &&
+                                    course.price !== undefined &&
+                                    course.price < course.original_price && (
+                                        <>
+                                            <span className="text-body text-muted-foreground line-through">
+                                                ${course.original_price}
+                                            </span>
+                                            <span className="text-xs font-bold text-destructive bg-destructive/10 px-2 py-0.5 rounded-full">
+                                                {Math.round(
+                                                    (1 -
+                                                        course.price /
+                                                            course.original_price) *
+                                                        100,
+                                                )}
+                                                % OFF
+                                            </span>
+                                        </>
+                                    )}
+                            </div>
+
+                            {course.is_enrolled ? (
+                                <Button
+                                    onClick={() =>
+                                        navigate(`/learn/${courseId}`)
+                                    }
+                                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-button py-3 font-semibold transition-colors"
+                                >
+                                    Go to Course
+                                </Button>
+                            ) : (
+                                <Dialog
+                                    open={isDialogOpen}
+                                    onOpenChange={setIsDialogOpen}
+                                >
+                                    <DialogTrigger asChild>
+                                        <Button className="w-full gradient-primary border-0 text-primary-foreground rounded-button py-3 font-semibold hover:opacity-90 transition-opacity">
+                                            Enroll Now
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-md">
+                                        <DialogHeader>
+                                            <DialogTitle>
+                                                Complete Enrollment
+                                            </DialogTitle>
+                                            <DialogDescription>
+                                                You are about to enroll in{" "}
+                                                <strong>{course.title}</strong>
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="space-y-4 py-4">
+                                            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                                                <div className="flex justify-between text-small">
+                                                    <span>Course Price</span>
+                                                    <span className="font-bold">
+                                                        ${course.price}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between text-small text-muted-foreground">
+                                                    <span>Tax</span>
+                                                    <span>$0.00</span>
+                                                </div>
+                                                <div className="border-t border-border pt-2 flex justify-between font-bold">
+                                                    <span>Total</span>
+                                                    <span className="text-primary">
+                                                        ${course.price}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-3">
+                                                <div className="relative">
+                                                    <CreditCard
+                                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                                                        size={16}
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Card Number"
+                                                        className="w-full pl-10 pr-4 py-2 text-small border border-border rounded-md outline-none focus:ring-2 focus:ring-primary/20"
                                                     />
                                                 </div>
-                                                <p className="text-body text-muted-foreground leading-relaxed italic">
-                                                    "{r.comment}"
-                                                </p>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="MM/YY"
+                                                        className="w-full px-4 py-2 text-small border border-border rounded-md outline-none focus:ring-2 focus:ring-primary/20"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="CVC"
+                                                        className="w-full px-4 py-2 text-small border border-border rounded-md outline-none focus:ring-2 focus:ring-primary/20"
+                                                    />
+                                                </div>
                                             </div>
-                                        )) || (
-                                            <div className="text-center py-12 bg-muted/20 rounded-card border-2 border-dashed border-border animate-in fade-in duration-700">
-                                                <Star size={32} className="text-muted-foreground/30 mx-auto mb-3" />
-                                                <p className="text-muted-foreground">No reviews yet for this course.</p>
+                                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground justify-center">
+                                                <Lock size={10} /> Secure SSL
+                                                Encrypted Payment
+                                                <ShieldCheck size={10} /> 30-Day
+                                                Money Back Guarantee
                                             </div>
-                                        ))}
-                                </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <Button
+                                                className="w-full gradient-primary border-0 text-primary-foreground font-bold"
+                                                onClick={handleEnroll}
+                                                disabled={isEnrolling}
+                                            >
+                                                {isEnrolling
+                                                    ? "Processing..."
+                                                    : `Pay $${course.price} & Enroll`}
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                            )}
+                            <div className="space-y-3 pt-2">
+                                {[
+                                    {
+                                        label: "Duration",
+                                        value: formatDuration(course.duration),
+                                    },
+                                    {
+                                        label: "Lessons",
+                                        value: `${totalLessons} lessons`,
+                                    },
+                                    { label: "Level", value: course.level },
+                                    { label: "Certificate", value: "Yes" },
+                                ].map((item) => (
+                                    <div
+                                        key={item.label}
+                                        className="flex justify-between text-small"
+                                    >
+                                        <span className="text-muted-foreground">
+                                            {item.label}
+                                        </span>
+                                        <span className="font-medium text-card-foreground">
+                                            {item.value}
+                                        </span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
