@@ -1,11 +1,9 @@
 import {
   Save,
   Camera,
-  Bell,
   Shield,
   CheckCircle2,
   XCircle,
-  Mail,
   User as UserIcon,
   Briefcase,
   Loader2,
@@ -124,7 +122,6 @@ const StudentSettings = () => {
   const canSavePassword = passwords.new === "" ? false : isPasswordValid;
 
   const handleSave = async () => {
-    // Save Profile Info
     const profileFormData = new FormData();
     profileFormData.append("first_name", formData.firstName);
     profileFormData.append("last_name", formData.lastName);
@@ -136,7 +133,6 @@ const StudentSettings = () => {
 
     updateProfileMutation.mutate(profileFormData);
 
-    // Save Password if provided
     if (passwords.old && passwords.new) {
       changePasswordMutation.mutate({
         old_password: passwords.old,
@@ -158,7 +154,7 @@ const StudentSettings = () => {
 
   return (
     <DashboardLayout type="student">
-      <div className="mb-8">
+      <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
         <h1 className="text-h1 text-foreground">Settings</h1>
         <p className="text-body text-muted-foreground mt-1">
           Manage your account and preferences
@@ -167,7 +163,7 @@ const StudentSettings = () => {
 
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-card rounded-card card-shadow p-6">
+          <div className="bg-card rounded-card card-shadow p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100 fill-mode-both">
             <h2 className="text-h3 text-card-foreground mb-8 flex items-center gap-2">
               Personal Information
               <UserIcon size={20} className="text-muted-foreground" />
@@ -175,7 +171,7 @@ const StudentSettings = () => {
 
             <div className="flex flex-col md:flex-row gap-8 items-start mb-8">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-sm flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD]">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-sm flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD] transition-transform duration-500 group-hover:scale-105">
                   {avatarPreview ? (
                     <img
                       src={avatarPreview}
@@ -191,7 +187,7 @@ const StudentSettings = () => {
                 </div>
                 <button
                   onClick={handleImageClick}
-                  className="absolute bottom-1 right-1 p-2 bg-white text-slate-500 rounded-full border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                  className="absolute bottom-1 right-1 p-2 bg-white text-slate-500 rounded-full border border-slate-200 hover:bg-slate-50 transition-all shadow-sm hover:scale-110 active:scale-90"
                 >
                   <Camera size={18} />
                 </button>
@@ -216,7 +212,7 @@ const StudentSettings = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, firstName: e.target.value })
                       }
-                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background transition-all"
                     />
                   </div>
                   <div>
@@ -229,7 +225,7 @@ const StudentSettings = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, lastName: e.target.value })
                       }
-                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background transition-all"
                     />
                   </div>
                 </div>
@@ -246,7 +242,7 @@ const StudentSettings = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, title: e.target.value })
                       }
-                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background transition-all"
                     />
                   </div>
                 </div>
@@ -262,13 +258,13 @@ const StudentSettings = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, bio: e.target.value })
                   }
-                  className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background h-28 resize-none"
+                  className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background h-28 resize-none transition-all"
                 />
               </div>
             </div>
           </div>
 
-          <div className="bg-card rounded-card card-shadow p-6">
+          <div className="bg-card rounded-card card-shadow p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 fill-mode-both">
             <div className="flex items-center gap-2 mb-6">
               <Shield size={20} className="text-primary" />
               <h2 className="text-h3 text-card-foreground">
@@ -287,7 +283,7 @@ const StudentSettings = () => {
                     setPasswords({ ...passwords, old: e.target.value })
                   }
                   placeholder="Enter current password"
-                  className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                  className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background transition-all"
                 />
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -302,7 +298,7 @@ const StudentSettings = () => {
                       setPasswords({ ...passwords, new: e.target.value })
                     }
                     placeholder="Enter new password"
-                    className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                    className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background transition-all"
                   />
                 </div>
                 <div>
@@ -316,7 +312,7 @@ const StudentSettings = () => {
                       setPasswords({ ...passwords, confirm: e.target.value })
                     }
                     placeholder="Confirm new password"
-                    className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                    className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background transition-all"
                   />
                 </div>
               </div>
@@ -335,10 +331,10 @@ const StudentSettings = () => {
                 ].map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-2 text-[11px]"
+                    className="flex items-center gap-2 text-[11px] transition-all duration-300"
                   >
                     {item.met ? (
-                      <CheckCircle2 size={14} className="text-emerald-500" />
+                      <CheckCircle2 size={14} className="text-emerald-500 animate-in zoom-in duration-300" />
                     ) : (
                       <XCircle size={14} className="text-muted-foreground/30" />
                     )}
@@ -358,9 +354,9 @@ const StudentSettings = () => {
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="bg-card rounded-card card-shadow p-6 text-center border-b-4 border-primary overflow-hidden relative">
-            <div className="w-28 h-28 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-md flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD]">
+        <div className="space-y-6 sticky top-6 self-start animate-in fade-in slide-in-from-right-4 duration-500 delay-300 fill-mode-both">
+          <div className="bg-card rounded-card card-shadow p-6 text-center border-b-4 border-primary overflow-hidden relative group hover:shadow-lg transition-all duration-300">
+            <div className="w-28 h-28 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-md flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD] transition-transform duration-500 group-hover:scale-110">
               {avatarPreview ? (
                 <img
                   src={avatarPreview}
@@ -375,14 +371,14 @@ const StudentSettings = () => {
               )}
             </div>
 
-            <h3 className="text-h3 font-black text-foreground truncate">
+            <h3 className="text-h3 font-black text-foreground truncate group-hover:text-primary transition-colors">
               {formData.firstName} {formData.lastName}
             </h3>
             <p className="text-xs font-medium text-muted-foreground mb-4 px-2 line-clamp-1">
               {formData.title}
             </p>
 
-            <div className="py-2.5 px-4 bg-muted/40 rounded-xl flex items-center justify-center gap-2 text-[11px] text-muted-foreground border border-border shadow-sm">
+            <div className="py-2.5 px-4 bg-muted/40 rounded-xl flex items-center justify-center gap-2 text-[11px] text-muted-foreground border border-border shadow-sm transition-all group-hover:bg-muted/60">
               <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
               <span className="font-medium truncate">
                 {formData.email}
@@ -397,7 +393,7 @@ const StudentSettings = () => {
               changePasswordMutation.isPending ||
               (passwords.new !== "" && !canSavePassword)
             }
-            className="w-full gradient-primary border-0 text-primary-foreground font-black rounded-button shadow-xl py-6 hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full gradient-primary border-0 text-primary-foreground font-black rounded-button shadow-xl py-6 hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {(updateProfileMutation.isPending || changePasswordMutation.isPending) ? (
               <Loader2 className="animate-spin mr-2" size={20} />

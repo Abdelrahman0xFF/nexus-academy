@@ -59,34 +59,51 @@ const StudentDashboard = () => {
   return (
     <DashboardLayout type="student">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-h1 text-foreground">
-          Welcome back, {user?.first_name || "Student"}! 👋
-        </h1>
-        <p className="text-body text-muted-foreground mt-1">
-          Continue where you left off
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+        <div>
+          <h1 className="text-h1 text-foreground">
+            Welcome back, {user?.first_name || "Student"}! 👋
+          </h1>
+          <p className="text-body text-muted-foreground mt-1">
+            Continue where you left off
+          </p>
+        </div>
+        <Button asChild className="gradient-primary border-0 text-primary-foreground rounded-button transition-all hover:scale-105 active:scale-95 shadow-md">
+          <Link to="/courses">Explore New Courses</Link>
+        </Button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {stats.map((s) => (
-          <div key={s.label} className="bg-card rounded-card card-shadow p-5">
-            <div className={`w-10 h-10 rounded-lg ${s.color} flex items-center justify-center mb-3`}>
-              <s.icon size={20} />
-            </div>
-            <div className="text-2xl font-bold text-card-foreground">{s.value}</div>
-            <div className="text-small text-muted-foreground">{s.label}</div>
-          </div>
-        ))}
+  {isLoading ? (
+    Array.from({ length: 4 }).map((_, i) => (
+      <div key={i} className="bg-card rounded-card card-shadow p-5 h-24 animate-pulse" />
+    ))
+  ) : (
+    stats.map((s, idx) => (
+      <div
+  key={s.label}
+  className="bg-card rounded-card card-shadow p-5 group border border-border/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+  style={{
+    animationDelay: `${idx * 100}ms`,
+  }}
+>
+        <div className={`w-10 h-10 rounded-lg ${s.color} flex items-center justify-center mb-3 transition-transform duration-500 group-hover:scale-110`}>
+          <s.icon size={20} />
+        </div>
+        <div className="text-2xl font-bold text-card-foreground group-hover:text-primary transition-colors">{s.value}</div>
+        <div className="text-small text-muted-foreground">{s.label}</div>
       </div>
+    ))
+  )}
+</div>
 
       {/* Continue Learning */}
-      <div className="bg-card rounded-card card-shadow p-6 mb-8">
+      <div className="bg-card rounded-card card-shadow p-6 mb-8 animate-in fade-in slide-in-from-left-4 duration-500 delay-200 fill-mode-both">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-h3 text-card-foreground">Continue Learning</h2>
-          <Link to="/dashboard/courses" className="text-primary text-small font-medium hover:underline flex items-center gap-1">
-            View All <ArrowRight size={14} />
+          <Link to="/student/courses" className="text-primary text-small font-bold hover:underline flex items-center gap-1 group">
+            View All <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
         
@@ -96,9 +113,14 @@ const StudentDashboard = () => {
           </div>
         ) : enrollmentData.length > 0 ? (
           <div className="space-y-4">
-            {enrollmentData.slice(0, 3).map((c) => (
-              <Link key={c.course_id} to={`/learn/${c.course_id}`} className="flex items-center gap-4 p-4 rounded-lg hover:bg-muted/50 transition-colors group">
-                <div className="w-16 h-16 rounded-lg gradient-primary flex items-center justify-center shrink-0 overflow-hidden">
+            {enrollmentData.slice(0, 3).map((c, idx) => (
+              <Link 
+                key={c.course_id} 
+                to={`/learn/${c.course_id}`} 
+                className="flex items-center gap-4 p-4 rounded-lg hover:bg-muted/50 transition-all group animate-in fade-in slide-in-from-left-4 fill-mode-both"
+                style={{ animationDelay: `${idx * 150 + 400}ms` }}
+              >
+                <div className="w-16 h-16 rounded-lg gradient-primary flex items-center justify-center shrink-0 overflow-hidden group-hover:scale-105 transition-transform duration-500">
                   {c.thumbnail_url ? (
                     <img src={getMediaUrl(c.thumbnail_url)} alt={c.title} className="w-full h-full object-cover" />
                   ) : (
@@ -106,13 +128,13 @@ const StudentDashboard = () => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-small font-semibold text-card-foreground truncate group-hover:text-primary transition-colors">
+                  <h3 className="text-small font-bold text-card-foreground truncate group-hover:text-primary transition-colors">
                     {c.title}
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {c.instructor_first_name} {c.instructor_last_name} · {Math.round(c.progress)}% complete
                   </p>
-                  <ProgressBar value={Math.round(c.progress)} className="mt-2" />
+                  <ProgressBar value={Math.round(c.progress)} className="mt-2 group-hover:bg-muted/30 transition-colors" />
                 </div>
               </Link>
             ))}
@@ -120,15 +142,15 @@ const StudentDashboard = () => {
         ) : (
           <div className="text-center py-12">
             <p className="text-muted-foreground mb-4">You haven't enrolled in any courses yet.</p>
-            <Button asChild variant="outline">
-              <Link to="/courses">Browse Courses</Link>
+            <Button asChild variant="outline" className="rounded-button hover:bg-muted transition-all hover:scale-105 active:scale-95">
+              <Link to="/courses">Browse Catalog</Link>
             </Button>
           </div>
         )}
       </div>
 
       {/* Recommended */}
-      <div>
+      <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 delay-400 fill-mode-both">
         <h2 className="text-h3 text-foreground mb-5">Recommended for You</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {isCoursesLoading ? (

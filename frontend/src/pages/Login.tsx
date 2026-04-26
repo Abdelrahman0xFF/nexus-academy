@@ -89,25 +89,27 @@ const Login = () => {
   return (
     <div className="h-screen overflow-y-auto custom-scrollbar bg-background">
       <div className="min-h-full flex items-center justify-center px-4">
-        <div className="w-full max-w-md space-y-8">
+        <div className="w-full max-w-md space-y-8 py-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
         <div className="text-center">
-          <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
+          <Link to="/" className="inline-flex items-center gap-2 mb-6 group transition-all hover:scale-105">
+            <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center shadow-lg group-hover:shadow-primary/30">
               <GraduationCap size={22} className="text-primary-foreground" />
             </div>
             <span className="text-xl font-bold text-foreground">
               Nexus<span className="text-primary">Academy</span>
             </span>
           </Link>
-          <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
-          <p className="text-muted-foreground mt-1">Sign in to continue learning</p>
+          <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">Welcome back</h1>
+          <p className="text-body text-muted-foreground mt-1">Sign in to continue learning</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 bg-card border border-border rounded-xl p-6 shadow-sm">
+        <div className="space-y-5 bg-card border border-border rounded-xl p-6 shadow-xl relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-1 gradient-primary opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          
           <Button
             type="button"
             variant="outline"
-            className="w-full border-border bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm"
+            className="w-full border-border bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm"
             onClick={() => window.location.href = authApi.getGoogleAuthUrl()}
             disabled={loading}
           >
@@ -124,67 +126,69 @@ const Login = () => {
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-border"></span>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or sign in with email</span>
+            <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest">
+              <span className="bg-card px-2 text-muted-foreground">Or email login</span>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className={errors.email ? "border-destructive" : ""}
-              disabled={loading}
-            />
-            {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Email Address</Label>
               <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                className={errors.password ? "border-destructive pr-10" : "pr-10"}
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                className={`rounded-button py-6 border-border focus:ring-primary/20 transition-all ${errors.email ? "border-destructive focus:ring-destructive/20" : ""}`}
                 disabled={loading}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                disabled={loading}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+              {errors.email && <p className="text-xs font-medium text-destructive animate-in fade-in slide-in-from-top-1">{errors.email}</p>}
             </div>
-            {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
-          </div>
 
-          <Button 
-            type="submit" 
-            className="w-full gradient-primary border-0 text-primary-foreground hover:opacity-90 disabled:opacity-70"
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Loader2 size={18} className="mr-2 animate-spin" /> Signing In...
-              </>
-            ) : (
-              "Sign In"
-            )}
-          </Button>
-        </form>
+            <div className="space-y-2">
+              <Label htmlFor="password" title="Enter your account password" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  className={`rounded-button py-6 border-border focus:ring-primary/20 transition-all pr-10 ${errors.password ? "border-destructive focus:ring-destructive/20" : ""}`}
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                  disabled={loading}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {errors.password && <p className="text-xs font-medium text-destructive animate-in fade-in slide-in-from-top-1">{errors.password}</p>}
+            </div>
 
-        <p className="text-center text-sm text-muted-foreground">
+            <Button 
+              type="submit" 
+              className="w-full gradient-primary border-0 text-primary-foreground py-6 rounded-button font-black text-small shadow-xl shadow-primary/20 hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="mr-2 animate-spin" /> Signing In...
+                </>
+              ) : (
+                "Sign In"
+              )}
+            </Button>
+          </form>
+        </div>
+
+        <p className="text-center text-small text-muted-foreground animate-in fade-in duration-1000 delay-500 fill-mode-both">
           Don't have an account?{" "}
-          <Link to="/signup" className="text-primary font-medium hover:underline">
+          <Link to="/signup" className="text-primary font-black hover:underline underline-offset-4">
             Sign up
           </Link>
         </p>

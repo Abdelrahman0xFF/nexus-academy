@@ -90,7 +90,7 @@ const InstructorCourses = () => {
 
   return (
     <DashboardLayout type="instructor">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
         <div>
           <h1 className="text-h1 text-foreground">My Courses</h1>
           <p className="text-body text-muted-foreground mt-1">
@@ -99,7 +99,7 @@ const InstructorCourses = () => {
         </div>
         <Button
           asChild
-          className="gradient-primary border-0 text-primary-foreground rounded-button hover:opacity-90 transition-opacity"
+          className="gradient-primary border-0 text-primary-foreground rounded-button hover:opacity-90 transition-all hover:scale-105 active:scale-95"
         >
           <Link to="/instructor/upload">
             <Plus size={18} className="mr-2" /> New Course

@@ -127,32 +127,31 @@ const Signup = () => {
   return (
     <div className="h-screen overflow-y-auto custom-scrollbar bg-background">
       <div className="min-h-full flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md space-y-8">
+        <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
         <div className="text-center">
-          <Link to="/" className="inline-flex items-center gap-2 mb-6 group">
-            <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center transition-transform group-hover:scale-110">
+          <Link to="/" className="inline-flex items-center gap-2 mb-6 group transition-all hover:scale-105">
+            <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center shadow-lg group-hover:shadow-primary/30">
               <GraduationCap size={22} className="text-primary-foreground" />
             </div>
             <span className="text-xl font-bold text-foreground">
               Nexus<span className="text-primary">Academy</span>
             </span>
           </Link>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">
+          <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">
             Create your account
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-body text-muted-foreground mt-1">
             Start your learning journey today
           </p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5 bg-card border border-border rounded-xl p-6 shadow-sm"
-        >
+        <div className="space-y-5 bg-card border border-border rounded-xl p-6 shadow-xl relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-1 gradient-primary opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
           <Button
             type="button"
             variant="outline"
-            className="w-full border-border bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm"
+            className="w-full border-border bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm"
             onClick={() => window.location.href = authApi.getGoogleAuthUrl()}
             disabled={loading}
           >
@@ -169,192 +168,148 @@ const Signup = () => {
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-border"></span>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
+            <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest">
               <span className="bg-card px-2 text-muted-foreground">Or sign up with email</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">First Name</Label>
+                <Input
+                  id="firstName"
+                  placeholder="Alex"
+                  value={form.firstName}
+                  onChange={(e) =>
+                    setForm({ ...form, firstName: e.target.value })
+                  }
+                  disabled={loading}
+                  className={`rounded-button py-6 border-border focus:ring-primary/20 transition-all ${errors.firstName ? "border-destructive focus:ring-destructive/20" : ""}`}
+                />
+                {errors.firstName && (
+                  <p className="text-[10px] text-destructive font-medium animate-in fade-in slide-in-from-top-1">
+                    {errors.firstName}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Last Name</Label>
+                <Input
+                  id="lastName"
+                  placeholder="Johnson"
+                  value={form.lastName}
+                  onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                  disabled={loading}
+                  className={`rounded-button py-6 border-border focus:ring-primary/20 transition-all ${errors.lastName ? "border-destructive focus:ring-destructive/20" : ""}`}
+                />
+                {errors.lastName && (
+                  <p className="text-[10px] text-destructive font-medium animate-in fade-in slide-in-from-top-1">
+                    {errors.lastName}
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
+              <Label htmlFor="email" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Email Address</Label>
               <Input
-                id="firstName"
-                placeholder="Alex"
-                value={form.firstName}
-                onChange={(e) =>
-                  setForm({ ...form, firstName: e.target.value })
-                }
+                id="email"
+                type="email"
+                placeholder="name@example.com"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
                 disabled={loading}
-                className={
-                  errors.firstName
-                    ? "border-destructive focus-visible:ring-destructive"
-                    : ""
-                }
+                className={`rounded-button py-6 border-border focus:ring-primary/20 transition-all ${errors.email ? "border-destructive focus:ring-destructive/20" : ""}`}
               />
-              {errors.firstName && (
-                <p className="text-[10px] text-destructive font-medium">
-                  {errors.firstName}
+              {errors.email && (
+                <p className="text-[10px] text-destructive font-medium animate-in fade-in slide-in-from-top-1">
+                  {errors.email}
                 </p>
               )}
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
+              <Label htmlFor="password" title="Create a strong password" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  disabled={loading}
+                  className={`rounded-button py-6 border-border focus:ring-primary/20 transition-all pr-10 ${errors.password ? "border-destructive focus:ring-destructive/20" : ""}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                  disabled={loading}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirm" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Confirm Password</Label>
               <Input
-                id="lastName"
-                placeholder="Johnson"
-                value={form.lastName}
-                onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                id="confirm"
+                type="password"
+                placeholder="••••••••"
+                value={form.confirm}
+                onChange={(e) => setForm({ ...form, confirm: e.target.value })}
                 disabled={loading}
-                className={
-                  errors.lastName
-                    ? "border-destructive focus-visible:ring-destructive"
-                    : ""
-                }
+                className={`rounded-button py-6 border-border focus:ring-primary/20 transition-all ${errors.confirm ? "border-destructive focus:ring-destructive/20" : ""}`}
               />
-              {errors.lastName && (
-                <p className="text-[10px] text-destructive font-medium">
-                  {errors.lastName}
+              {errors.confirm && (
+                <p className="text-[10px] text-destructive font-medium animate-in fade-in slide-in-from-top-1">
+                  {errors.confirm}
                 </p>
               )}
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="name@example.com"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              disabled={loading}
-              className={
-                errors.email
-                  ? "border-destructive focus-visible:ring-destructive"
-                  : ""
-              }
-            />
-            {errors.email && (
-              <p className="text-[10px] text-destructive font-medium">
-                {errors.email}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="create a strong password"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                disabled={loading}
-                className={
-                  errors.password ? "border-destructive pr-10" : "pr-10"
-                }
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                disabled={loading}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+            <div className="p-4 bg-muted/20 rounded-xl space-y-2 border border-border/50">
+              {[
+                { label: "6+ Characters", met: passwordCriteria.length },
+                { label: "Capital & Small letters", met: passwordCriteria.hasUpper && passwordCriteria.hasLower },
+                { label: "Symbols (@, #, $)", met: passwordCriteria.hasSymbol },
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-[11px] transition-all duration-300">
+                  {item.met ? (
+                    <CheckCircle2 size={14} className="text-emerald-500 animate-in zoom-in duration-300" />
+                  ) : (
+                    <XCircle size={14} className="text-muted-foreground/30" />
+                  )}
+                  <span className={item.met ? "text-emerald-600 font-bold" : "text-muted-foreground"}>
+                    {item.label}
+                  </span>
+                </div>
+              ))}
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="confirm">Confirm Password</Label>
-            <Input
-              id="confirm"
-              type="password"
-              placeholder="confirm your password"
-              value={form.confirm}
-              onChange={(e) => setForm({ ...form, confirm: e.target.value })}
-              disabled={loading}
-              className={errors.confirm ? "border-destructive" : ""}
-            />
-            {errors.confirm && (
-              <p className="text-[10px] text-destructive font-medium">
-                {errors.confirm}
-              </p>
-            )}
-          </div>
-
-          <div className="p-3 bg-muted/20 rounded-lg space-y-2 border border-border/50">
-            <div className="flex items-center gap-2 text-[11px]">
-              {passwordCriteria.length ? (
-                <CheckCircle2 size={14} className="text-emerald-500" />
+            <Button
+              type="submit"
+              disabled={!isPasswordValid || !form.confirm || loading}
+              className="w-full gradient-primary border-0 text-primary-foreground py-6 rounded-button font-black text-small shadow-xl shadow-primary/20 hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="mr-2 animate-spin" /> Creating Account...
+                </>
               ) : (
-                <XCircle size={14} className="text-muted-foreground/30" />
+                "Create Account"
               )}
-              <span
-                className={
-                  passwordCriteria.length
-                    ? "text-emerald-600 font-medium"
-                    : "text-muted-foreground"
-                }
-              >
-                6+ Characters
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-[11px]">
-              {passwordCriteria.hasUpper && passwordCriteria.hasLower ? (
-                <CheckCircle2 size={14} className="text-emerald-500" />
-              ) : (
-                <XCircle size={14} className="text-muted-foreground/30" />
-              )}
-              <span
-                className={
-                  passwordCriteria.hasUpper && passwordCriteria.hasLower
-                    ? "text-emerald-600 font-medium"
-                    : "text-muted-foreground"
-                }
-              >
-                Capital & Small letters
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-[11px]">
-              {passwordCriteria.hasSymbol ? (
-                <CheckCircle2 size={14} className="text-emerald-500" />
-              ) : (
-                <XCircle size={14} className="text-muted-foreground/30" />
-              )}
-              <span
-                className={
-                  passwordCriteria.hasSymbol
-                    ? "text-emerald-600 font-medium"
-                    : "text-muted-foreground"
-                }
-              >
-                Symbols (! @ # $ % ^ & *)
-              </span>
-            </div>
-          </div>
+            </Button>
+          </form>
+        </div>
 
-          <Button
-            type="submit"
-            disabled={!isPasswordValid || !form.confirm || loading}
-            className="w-full gradient-primary border-0 text-primary-foreground font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50"
-          >
-            {loading ? (
-              <>
-                <Loader2 size={18} className="mr-2 animate-spin" /> Creating Account...
-              </>
-            ) : (
-              "Create Account"
-            )}
-          </Button>
-        </form>
-
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-center text-small text-muted-foreground animate-in fade-in duration-1000 delay-500 fill-mode-both">
           Already have an account?{" "}
           <Link
             to="/login"
-            className="text-primary font-bold hover:underline underline-offset-4"
+            className="text-primary font-black hover:underline underline-offset-4"
           >
             Sign in
           </Link>

@@ -1,4 +1,4 @@
-import { Upload, Image, Video, Plus, X, Loader2 } from "lucide-react";
+import { Upload, Image, Video, Plus, X, Loader2, HelpCircle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -201,7 +201,7 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
 
   return (
     <DashboardLayout type="instructor">
-      <div className="mb-8">
+      <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
         <h1 className="text-h1 text-foreground">{isEditMode ? "Edit Course" : "Upload Course"}</h1>
         <p className="text-body text-muted-foreground mt-1">{isEditMode ? "Update your course details" : "Create and publish a new course"}</p>
       </div>
@@ -209,7 +209,7 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Info */}
-          <div className="bg-card rounded-card card-shadow p-6">
+          <div className="bg-card rounded-card card-shadow p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100 fill-mode-both">
             <h2 className="text-h3 text-card-foreground mb-5">Basic Information</h2>
             <div className="space-y-4">
               <div>
@@ -219,7 +219,7 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Complete Web Development Bootcamp"
-                  className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20"
+                  className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </div>
               <div>
@@ -229,7 +229,7 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Brief overview of your course..."
                   rows={3}
-                  className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20 resize-none"
+                  className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20 resize-none transition-all"
                 />
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -240,7 +240,7 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
                     value={categoryId}
                     onValueChange={setCategoryId}
                     placeholder="Select category"
-                    triggerClassName="px-4 py-2.5"
+                    triggerClassName="px-4 py-2.5 hover:bg-muted/50 transition-colors"
                   />
                 </div>
                 <div>
@@ -250,7 +250,7 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
                     value={level}
                     onValueChange={(val) => setLevel(val as any)}
                     placeholder="Select level"
-                    triggerClassName="px-4 py-2.5"
+                    triggerClassName="px-4 py-2.5 hover:bg-muted/50 transition-colors"
                   />
                 </div>
               </div>
@@ -262,7 +262,7 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
                     value={originalPrice}
                     onChange={(e) => setOriginalPrice(e.target.value ? Number(e.target.value) : "")}
                     placeholder="99.99"
-                    className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20"
+                    className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20 transition-all"
                   />
                 </div>
                 <div>
@@ -272,7 +272,7 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
                     value={price}
                     onChange={(e) => setPrice(e.target.value ? Number(e.target.value) : "")}
                     placeholder="49.99"
-                    className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20"
+                    className="w-full px-4 py-2.5 text-small border border-border outline-none rounded-button focus:ring-2 focus:ring-primary/20 transition-all"
                   />
                 </div>
               </div>
@@ -284,7 +284,7 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
                 />
                 <label
                   htmlFor="is_available"
-                  className="text-small font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  className="text-small font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                 >
                   Make this course available for enrollment
                 </label>
@@ -293,18 +293,18 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
           </div>
 
           {/* Media Upload */}
-          <div className="bg-card rounded-card card-shadow p-6">
+          <div className="bg-card rounded-card card-shadow p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 fill-mode-both">
             <h2 className="text-h3 text-card-foreground mb-5">Course Media</h2>
             <div className="grid gap-4">
               <div 
                 onClick={() => thumbnailInputRef.current?.click()}
-                className="border-2 border-dashed border-border rounded-card p-8 flex flex-col items-center justify-center text-center hover:border-primary/40 transition-colors cursor-pointer relative overflow-hidden h-48"
+                className="border-2 border-dashed border-border rounded-card p-8 flex flex-col items-center justify-center text-center hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer relative overflow-hidden h-48 group"
               >
                 {thumbnailPreview ? (
-                  <img src={thumbnailPreview.startsWith("http") ? thumbnailPreview : (thumbnailPreview.includes("base64") ? thumbnailPreview : `http://localhost:4000/api/media/${thumbnailPreview}`)} alt="Thumbnail preview" className="absolute inset-0 w-full h-full object-cover" />
+                  <img src={thumbnailPreview.startsWith("http") ? thumbnailPreview : (thumbnailPreview.includes("base64") ? thumbnailPreview : `http://localhost:4000/api/media/${thumbnailPreview}`)} alt="Thumbnail preview" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                 ) : (
                   <>
-                    <Image size={32} className="text-muted-foreground mb-3" />
+                    <Image size={32} className="text-muted-foreground mb-3 transition-transform group-hover:scale-110" />
                     <p className="text-small font-medium text-foreground">Course Thumbnail</p>
                     <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p>
                   </>
@@ -321,16 +321,16 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
           </div>
 
           {!isEditMode && (
-            <div className="bg-card rounded-card card-shadow p-6">
+            <div className="bg-card rounded-card card-shadow p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300 fill-mode-both">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-h3 text-card-foreground">Course Content</h2>
-                <Button variant="outline" size="sm" className="rounded-button" onClick={addSection}>
+                <Button variant="outline" size="sm" className="rounded-button hover:bg-primary/5 transition-colors" onClick={addSection}>
                   <Plus size={14} className="mr-1" /> Add Section
                 </Button>
               </div>
               <div className="space-y-4">
                 {sections.map((section, si) => (
-                  <div key={si} className="border border-border rounded-lg p-4 bg-muted/20">
+                  <div key={si} className="border border-border rounded-lg p-4 bg-muted/20 transition-all hover:bg-muted/30">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
                         {si + 1}
@@ -344,16 +344,16 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
                           setSections(u);
                         }}
                         placeholder="Section title"
-                        className="flex-1 px-3 py-1.5 text-small bg-background rounded-button border border-border outline-none focus:ring-2 focus:ring-primary/20 font-medium"
+                        className="flex-1 px-3 py-1.5 text-small bg-background rounded-button border border-border outline-none focus:ring-2 focus:ring-primary/20 font-medium transition-all"
                       />
-                      <button onClick={() => removeSection(si)} className="p-1 text-muted-foreground hover:text-destructive">
+                      <button onClick={() => removeSection(si)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
                         <X size={16} />
                       </button>
                     </div>
                     
                     <div className="space-y-3 ml-6">
                       {section.lessons.map((lesson, li) => (
-                        <div key={li} className="bg-background border border-border rounded-md p-3 space-y-3">
+                        <div key={li} className="bg-background border border-border rounded-md p-3 space-y-3 transition-all hover:shadow-sm">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-medium text-muted-foreground">L{li + 1}</span>
                             <input
@@ -365,9 +365,9 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
                                 setSections(u);
                               }}
                               placeholder="Lesson title"
-                              className="flex-1 px-3 py-1 text-small bg-muted/50 rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20"
+                              className="flex-1 px-3 py-1 text-small bg-muted/50 rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                             />
-                            <button onClick={() => removeLesson(si, li)} className="p-1 text-muted-foreground hover:text-destructive">
+                            <button onClick={() => removeLesson(si, li)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
                               <X size={14} />
                             </button>
                           </div>
@@ -381,7 +381,7 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
                             }}
                             placeholder="Lesson description (optional)"
                             rows={2}
-                            className="w-full px-3 py-1.5 text-xs bg-muted/30 rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                            className="w-full px-3 py-1.5 text-xs bg-muted/30 rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"
                           />
                           
                           <div className="flex items-center gap-3">
@@ -398,7 +398,7 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
                               />
                               <label 
                                 htmlFor={`video-${si}-${li}`}
-                                className="flex items-center gap-2 px-3 py-1.5 text-xs bg-primary/10 text-primary rounded-button border border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors w-fit"
+                                className="flex items-center gap-2 px-3 py-1.5 text-xs bg-primary/10 text-primary rounded-button border border-primary/20 cursor-pointer hover:bg-primary/20 transition-all w-fit"
                               >
                                 <Video size={14} />
                                 {lesson.video ? lesson.video.name : "Upload Lesson Video"}
@@ -409,7 +409,7 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
                       ))}
                       <button
                         onClick={() => addLesson(si)}
-                        className="text-xs text-primary font-medium hover:underline flex items-center gap-1 mt-1"
+                        className="text-xs text-primary font-medium hover:underline flex items-center gap-1 mt-1 transition-all hover:pl-1"
                       >
                         <Plus size={12} /> Add Lesson
                       </button>
@@ -422,11 +422,11 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 delay-400 fill-mode-both">
           <div className="bg-card rounded-card card-shadow p-6 sticky top-6">
             <h3 className="text-h3 text-card-foreground mb-4">Publish</h3>
             {publishing && (
-              <div className="mb-4 p-3 bg-primary/5 rounded-md border border-primary/10">
+              <div className="mb-4 p-3 bg-primary/5 rounded-md border border-primary/10 animate-pulse">
                 <div className="flex items-center gap-2 text-xs text-primary font-medium mb-1">
                   <Loader2 size={14} className="animate-spin" />
                   Processing...
@@ -437,21 +437,21 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
               </div>
             )}
             <div className="space-y-3 mb-6">
-              <div className="flex justify-between text-small">
+              <div className="flex justify-between text-small group">
                 <span className="text-muted-foreground">Status</span>
-                <span className={`font-medium ${isAvailable ? "text-emerald-600" : "text-amber-600"}`}>
+                <span className={`font-black ${isAvailable ? "text-emerald-600" : "text-amber-600"} transition-all group-hover:scale-110`}>
                   {isAvailable ? "Available" : "Draft"}
                 </span>
               </div>
               {!isEditMode && (
                 <>
-                  <div className="flex justify-between text-small">
+                  <div className="flex justify-between text-small group">
                     <span className="text-muted-foreground">Sections</span>
-                    <span className="font-medium text-foreground">{sections.length}</span>
+                    <span className="font-bold text-foreground transition-all group-hover:scale-110">{sections.length}</span>
                   </div>
-                  <div className="flex justify-between text-small">
+                  <div className="flex justify-between text-small group">
                     <span className="text-muted-foreground">Lessons</span>
-                    <span className="font-medium text-foreground">{sections.reduce((a, s) => a + s.lessons.length, 0)}</span>
+                    <span className="font-bold text-foreground transition-all group-hover:scale-110">{sections.reduce((a, s) => a + s.lessons.length, 0)}</span>
                   </div>
                 </>
               )}
@@ -460,7 +460,7 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
               <Button 
                 onClick={handlePublish}
                 disabled={publishing}
-                className="w-full gradient-primary border-0 text-primary-foreground rounded-button hover:opacity-90 shadow-lg shadow-primary/20 disabled:opacity-50"
+                className="w-full gradient-primary border-0 text-primary-foreground font-black rounded-button hover:opacity-90 shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
               >
                 {publishing ? (
                   <>
@@ -474,8 +474,11 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
               </Button>
             </div>
             
-            <div className="mt-6 p-4 bg-muted/50 rounded-card border border-border">
-              <h4 className="text-xs font-bold text-foreground mb-2 uppercase tracking-wider">Instructions</h4>
+            <div className="mt-6 p-4 bg-muted/50 rounded-card border border-border transition-all hover:bg-muted/70">
+              <h4 className="text-xs font-bold text-foreground mb-2 uppercase tracking-wider flex items-center gap-2">
+                <HelpCircle size={14} className="text-primary" />
+                Instructions
+              </h4>
               <ul className="text-[11px] text-muted-foreground space-y-2 list-disc pl-4">
                 <li>Fill all required fields marked in the form.</li>
                 {!isEditMode && <li>Each lesson MUST have a video file.</li>}

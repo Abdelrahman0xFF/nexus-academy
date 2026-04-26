@@ -1,19 +1,35 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
+
+type AnimationType = 
+  | "fade-in" 
+  | "slide-up" 
+  | "slide-down" 
+  | "slide-left" 
+  | "slide-right" 
+  | "zoom-in" 
+  | "zoom-out";
 
 interface ScrollRevealProps {
   children: ReactNode;
-  animation?: string;
-  delay?: string;
+  animation?: AnimationType;
+  delay?: number; // in milliseconds
+  duration?: number; // in milliseconds
   className?: string;
   once?: boolean;
+  threshold?: number;
+  distance?: string; // for slide animations
 }
 
 const ScrollReveal = ({
   children,
-  animation = "animate-reveal",
-  delay = "0s",
+  animation = "fade-in",
+  delay = 0,
+  duration = 700,
   className = "",
   once = true,
+  threshold = 0.1,
+  distance = "20px",
 }: ScrollRevealProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -31,8 +47,8 @@ const ScrollReveal = ({
         }
       },
       {
-        threshold: 0.1,
-        rootMargin: "0px 0px -50px 0px", // Trigger slightly before the element enters
+        threshold,
+        rootMargin: "0px 0px -20px 0px",
       }
     );
 
@@ -46,13 +62,32 @@ const ScrollReveal = ({
         observer.unobserve(currentRef);
       }
     };
-  }, [once]);
+  }, [once, threshold]);
+
+  const getAnimationClass = () => {
+    if (!isVisible) return "opacity-0";
+    
+    switch (animation) {
+      case "fade-in": return "animate-in fade-in";
+      case "slide-up": return "animate-in fade-in slide-in-from-bottom-5";
+      case "slide-down": return "animate-in fade-in slide-in-from-top-5";
+      case "slide-left": return "animate-in fade-in slide-in-from-right-5";
+      case "slide-right": return "animate-in fade-in slide-in-from-left-5";
+      case "zoom-in": return "animate-in fade-in zoom-in-95";
+      case "zoom-out": return "animate-in fade-in zoom-in-105";
+      default: return "animate-in fade-in";
+    }
+  };
 
   return (
     <div
       ref={ref}
-      className={`${isVisible ? animation : "opacity-0"} ${className}`}
-      style={{ animationDelay: delay }}
+      className={cn(getAnimationClass(), className)}
+      style={{ 
+        animationDelay: `${delay}ms`,
+        animationDuration: `${duration}ms`,
+        animationFillMode: 'both'
+      }}
     >
       {children}
     </div>

@@ -19,12 +19,11 @@ import ScrollReveal from "@/components/ScrollReveal";
 import { instructors, testimonials } from "@/lib/data";
 import { categoryApi } from "@/lib/categories-api";
 import { coursesApi, type Course } from "@/lib/courses-api";
-import type { Category } from "@/lib/data";
 import heroImage from "@/assets/landing-img.svg";
 import Marquee from "@/components/Marquee";
 
 const Landing = () => {
-    const [categories, setCategories] = useState<Category[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
     const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -58,8 +57,8 @@ const Landing = () => {
             <section className="relative overflow-hidden h-[calc(100vh_-_65px)] flex items-center">
                 <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-24">
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <div className="animate-reveal">
-                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-small font-medium mb-6">
+                        <div className="animate-in fade-in slide-in-from-left-8 duration-1000 fill-mode-both">
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-small font-medium mb-6 animate-in zoom-in-95 duration-500 delay-300 fill-mode-both">
                                 <TrendingUp size={14} /> #1 Learning Platform in
                                 {" " + new Date().getFullYear()}
                             </div>
@@ -79,7 +78,7 @@ const Landing = () => {
                                 <Link to="/courses">
                                     <Button
                                         size="lg"
-                                        className="gradient-primary border-0 text-primary-foreground rounded-button px-8 hover:opacity-90 transition-opacity"
+                                        className="gradient-primary border-0 text-primary-foreground rounded-button px-8 hover:opacity-90 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/20"
                                     >
                                         Explore Courses{" "}
                                         <ArrowRight
@@ -92,7 +91,7 @@ const Landing = () => {
                                     <Button
                                         size="lg"
                                         variant="outline"
-                                        className="rounded-button px-8"
+                                        className="rounded-button px-8 transition-all hover:bg-muted hover:scale-105 active:scale-95"
                                     >
                                         Start Free Trial
                                     </Button>
@@ -112,8 +111,8 @@ const Landing = () => {
                                         label: "Courses Available",
                                         value: "1,200+",
                                     },
-                                ].map((stat) => (
-                                    <div key={stat.label}>
+                                ].map((stat, idx) => (
+                                    <div key={stat.label} className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both" style={{ animationDelay: `${idx * 150 + 500}ms` }}>
                                         <div className="text-2xl font-bold text-primary">
                                             {stat.value}
                                         </div>
@@ -124,11 +123,11 @@ const Landing = () => {
                                 ))}
                             </div>
                         </div>
-                        <div className="hidden lg:block animate-reveal-up">
+                        <div className="hidden lg:block animate-in fade-in zoom-in-95 duration-1000 delay-300 fill-mode-both">
                             <img
                                 src={heroImage}
                                 alt="Hero Illustration"
-                                className="w-full h-auto object-contain"
+                                className="w-full h-auto object-contain hover-lift transition-transform duration-500"
                             />
                         </div>
                     </div>
@@ -136,7 +135,7 @@ const Landing = () => {
             </section>
 
             {/* Stats Bar */}
-            <ScrollReveal className="animate-reveal">
+            <ScrollReveal animation="fade-in" duration={1000}>
                 <section className="border-y border-border bg-card">
                     <div className="container mx-auto px-4 lg:px-8 py-8">
                         <Marquee pauseOnHover={false}>
@@ -164,9 +163,9 @@ const Landing = () => {
                             ].map((s) => (
                                 <div
                                     key={s.label}
-                                    className="flex items-center gap-4 w-64 shrink-0 mx-4"
+                                    className="flex items-center gap-4 w-64 shrink-0 mx-4 group"
                                 >
-                                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
                                         <s.icon
                                             size={24}
                                             className="text-primary"
@@ -189,7 +188,7 @@ const Landing = () => {
 
             {/* Featured Courses */}
             <section className="container mx-auto px-4 lg:px-8 py-16">
-                <ScrollReveal>
+                <ScrollReveal animation="slide-up">
                     <div className="flex items-end justify-between mb-10">
                         <div>
                             <h2 className="text-h2 text-foreground">
@@ -201,9 +200,9 @@ const Landing = () => {
                         </div>
                         <Link
                             to="/courses"
-                            className="hidden sm:flex items-center gap-1 text-primary font-medium text-small hover:underline"
+                            className="hidden sm:flex items-center gap-1 text-primary font-medium text-small hover:underline group"
                         >
-                            View All <ArrowRight size={16} />
+                            View All <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </div>
                 </ScrollReveal>
@@ -219,7 +218,8 @@ const Landing = () => {
                         featuredCourses.map((c, index) => (
                             <ScrollReveal
                                 key={c.course_id}
-                                delay={`${index * 0.1}s`}
+                                animation="slide-up"
+                                delay={index * 100}
                             >
                                 <CourseCard course={c} />
                             </ScrollReveal>
@@ -235,7 +235,7 @@ const Landing = () => {
             {/* Categories */}
             <section className="bg-card border-y border-border">
                 <div className="container mx-auto px-4 lg:px-8 py-16">
-                    <ScrollReveal>
+                    <ScrollReveal animation="slide-up">
                         <div className="text-center mb-10">
                             <h2 className="text-h2 text-foreground">
                                 Browse by Category
@@ -249,7 +249,8 @@ const Landing = () => {
                         {categories.slice(0, 4).map((c, index) => (
                             <ScrollReveal
                                 key={c.category_id}
-                                delay={`${index * 0.1}s`}
+                                animation="zoom-in"
+                                delay={index * 100}
                             >
                                 <CategoryCard
                                     category={c}
@@ -263,7 +264,7 @@ const Landing = () => {
 
             {/* Top Instructors */}
             <section className="container mx-auto px-4 lg:px-8 py-16">
-                <ScrollReveal>
+                <ScrollReveal animation="slide-up">
                     <div className="text-center mb-10">
                         <h2 className="text-h2 text-foreground">
                             Top Instructors
@@ -275,7 +276,11 @@ const Landing = () => {
                 </ScrollReveal>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {instructors.map((i, index) => (
-                        <ScrollReveal key={i.id} delay={`${index * 0.1}s`}>
+                        <ScrollReveal 
+                            key={i.id} 
+                            animation="slide-up" 
+                            delay={index * 100}
+                        >
                             <InstructorCard instructor={i} />
                         </ScrollReveal>
                     ))}
@@ -285,7 +290,7 @@ const Landing = () => {
             {/* Testimonials */}
             <section className="bg-card border-y border-border">
                 <div className="container mx-auto px-4 lg:px-8 py-16">
-                    <ScrollReveal>
+                    <ScrollReveal animation="slide-up">
                         <div className="text-center mb-10">
                             <h2 className="text-h2 text-foreground">
                                 What Our Students Say
@@ -297,17 +302,21 @@ const Landing = () => {
                     </ScrollReveal>
                     <div className="grid md:grid-cols-3 gap-6">
                         {testimonials.map((t, index) => (
-                            <ScrollReveal key={t.id} delay={`${index * 0.1}s`}>
-                                <div className="bg-background rounded-card card-shadow p-6 hover-lift h-full">
+                            <ScrollReveal 
+                                key={t.id} 
+                                animation="slide-up" 
+                                delay={index * 100}
+                            >
+                                <div className="bg-background rounded-card card-shadow p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group h-full">
                                     <Quote
                                         size={24}
-                                        className="text-primary/30 mb-4"
+                                        className="text-primary/30 mb-4 group-hover:text-primary/50 transition-colors"
                                     />
                                     <p className="text-body text-muted-foreground leading-relaxed mb-6">
                                         {t.content}
                                     </p>
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
+                                        <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center group-hover:scale-110 transition-transform">
                                             <span className="text-small font-bold text-primary-foreground">
                                                 {t.name
                                                     .split(" ")
@@ -340,8 +349,8 @@ const Landing = () => {
 
             {/* CTA */}
             <section className="container mx-auto px-4 lg:px-8 py-16">
-                <ScrollReveal>
-                    <div className="gradient-primary rounded-card p-10 md:p-16 text-center">
+                <ScrollReveal animation="zoom-in" duration={800}>
+                    <div className="gradient-primary rounded-card p-10 md:p-16 text-center shadow-xl hover:shadow-2xl transition-shadow duration-500">
                         <h2 className="text-h2 text-primary-foreground mb-4">
                             Ready to Start Learning?
                         </h2>
@@ -352,7 +361,7 @@ const Landing = () => {
                         <Link to="/signup">
                             <Button
                                 size="lg"
-                                className="bg-card text-primary hover:bg-card/90 rounded-button px-10 font-semibold"
+                                className="bg-card text-primary hover:bg-card/90 rounded-button px-10 font-semibold transition-all hover:scale-105 active:scale-95 shadow-md"
                             >
                                 Get Started Free{" "}
                                 <ArrowRight size={18} className="ml-2" />
