@@ -98,23 +98,43 @@ const getAllCourses = asyncHandler(async (req, res, next) => {
 const getMyCourses = asyncHandler(async (req, res, next) => {
     const userId = req.user.user_id;
     const isAdmin = req.user.role === "admin";
+    const { page = 1, limit = 10, search, category_id, is_available } = req.query;
 
-    const courses = await Course.findByInstructorId(userId, userId, isAdmin);
-    return successResponse(res, courses);
+    const { courses, total } = await Course.findByInstructorId(
+        userId,
+        userId,
+        isAdmin,
+        Number(page),
+        Number(limit),
+        { 
+            search, 
+            category_id: category_id ? Number(category_id) : null,
+            is_available: is_available === undefined ? undefined : is_available === "true"
+        },
+    );
+    return successResponse(res, { courses, total });
 });
 
 const getCoursesByInstructorId = asyncHandler(async (req, res, next) => {
     const { instructor_id } = req.params;
     const userId = req.user?.user_id || null;
     const isAdmin = req.user?.role === "admin";
+    const { page = 1, limit = 10, search, category_id, is_available } = req.query;
 
-    const courses = await Course.findByInstructorId(
-        instructor_id,
+    const { courses, total } = await Course.findByInstructorId(
+        Number(instructor_id),
         userId,
         isAdmin,
+        Number(page),
+        Number(limit),
+        { 
+            search, 
+            category_id: category_id ? Number(category_id) : null,
+            is_available: is_available === undefined ? undefined : is_available === "true"
+        },
     );
 
-    return successResponse(res, courses);
+    return successResponse(res, { courses, total });
 });
 
 const updateCourse = asyncHandler(async (req, res, next) => {

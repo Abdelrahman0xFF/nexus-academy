@@ -5,13 +5,20 @@ import asyncHandler from "../utils/asyncHandler.js";
 export const getEarnings = asyncHandler(async (req, res) => {
     const user_id = req.user.user_id;
     const is_admin = req.user.role === "admin";
+    const { page = 1, limit = 10 } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
     const pool = await poolPromise;
 
-    let query,
-        params = {};
+    let detailsQuery, totalRevenueQuery, countQuery;
+    const request = pool.request();
 
     if (is_admin) {
-        query = `
+        totalRevenueQuery = `
+            SELECT SUM(e.enrollment_cost * 0.3) as total_revenue
+            FROM enrollments e
+        `;
+        
+        detailsQuery = `
             SELECT 
                 u.user_id, 
                 u.first_name, 
@@ -22,36 +29,65 @@ export const getEarnings = asyncHandler(async (req, res) => {
             JOIN courses c ON u.user_id = c.instructor_id
             JOIN enrollments e ON c.course_id = e.course_id
             GROUP BY u.user_id, u.first_name, u.last_name
+            ORDER BY earning DESC
+            OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
+        `;
+
+        countQuery = `
+            SELECT COUNT(DISTINCT u.user_id) as total
+            FROM users u
+            JOIN courses c ON u.user_id = c.instructor_id
+            JOIN enrollments e ON c.course_id = e.course_id
         `;
     } else {
-        query = `
+        request.input("instructor_id", sql.Int, user_id);
+        
+        totalRevenueQuery = `
+            SELECT 
+                SUM(e.enrollment_cost * 0.7) as total_revenue,
+                COUNT(e.user_id) as total_students_overall
+            FROM enrollments e
+            JOIN courses c ON e.course_id = c.course_id
+            WHERE c.instructor_id = @instructor_id
+        `;
+
+        detailsQuery = `
             SELECT 
                 c.course_id, 
                 c.title, 
                 COUNT(e.user_id) as total_students, 
-                SUM(e.enrollment_cost * 0.7) as earning
+                SUM(ISNULL(e.enrollment_cost, 0) * 0.7) as earning
             FROM courses c
             LEFT JOIN enrollments e ON c.course_id = e.course_id
             WHERE c.instructor_id = @instructor_id
             GROUP BY c.course_id, c.title
+            ORDER BY earning DESC
+            OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
         `;
-        params.instructor_id = user_id;
+
+        countQuery = `
+            SELECT COUNT(*) as total
+            FROM courses
+            WHERE instructor_id = @instructor_id
+        `;
     }
 
-    const request = pool.request();
-    if (params.instructor_id)
-        request.input("instructor_id", sql.Int, params.instructor_id);
+    request.input("limit", sql.Int, Number(limit));
+    request.input("offset", sql.Int, offset);
 
-    const result = await request.query(query);
+    const [revenueRes, detailsRes, countRes] = await Promise.all([
+        request.query(totalRevenueQuery),
+        request.query(detailsQuery),
+        request.query(countQuery)
+    ]);
 
-    const total_revenue = result.recordset.reduce(
-        (sum, item) => sum + (item.earning || 0),
-        0,
-    );
+    const total_revenue = revenueRes.recordset[0]?.total_revenue || 0;
+    const total_items = countRes.recordset[0]?.total || 0;
 
     return successResponse(res, {
         total_revenue,
-        details: result.recordset,
+        details: detailsRes.recordset,
+        total: total_items
     });
 });
 
@@ -67,7 +103,6 @@ export const getEarningsAnalytics = asyncHandler(async (req, res) => {
                 FORMAT(e.enrolled_at, 'yyyy-MM') as month,
                 SUM(e.enrollment_cost * 0.3) as revenue
             FROM enrollments e
-            WHERE e.enrolled_at >= DATEADD(year, -1, GETDATE())
             GROUP BY FORMAT(e.enrolled_at, 'yyyy-MM')
             ORDER BY month ASC
         `;
@@ -79,7 +114,7 @@ export const getEarningsAnalytics = asyncHandler(async (req, res) => {
             FROM enrollments e
             JOIN courses c ON e.course_id = c.course_id
             WHERE c.instructor_id = @instructor_id
-            AND e.enrolled_at >= DATEADD(year, -1, GETDATE())
+            AND e.enrolled_at >= DATEADD(month, -11, DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1))
             GROUP BY FORMAT(e.enrolled_at, 'yyyy-MM')
             ORDER BY month ASC
         `;
@@ -89,6 +124,21 @@ export const getEarningsAnalytics = asyncHandler(async (req, res) => {
     if (!is_admin) request.input("instructor_id", sql.Int, user_id);
 
     const result = await request.query(query);
+    const data = result.recordset;
 
-    return successResponse(res, result.recordset);
+    const last12Months = [];
+    for (let i = 11; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const monthLabel = d.toLocaleString('default', { month: 'short' });
+        
+        const existing = data.find(item => item.month === monthStr);
+        last12Months.push({
+            month: monthLabel,
+            revenue: existing ? existing.revenue : 0
+        });
+    }
+
+    return successResponse(res, last12Months);
 });

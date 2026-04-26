@@ -56,9 +56,14 @@ class Review {
                     JOIN users u ON r.user_id = u.user_id
                     WHERE r.course_id = @course_id
                     ORDER BY r.${sortBy} ${validOrder}
-                    OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
+                    OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
+
+                    SELECT COUNT(*) as total FROM reviews WHERE course_id = @course_id;
                 `);
-            return result.recordset;
+            return {
+                reviews: result.recordsets[0],
+                total: result.recordsets[1][0].total
+            };
         } catch (err) {
             console.error("Error finding reviews: ", err);
             throw err;
@@ -97,6 +102,65 @@ class Review {
             return true;
         } catch (err) {
             console.error("Error deleting review: ", err);
+            throw err;
+        }
+    }
+
+    static async findByInstructorId(instructor_id, page = 1, limit = 10, course_id = null, rating = null, search = null) {
+        try {
+            const offset = (page - 1) * limit;
+            const pool = await poolPromise;
+            
+            let query = `
+                SELECT r.*, u.first_name, u.last_name, u.avatar_url, c.title as course_title
+                FROM reviews r
+                JOIN users u ON r.user_id = u.user_id
+                JOIN courses c ON r.course_id = c.course_id
+                WHERE c.instructor_id = @instructor_id
+            `;
+
+            let countQuery = `
+                SELECT COUNT(*) as total
+                FROM reviews r
+                JOIN courses c ON r.course_id = c.course_id
+                WHERE c.instructor_id = @instructor_id
+            `;
+
+            const request = pool.request();
+            request.input("instructor_id", sql.Int, instructor_id);
+            request.input("limit", sql.Int, limit);
+            request.input("offset", sql.Int, offset);
+
+            let filter = "";
+            if (course_id) {
+                filter += " AND r.course_id = @course_id";
+                request.input("course_id", sql.Int, course_id);
+            }
+
+            if (rating) {
+                filter += " AND r.rating = @rating";
+                request.input("rating", sql.Int, rating);
+            }
+
+            if (search) {
+                filter += " AND (u.first_name LIKE @search OR u.last_name LIKE @search OR r.comment LIKE @search)";
+                request.input("search", sql.NVarChar, `%${search}%`);
+            }
+
+            const result = await request.query(`
+                ${query} ${filter}
+                ORDER BY r.reviewed_at DESC
+                OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
+
+                ${countQuery} ${filter};
+            `);
+
+            return {
+                reviews: result.recordsets[0],
+                total: result.recordsets[1][0].total
+            };
+        } catch (err) {
+            console.error("Error finding reviews by instructor ID: ", err);
             throw err;
         }
     }

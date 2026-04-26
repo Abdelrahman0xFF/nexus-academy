@@ -8,7 +8,7 @@ export const useAuth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { data: user, isLoading, isError, error } = useQuery<User>({
+  const { data: user, isLoading, isError, error, refetch: refreshUser } = useQuery<User>({
     queryKey: ["auth-user"],
     queryFn: async () => {
       const response = await authApi.me();
@@ -42,6 +42,7 @@ export const useAuth = () => {
     isLoading,
     isError,
     error,
+    refreshUser,
     logout: logoutMutation.mutate,
     isLoggingOut: logoutMutation.isPending,
   };

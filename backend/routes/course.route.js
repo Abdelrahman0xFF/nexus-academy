@@ -11,7 +11,7 @@ import {
     getCourseStats,
 } from "../controllers/course.controller.js";
 import { getCourseReviews } from "../controllers/review.controller.js";
-import { getEnrollmentsByCourseId } from "../controllers/enrollment.controller.js";
+import { getInstructorEnrollments } from "../controllers/enrollment.controller.js";
 import { getSectionsByCourseId } from "../controllers/section.controller.js";
 import {
     authenticate,
@@ -43,7 +43,7 @@ router.get(
     "/:course_id/enrollments",
     authenticate,
     authorize("instructor", "admin"),
-    getEnrollmentsByCourseId,
+    getInstructorEnrollments,
 );
 
 router.get("/:course_id/sections", optionalAuthenticate, getSectionsByCourseId);

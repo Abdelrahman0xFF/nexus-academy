@@ -57,6 +57,17 @@ export interface Lesson {
   duration: number;
 }
 
+export interface LessonForm {
+  title: string;
+  description: string;
+  video: File | null;
+}
+
+export interface SectionForm {
+  title: string;
+  lessons: LessonForm[];
+}
+
 export const coursesApi = {
   getAll: async (params?: {
     page?: number;
@@ -98,8 +109,17 @@ export const coursesApi = {
     return response.data;
   },
 
-  getMyCourses: async (): Promise<Course[]> => {
-    const response = await api.get<any, ApiResponse<Course[]>>("/courses/my");
+  getMyCourses: async (page = 1, limit = 10, params?: { search?: string; category_id?: number; is_available?: boolean }): Promise<{ courses: Course[]; total: number }> => {
+    const response = await api.get<any, ApiResponse<{ courses: Course[]; total: number }>>(`/courses/my`, { 
+      params: { page, limit, ...params } 
+    });
+    return response.data;
+  },
+
+  getCoursesByInstructorId: async (instructorId: number, page = 1, limit = 10, params?: { search?: string; category_id?: number; is_available?: boolean }): Promise<{ courses: Course[]; total: number }> => {
+    const response = await api.get<any, ApiResponse<{ courses: Course[]; total: number }>>(`/courses/instructor/${instructorId}`, { 
+      params: { page, limit, ...params } 
+    });
     return response.data;
   },
 

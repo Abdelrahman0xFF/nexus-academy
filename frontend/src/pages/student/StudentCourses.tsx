@@ -6,26 +6,38 @@ import { AppSelect } from "@/components/ui/app-select";
 import { useQuery } from "@tanstack/react-query";
 import { enrollmentApi } from "@/lib/enrollment-api";
 import { getMediaUrl } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { AppPagination } from "@/components/ui/app-pagination";
 
 const StudentCourses = () => {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
-  const { data: enrollments, isLoading } = useQuery({
-    queryKey: ["my-enrollments-all"],
-    queryFn: () => enrollmentApi.getMyEnrollments(1, 100),
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const { data: enrollmentsRes, isLoading } = useQuery({
+    queryKey: ["my-enrollments", page, debouncedSearch, statusFilter],
+    queryFn: () => enrollmentApi.getMyEnrollments(page, limit, { 
+        search: debouncedSearch, 
+        status: statusFilter === "All Status" ? undefined : statusFilter 
+    }),
   });
 
-  const enrollmentData = enrollments?.data || [];
-  const filteredEnrollments = enrollmentData.filter(e => {
-    const matchesSearch = e.title.toLowerCase().includes(search.toLowerCase());
-    let matchesStatus = true;
-    if (statusFilter === "Completed") matchesStatus = e.progress === 100;
-    if (statusFilter === "In Progress") matchesStatus = e.progress > 0 && e.progress < 100;
-    if (statusFilter === "Not Started") matchesStatus = e.progress === 0;
-    return matchesSearch && matchesStatus;
-  });
+  const enrollmentData = enrollmentsRes?.data?.enrollments || [];
+  const total = enrollmentsRes?.data?.total || 0;
+  const totalPages = Math.ceil(total / limit);
+
+  const filteredEnrollments = enrollmentData;
 
   return (
     <DashboardLayout type="student">
@@ -131,6 +143,12 @@ const StudentCourses = () => {
   </div>
 )}
       </div>
+
+      <AppPagination 
+        currentPage={page} 
+        totalPages={totalPages} 
+        onPageChange={setPage} 
+      />
     </DashboardLayout>
   );
 };

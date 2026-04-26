@@ -1403,6 +1403,59 @@
                 "responses": { "200": { "description": "List" } }
             }
         },
+        "/enrollments/instructor/students": {
+            "get": {
+                "tags": ["Enrollments"],
+                "summary": "Get unique students for an instructor (Instructor)",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 1 }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 100 }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "course_id",
+                        "in": "query",
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of students with their progress and enrolled courses"
+                    },
+                    "403": { "$ref": "#/components/responses/Forbidden" }
+                }
+            }
+        },
+        "/enrollments/instructor/recent": {
+            "get": {
+                "tags": ["Enrollments"],
+                "summary": "Get recent enrollments for an instructor's courses (Instructor)",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 10 }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of recent enrollments with student and course details"
+                    },
+                    "403": { "$ref": "#/components/responses/Forbidden" }
+                }
+            }
+        },
         "/enrollments/progress/{course_id}": {
             "get": {
                 "tags": ["Enrollments"],

@@ -3,28 +3,47 @@ import {
   Camera,
   Mail,
   Briefcase,
-  Bell,
   CheckCircle2,
   XCircle,
   Shield,
-  User,
+  User as UserIcon,
+  Loader2,
 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import { authApi, InstructorSettingsForm } from "@/lib/auth-api";
+import { toast } from "sonner";
+import { getMediaUrl } from "@/lib/utils";
 
 const InstructorSettings = () => {
-  const [formData, setFormData] = useState({
-    firstName: "Sarah",
-    lastName: "Johnson",
-    email: "sarah@nexusacademy.com",
-    bio: "Senior Full-Stack Developer with 10+ years of experience building scalable web applications.",
-    title: "Senior Full-Stack Developer",
-    website: "https://sarahjohnson.dev",
-    avatar: "",
+  const { user, refreshUser } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<InstructorSettingsForm>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    bio: "",
+    title: "",
+    website: "",
+    avatar: null,
+    avatarPreview: "",
   });
 
-  const [displayedProfile, setDisplayedProfile] = useState({ ...formData });
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: user.first_name || "",
+        lastName: user.last_name || "",
+        email: user.email || "",
+        bio: user.bio || "",
+        title: user.title || "",
+        avatarPreview: user.avatar_url ? getMediaUrl(user.avatar_url) : "",
+      }));
+    }
+  }, [user]);
 
   const [passwords, setPasswords] = useState({
     old: "",
@@ -41,11 +60,7 @@ const InstructorSettings = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, avatar: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      setFormData({ ...formData, avatar: file, avatarPreview: URL.createObjectURL(file) });
     }
   };
 
@@ -61,9 +76,37 @@ const InstructorSettings = () => {
   const isPasswordValid = Object.values(passwordCriteria).every(Boolean);
   const canSave = passwords.new === "" ? true : isPasswordValid;
 
-  const handleSave = () => {
-    setDisplayedProfile({ ...formData });
-    setPasswords({ old: "", new: "", confirm: "" });
+  const handleSave = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const profileData = new FormData();
+      profileData.append("first_name", formData.firstName);
+      profileData.append("last_name", formData.lastName);
+      profileData.append("bio", formData.bio);
+      profileData.append("title", formData.title);
+      if (formData.avatar) {
+        profileData.append("avatar", formData.avatar);
+      }
+
+      await authApi.updateProfile(user.id, profileData);
+
+      if (passwords.new) {
+        await authApi.changePassword({
+          old_password: passwords.old,
+          new_password: passwords.new,
+          confirm_password: passwords.confirm,
+        });
+      }
+
+      await refreshUser();
+      toast.success("Settings updated successfully");
+      setPasswords({ old: "", new: "", confirm: "" });
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update settings");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -80,15 +123,15 @@ const InstructorSettings = () => {
           <div className="bg-card rounded-card card-shadow p-6">
             <h2 className="text-h3 text-card-foreground mb-8 flex items-center gap-2">
               Personal Information
-              <User size={20} className="text-muted-foreground" />
+              <UserIcon size={20} className="text-muted-foreground" />
             </h2>
 
             <div className="flex flex-col md:flex-row gap-8 items-start mb-8">
               <div className="relative group">
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-sm flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD]">
-                  {formData.avatar ? (
+                  {formData.avatarPreview ? (
                     <img
-                      src={formData.avatar}
+                      src={formData.avatarPreview}
                       alt="Profile"
                       className="w-full h-full object-cover"
                     />
@@ -188,19 +231,6 @@ const InstructorSettings = () => {
                   className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background h-28 resize-none"
                 />
               </div>
-              <div>
-                <label className="text-small font-medium text-foreground block mb-1.5">
-                  Website
-                </label>
-                <input
-                  type="url"
-                  value={formData.website}
-                  onChange={(e) =>
-                    setFormData({ ...formData, website: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
-                />
-              </div>
             </div>
           </div>
 
@@ -294,41 +324,41 @@ const InstructorSettings = () => {
         <div className="space-y-6">
           <div className="bg-card rounded-card card-shadow p-6 text-center border-b-4 border-primary overflow-hidden relative">
             <div className="w-28 h-28 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-md flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD]">
-              {displayedProfile.avatar ? (
+              {formData.avatarPreview ? (
                 <img
-                  src={displayedProfile.avatar}
+                  src={formData.avatarPreview}
                   alt="Preview"
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <span className="text-white text-3xl font-bold tracking-tighter">
-                  {displayedProfile.firstName[0]}
-                  {displayedProfile.lastName[0]}
+                  {formData.firstName[0]}
+                  {formData.lastName[0]}
                 </span>
               )}
             </div>
 
             <h3 className="text-h3 font-black text-foreground truncate">
-              {displayedProfile.firstName} {displayedProfile.lastName}
+              {formData.firstName} {formData.lastName}
             </h3>
             <p className="text-xs font-medium text-muted-foreground mb-4 px-2 line-clamp-1">
-              {displayedProfile.title}
+              {formData.title}
             </p>
 
             <div className="py-2.5 px-4 bg-muted/40 rounded-xl flex items-center justify-center gap-2 text-[11px] text-muted-foreground border border-border shadow-sm">
               <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
               <span className="font-medium truncate">
-                {displayedProfile.email}
+                {formData.email}
               </span>
             </div>
           </div>
 
           <Button
             onClick={handleSave}
-            disabled={!canSave}
+            disabled={!canSave || loading}
             className="w-full gradient-primary border-0 text-primary-foreground font-black rounded-button shadow-xl py-6 hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save size={20} className="mr-2" /> Save Changes
+            {loading ? <Loader2 className="animate-spin" /> : <Save size={20} className="mr-2" />} Save Changes
           </Button>
         </div>
       </div>
@@ -337,3 +367,4 @@ const InstructorSettings = () => {
 };
 
 export default InstructorSettings;
+

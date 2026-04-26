@@ -37,6 +37,7 @@ const instructorLinks = [
   { label: "My Courses", path: "/instructor/courses", icon: BookOpen },
   { label: "Upload Course", path: "/instructor/upload", icon: Upload },
   { label: "Analytics", path: "/instructor/analytics", icon: BarChart3 },
+  { label: "Reviews", path: "/instructor/reviews", icon: MessageSquare },
   { label: "Students", path: "/instructor/students", icon: Users },
   { label: "Revenue", path: "/instructor/revenue", icon: DollarSign },
   { label: "Settings", path: "/instructor/settings", icon: Settings },

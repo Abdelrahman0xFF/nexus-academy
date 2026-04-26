@@ -15,9 +15,39 @@ export interface Enrollment {
   progress: number;
 }
 
+export interface InstructorStudent {
+  user_id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  avatar_url?: string;
+  joined_at: string;
+  courses_enrolled: number;
+  avg_progress: number;
+  courses?: {
+    course_id: number;
+    title: string;
+    enrolled_at: string;
+    progress: number;
+  }[];
+}
+
 export const enrollmentApi = {
-  getMyEnrollments: async (page = 1, limit = 10): Promise<ApiResponse<Enrollment[]>> => {
-    return api.get<never, ApiResponse<Enrollment[]>>(`/enrollments/my?page=${page}&limit=${limit}`);
+  getInstructorStudents: async (page = 1, limit = 100, search?: string, courseId?: number): Promise<ApiResponse<{ students: InstructorStudent[]; total: number }>> => {
+    const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+    const courseParam = courseId ? `&course_id=${courseId}` : '';
+    return api.get<never, ApiResponse<{ students: InstructorStudent[]; total: number }>>(`/enrollments/instructor/students?page=${page}&limit=${limit}${searchParam}${courseParam}`);
+  },
+
+  getInstructorEnrollments: async (page = 1, limit = 10, courseId?: number): Promise<ApiResponse<{ enrollments: any[]; total: number }>> => {
+    const courseParam = courseId ? `&course_id=${courseId}` : '';
+    return api.get<never, ApiResponse<{ enrollments: any[]; total: number }>>(`/enrollments/instructor?page=${page}&limit=${limit}${courseParam}`);
+  },
+
+  getMyEnrollments: async (page = 1, limit = 10, params?: { search?: string; status?: string }): Promise<ApiResponse<{ enrollments: any[]; total: number }>> => {
+    return api.get<never, ApiResponse<{ enrollments: any[]; total: number }>>(`/enrollments/my`, { 
+        params: { page, limit, ...params } 
+    });
   },
 
   enroll: async (courseId: number, paymentMethod = "card"): Promise<ApiResponse<null>> => {

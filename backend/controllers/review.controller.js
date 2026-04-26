@@ -46,14 +46,29 @@ export const getCourseReviews = asyncHandler(async (req, res) => {
 
     const sortColumn = sortMap[sortBy] || "rating";
 
-    const reviews = await Review.findByCourseId(
+    const { reviews, total } = await Review.findByCourseId(
         course_id,
         Number(page),
         Number(limit),
         sortColumn,
         order,
     );
-    return successResponse(res, reviews);
+    return successResponse(res, { reviews, total });
+});
+
+export const getInstructorReviews = asyncHandler(async (req, res) => {
+    const user_id = req.user.user_id;
+    const { page = 1, limit = 10, course_id, rating, search } = req.query;
+
+    const { reviews, total } = await Review.findByInstructorId(
+        user_id,
+        Number(page),
+        Number(limit),
+        course_id ? Number(course_id) : null,
+        rating ? Number(rating) : null,
+        search || null,
+    );
+    return successResponse(res, { reviews, total });
 });
 
 export const updateReview = asyncHandler(async (req, res) => {

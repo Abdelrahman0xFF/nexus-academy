@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { authApi } from "@/lib/auth-api";
+import { authApi, SignupForm } from "@/lib/auth-api";
 import { useAuth } from "@/hooks/use-auth";
 
 const Signup = () => {
@@ -42,7 +42,7 @@ const Signup = () => {
     password?: string;
     confirm?: string;
   }>({});
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<SignupForm>({
     firstName: "",
     lastName: "",
     email: "",

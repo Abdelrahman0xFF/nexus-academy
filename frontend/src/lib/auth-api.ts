@@ -1,5 +1,4 @@
 import { api, ApiResponse } from "./api-client";
-
 export interface User {
   id: number;
   first_name: string;
@@ -9,7 +8,32 @@ export interface User {
   avatar_url?: string;
   title?: string;
   bio?: string;
+  is_verified: boolean;
   created_at: string;
+}
+
+export interface SignupForm {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirm: string;
+}
+
+export interface LoginForm {
+  email: string;
+  password: string;
+}
+
+export interface InstructorSettingsForm {
+  firstName: string;
+  lastName: string;
+  email: string;
+  bio: string;
+  title: string;
+  website: string;
+  avatar: File | null;
+  avatarPreview: string;
 }
 
 export interface AuthCredentials {

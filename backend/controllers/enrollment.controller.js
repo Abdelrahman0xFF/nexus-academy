@@ -47,23 +47,27 @@ export const getProgress = asyncHandler(async (req, res) => {
     return successResponse(res, { progress });
 });
 
-export const getEnrollmentsByCourseId = asyncHandler(async (req, res) => {
-    const { course_id } = req.params;
-    const { page = 1, limit = 10, sortBy = "Time", order = "DESC" } = req.query;
+export const getInstructorEnrollments = asyncHandler(async (req, res) => {
+    const { course_id } = req.params; 
+    const { page = 1, limit = 10, sortBy = "Time", order = "DESC", course_id: query_course_id } = req.query;
     const user_id = req.user.user_id;
     const isAdmin = req.user.role === "admin";
 
-    const course = await Course.findById(course_id, user_id, isAdmin);
-    if (!course) {
-        return errorResponse(res, "Course not found", 404);
-    }
+    const targetCourseId = course_id || query_course_id;
 
-    if (!isAdmin && course.instructor_id !== user_id) {
-        return errorResponse(
-            res,
-            "Only the instructor of this course can view enrollments",
-            403,
-        );
+    if (targetCourseId) {
+        const course = await Course.findById(targetCourseId, user_id, isAdmin);
+        if (!course) {
+            return errorResponse(res, "Course not found", 404);
+        }
+
+        if (!isAdmin && course.instructor_id !== user_id) {
+            return errorResponse(
+                res,
+                "Only the instructor of this course can view its enrollments",
+                403,
+            );
+        }
     }
 
     const sortMap = {
@@ -74,19 +78,20 @@ export const getEnrollmentsByCourseId = asyncHandler(async (req, res) => {
 
     const sortColumn = sortMap[sortBy] || "enrolled_at";
 
-    const enrollments = await Enrollment.getEnrollmentsByCourseId(
-        course_id,
+    const { enrollments, total } = await Enrollment.getInstructorEnrollments(
+        user_id,
+        targetCourseId ? Number(targetCourseId) : null,
         Number(page),
         Number(limit),
         sortColumn,
         order,
     );
-    return successResponse(res, enrollments);
+    return successResponse(res, { enrollments, total });
 });
 
 export const getMyEnrollments = asyncHandler(async (req, res) => {
     const user_id = req.user.user_id;
-    const { page = 1, limit = 10, sortBy = "Time", order = "DESC" } = req.query;
+    const { page = 1, limit = 10, sortBy = "Time", order = "DESC", search, status } = req.query;
 
     const sortMap = {
         Time: "enrolled_at",
@@ -96,14 +101,35 @@ export const getMyEnrollments = asyncHandler(async (req, res) => {
 
     const sortColumn = sortMap[sortBy] || "enrolled_at";
 
-    const enrollments = await Enrollment.findByUserId(
+    const { enrollments, total } = await Enrollment.findByUserId(
         user_id,
         Number(page),
         Number(limit),
         sortColumn,
         order,
+        { search, status }
     );
-    return successResponse(res, enrollments);
+    return successResponse(res, { enrollments, total });
+});
+
+export const getInstructorStudents = asyncHandler(async (req, res) => {
+    const user_id = req.user.user_id;
+    const { page = 1, limit = 10, search, course_id } = req.query;
+
+    const { students, total } = await Enrollment.getUniqueStudentsByInstructorId(
+        user_id,
+        Number(page),
+        Number(limit),
+        search || null,
+        course_id ? Number(course_id) : null,
+    );
+
+    const formattedStudents = students.map(s => ({
+        ...s,
+        courses: s.courses ? JSON.parse(s.courses) : []
+    }));
+
+    return successResponse(res, { students: formattedStudents, total });
 });
 
 export const unenroll = asyncHandler(async (req, res) => {

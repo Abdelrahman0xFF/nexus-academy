@@ -35,7 +35,8 @@ const StudentCertificates = () => {
         }
 
         if (enrollmentsRes.success) {
-          const inProgressCourses = (enrollmentsRes.data || []).filter(
+          const enrollments = enrollmentsRes.data.enrollments || [];
+          const inProgressCourses = enrollments.filter(
             (e) => e.progress > 0 && e.progress < 95
           );
           setInProgress(inProgressCourses);

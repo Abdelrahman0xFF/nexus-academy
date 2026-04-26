@@ -12,10 +12,12 @@ import StudentProgress from "./pages/student/StudentProgress";
 import StudentCertificates from "./pages/student/StudentCertificates";
 import StudentSettings from "./pages/student/StudentSettings";
 import LessonPlayer from "./pages/student/LessonPlayer";
-import InstructorDashboard from "./pages/InstructorDashboard";
+import InstructorDashboard from "./pages/instructor/InstructorOverview";
 import InstructorCourses from "./pages/instructor/InstructorCourses";
 import UploadCourse from "./pages/instructor/UploadCourse";
+import EditCourse from "./pages/instructor/EditCourse";
 import InstructorAnalytics from "./pages/instructor/InstructorAnalytics";
+import InstructorReviews from "./pages/instructor/InstructorReviews";
 import InstructorStudents from "./pages/instructor/InstructorStudents";
 import InstructorRevenue from "./pages/instructor/InstructorRevenue";
 import InstructorSettings from "./pages/instructor/InstructorSettings";
@@ -169,12 +171,32 @@ const App = () => (
                         }
                     />
                     <Route
+                        path="/instructor/edit/:id"
+                        element={
+                            <ProtectedRoute
+                                allowedRoles={["instructor"]}
+                            >
+                                <EditCourse />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
                         path="/instructor/analytics"
                         element={
                             <ProtectedRoute
                                 allowedRoles={["instructor"]}
                             >
                                 <InstructorAnalytics />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/instructor/reviews"
+                        element={
+                            <ProtectedRoute
+                                allowedRoles={["instructor"]}
+                            >
+                                <InstructorReviews />
                             </ProtectedRoute>
                         }
                     />

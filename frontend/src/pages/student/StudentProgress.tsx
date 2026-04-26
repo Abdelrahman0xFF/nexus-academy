@@ -5,16 +5,16 @@ import { useQuery } from "@tanstack/react-query";
 import { enrollmentApi } from "@/lib/enrollment-api";
 
 const StudentProgress = () => {
-  const { data: enrollments, isLoading } = useQuery({
+  const { data: enrollmentsRes, isLoading } = useQuery({
     queryKey: ["my-enrollments-progress"],
     queryFn: () => enrollmentApi.getMyEnrollments(1, 100),
   });
 
-  const enrollmentData = enrollments?.data || [];
+  const enrollmentData = enrollmentsRes?.data?.enrollments || [];
   const totalProgress = enrollmentData.length > 0 
-    ? Math.round(enrollmentData.reduce((a, c) => a + c.progress, 0) / enrollmentData.length)
+    ? Math.round(enrollmentData.reduce((a, c) => a + (c.progress || 0), 0) / enrollmentData.length)
     : 0;
-  const completed = enrollmentData.filter((c) => c.progress >= 95).length;
+  const completed = enrollmentData.filter((c) => (c.progress || 0) >= 95).length;
 
   if (isLoading) {
     return (

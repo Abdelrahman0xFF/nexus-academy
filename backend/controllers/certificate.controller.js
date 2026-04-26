@@ -134,7 +134,7 @@ export const verifyCertificate = asyncHandler(async (req, res) => {
 export const getAllUserCertificates = asyncHandler(async (req, res) => {
     const user_id = req.user.user_id;
     
-    const enrollments = await Enrollment.findByUserId(user_id, 1, 100);
+    const { enrollments } = await Enrollment.findByUserId(user_id, 1, 100);
     
     for (const enrollment of enrollments) {
         if (enrollment.progress >= 95) {

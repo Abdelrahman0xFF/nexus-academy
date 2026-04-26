@@ -77,7 +77,7 @@ class Enrollment {
         }
     }
 
-    static async getEnrollmentsByCourseId(course_id, page = 1, limit = 10, sortBy = "enrolled_at", order = "DESC") {
+    static async getInstructorEnrollments(instructor_id, course_id = null, page = 1, limit = 10, sortBy = "enrolled_at", order = "DESC") {
         try {
             const offset = (page - 1) * limit;
             const pool = await poolPromise;
@@ -86,75 +86,145 @@ class Enrollment {
             if (!allowedSortColumns.includes(sortBy)) sortBy = "enrolled_at";
             const validOrder = ["ASC", "DESC"].includes(order.toUpperCase()) ? order.toUpperCase() : "DESC";
 
-            const result = await pool
-                .request()
-                .input("course_id", sql.Int, course_id)
-                .input("limit", sql.Int, limit)
-                .input("offset", sql.Int, offset).query(`
-                    SELECT e.*, u.first_name, u.last_name, u.avatar_url, u.email
-                    FROM enrollments e
-                    JOIN users u ON e.user_id = u.user_id
-                    WHERE e.course_id = @course_id
-                    ORDER BY e.${sortBy} ${validOrder}
-                    OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
-                `);
-            return result.recordset;
+            const request = pool.request();
+            request.input("instructor_id", sql.Int, instructor_id);
+            request.input("limit", sql.Int, limit);
+            request.input("offset", sql.Int, offset);
+
+            let filterQuery = "WHERE c.instructor_id = @instructor_id";
+            if (course_id) {
+                request.input("course_id", sql.Int, course_id);
+                filterQuery += " AND e.course_id = @course_id";
+            }
+
+            const result = await request.query(`
+                SELECT e.*, u.first_name, u.last_name, u.avatar_url, u.email, c.title as course_title
+                FROM enrollments e
+                JOIN users u ON e.user_id = u.user_id
+                JOIN courses c ON e.course_id = c.course_id
+                ${filterQuery}
+                ORDER BY e.${sortBy} ${validOrder}
+                OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
+
+                SELECT COUNT(*) as total
+                FROM enrollments e
+                JOIN courses c ON e.course_id = c.course_id
+                ${filterQuery};
+            `);
+            return {
+                enrollments: result.recordsets[0],
+                total: result.recordsets[1][0].total
+            };
         } catch (err) {
-            console.error("Error fetching enrollments: ", err);
+            console.error("Error fetching instructor enrollments: ", err);
             throw err;
         }
     }
 
-    static async findByUserId(user_id, page = 1, limit = 10, sortBy = "enrolled_at", order = "DESC") {
+    static async findByUserId(user_id, page = 1, limit = 10, sortBy = "enrolled_at", order = "DESC", filters = {}) {
         try {
             const offset = (page - 1) * limit;
             const pool = await poolPromise;
+            const request = pool.request();
+
+            request.input("user_id", sql.Int, user_id);
+            request.input("limit", sql.Int, limit);
+            request.input("offset", sql.Int, offset);
 
             const allowedSortColumns = ["enrolled_at", "course_id", "enrollment_cost"];
             if (!allowedSortColumns.includes(sortBy)) sortBy = "enrolled_at";
             const validOrder = ["ASC", "DESC"].includes(order.toUpperCase()) ? order.toUpperCase() : "DESC";
 
-            const result = await pool
-                .request()
-                .input("user_id", sql.Int, user_id)
-                .input("limit", sql.Int, limit)
-                .input("offset", sql.Int, offset).query(`
-                SELECT 
-                    e.course_id,
-                    e.user_id,
-                    e.enrolled_at,
-                    e.payment_method,
-                    e.payment_status,
-                    e.enrollment_cost,
-                    c.title, 
-                    c.thumbnail_url, 
-                    c.instructor_id,
-                    cat.name AS category_name,
-                    u.first_name AS instructor_first_name, 
-                    u.last_name AS instructor_last_name,
-                    CASE 
-                        WHEN l_count.total = 0 THEN 0 
-                        ELSE (CAST(ISNULL(ul_count.completed, 0) AS FLOAT) / l_count.total * 100) 
-                    END AS progress
-                FROM enrollments e
-                JOIN courses c ON e.course_id = c.course_id
-                JOIN users u ON c.instructor_id = u.user_id
-                LEFT JOIN categories cat ON c.category_id = cat.category_id
-                LEFT JOIN (
-                    SELECT course_id, COUNT(*) as total 
-                    FROM lessons 
-                    GROUP BY course_id
-                ) l_count ON e.course_id = l_count.course_id
-                LEFT JOIN (
-                    SELECT course_id, user_id, COUNT(*) as completed 
-                    FROM user_lessons 
-                    GROUP BY course_id, user_id
-                ) ul_count ON e.course_id = ul_count.course_id AND e.user_id = ul_count.user_id
-                WHERE e.user_id = @user_id
-                ORDER BY e.${sortBy} ${validOrder}
-                OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
-            `);
-            return result.recordset;
+            let filterQuery = "WHERE e.user_id = @user_id";
+            if (filters.search) {
+                request.input("search", sql.NVarChar, `%${filters.search}%`);
+                filterQuery += " AND (c.title LIKE @search OR c.description LIKE @search)";
+            }
+
+            let statusFilter = "";
+            if (filters.status) {
+                if (filters.status === "Completed") {
+                    statusFilter = "AND progress >= 100";
+                } else if (filters.status === "In Progress") {
+                    statusFilter = "AND progress > 0 AND progress < 100";
+                } else if (filters.status === "Not Started") {
+                    statusFilter = "AND progress = 0";
+                }
+            }
+
+            const query = `
+                WITH ProgressCTE AS (
+                    SELECT 
+                        e.course_id,
+                        e.user_id,
+                        e.enrolled_at,
+                        e.payment_method,
+                        e.payment_status,
+                        e.enrollment_cost,
+                        c.title, 
+                        c.thumbnail_url, 
+                        c.instructor_id,
+                        cat.name AS category_name,
+                        u.first_name AS instructor_first_name, 
+                        u.last_name AS instructor_last_name,
+                        CASE 
+                            WHEN l_count.total = 0 THEN 0 
+                            ELSE (CAST(ISNULL(ul_count.completed, 0) AS FLOAT) / l_count.total * 100) 
+                        END AS progress
+                    FROM enrollments e
+                    JOIN courses c ON e.course_id = c.course_id
+                    JOIN users u ON c.instructor_id = u.user_id
+                    LEFT JOIN categories cat ON c.category_id = cat.category_id
+                    LEFT JOIN (
+                        SELECT course_id, COUNT(*) as total 
+                        FROM lessons 
+                        GROUP BY course_id
+                    ) l_count ON e.course_id = l_count.course_id
+                    LEFT JOIN (
+                        SELECT course_id, user_id, COUNT(*) as completed 
+                        FROM user_lessons 
+                        GROUP BY course_id, user_id
+                    ) ul_count ON e.course_id = ul_count.course_id AND e.user_id = ul_count.user_id
+                    ${filterQuery}
+                )
+                SELECT * FROM (
+                    SELECT * FROM ProgressCTE
+                ) as t
+                WHERE 1=1 ${statusFilter}
+                ORDER BY ${sortBy} ${validOrder}
+                OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
+
+                WITH ProgressCTE AS (
+                    SELECT 
+                        e.course_id,
+                        e.user_id,
+                        CASE 
+                            WHEN l_count.total = 0 THEN 0 
+                            ELSE (CAST(ISNULL(ul_count.completed, 0) AS FLOAT) / l_count.total * 100) 
+                        END AS progress
+                    FROM enrollments e
+                    JOIN courses c ON e.course_id = c.course_id
+                    LEFT JOIN (
+                        SELECT course_id, COUNT(*) as total 
+                        FROM lessons 
+                        GROUP BY course_id
+                    ) l_count ON e.course_id = l_count.course_id
+                    LEFT JOIN (
+                        SELECT course_id, user_id, COUNT(*) as completed 
+                        FROM user_lessons 
+                        GROUP BY course_id, user_id
+                    ) ul_count ON e.course_id = ul_count.course_id AND e.user_id = ul_count.user_id
+                    ${filterQuery}
+                )
+                SELECT COUNT(*) as total FROM ProgressCTE
+                WHERE 1=1 ${statusFilter};
+            `;
+
+            const result = await request.query(query);
+            return {
+                enrollments: result.recordsets[0],
+                total: result.recordsets[1][0].total
+            };
         } catch (err) {
             console.error("Error fetching user enrollments: ", err);
             throw err;
@@ -174,6 +244,100 @@ class Enrollment {
             return true;
         } catch (err) {
             console.error("Error deleting enrollment: ", err);
+            throw err;
+        }
+    }
+
+    static async getUniqueStudentsByInstructorId(instructor_id, page = 1, limit = 10, search = null, course_id = null) {
+        try {
+            const offset = (page - 1) * limit;
+            const pool = await poolPromise;
+
+            const request = pool.request();
+            request.input("instructor_id", sql.Int, instructor_id);
+            request.input("limit", sql.Int, limit);
+            request.input("offset", sql.Int, offset);
+
+            let filterQuery = "";
+            if (search) {
+                filterQuery += " AND (u.first_name LIKE @search OR u.last_name LIKE @search OR u.email LIKE @search)";
+                request.input("search", sql.NVarChar, `%${search}%`);
+            }
+
+            if (course_id) {
+                filterQuery += " AND e.course_id = @course_id";
+                request.input("course_id", sql.Int, course_id);
+            }
+
+            const result = await request.query(`
+                SELECT 
+                    u.user_id, 
+                    u.first_name, 
+                    u.last_name, 
+                    u.email, 
+                    u.avatar_url,
+                    u.created_at as joined_at,
+                    COUNT(e.course_id) as courses_enrolled,
+                    AVG(
+                        CASE 
+                            WHEN l_count.total = 0 THEN 0 
+                            ELSE (CAST(ISNULL(ul_count.completed, 0) AS FLOAT) / l_count.total * 100) 
+                        END
+                    ) as avg_progress,
+                    (
+                        SELECT 
+                            c2.course_id,
+                            c2.title,
+                            e2.enrolled_at,
+                            CASE 
+                                WHEN l_count2.total = 0 THEN 0 
+                                ELSE (CAST(ISNULL(ul_count2.completed, 0) AS FLOAT) / l_count2.total * 100) 
+                            END as progress
+                        FROM enrollments e2
+                        JOIN courses c2 ON e2.course_id = c2.course_id
+                        LEFT JOIN (
+                            SELECT course_id, COUNT(*) as total 
+                            FROM lessons 
+                            GROUP BY course_id
+                        ) l_count2 ON e2.course_id = l_count2.course_id
+                        LEFT JOIN (
+                            SELECT course_id, user_id, COUNT(*) as completed 
+                            FROM user_lessons 
+                            GROUP BY course_id, user_id
+                        ) ul_count2 ON e2.course_id = ul_count2.course_id AND e2.user_id = ul_count2.user_id
+                        WHERE e2.user_id = u.user_id AND c2.instructor_id = @instructor_id
+                        FOR JSON PATH
+                    ) as courses
+                FROM users u
+                JOIN enrollments e ON u.user_id = e.user_id
+                JOIN courses c ON e.course_id = c.course_id
+                LEFT JOIN (
+                    SELECT course_id, COUNT(*) as total 
+                    FROM lessons 
+                    GROUP BY course_id
+                ) l_count ON e.course_id = l_count.course_id
+                LEFT JOIN (
+                    SELECT course_id, user_id, COUNT(*) as completed 
+                    FROM user_lessons 
+                    GROUP BY course_id, user_id
+                ) ul_count ON e.course_id = ul_count.course_id AND e.user_id = ul_count.user_id
+                WHERE c.instructor_id = @instructor_id ${filterQuery}
+                GROUP BY u.user_id, u.first_name, u.last_name, u.email, u.avatar_url, u.created_at
+                ORDER BY joined_at DESC
+                OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
+
+                SELECT COUNT(DISTINCT u.user_id) as total
+                FROM users u
+                JOIN enrollments e ON u.user_id = e.user_id
+                JOIN courses c ON e.course_id = c.course_id
+                WHERE c.instructor_id = @instructor_id ${filterQuery};
+            `);
+            return {
+                students: result.recordsets[0],
+                total: result.recordsets[1][0].total
+            };
+        } catch (err) {
+            console.error("Error fetching instructor students: ", err);
             throw err;
         }
     }

@@ -574,18 +574,19 @@ const CourseDetails = () => {
                                 )}
                             </div>
                             <div className="flex items-baseline gap-3">
-                                <span className="text-3xl font-bold text-primary">
-                                    {course.price === 0 ? (
-                                        <span className="text-green-600">
-                                            Free
-                                        </span>
-                                    ) : (
-                                        `$${course.price ?? course.original_price}`
-                                    )}
-                                </span>
+                                {course.price === 0 ? (
+                                    <span className="text-3xl font-bold text-emerald-600">
+                                        Free
+                                    </span>
+                                ) : (
+                                    <span className="text-3xl font-bold text-primary">
+                                        ${course.price ?? course.original_price}
+                                    </span>
+                                )}
 
                                 {course.price !== null &&
                                     course.price !== undefined &&
+                                    course.price > 0 &&
                                     course.price < course.original_price && (
                                         <>
                                             <span className="text-body text-muted-foreground line-through">

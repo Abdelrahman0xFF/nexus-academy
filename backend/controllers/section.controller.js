@@ -7,8 +7,10 @@ import asyncHandler from "../utils/asyncHandler.js";
 
 const createSection = asyncHandler(async (req, res, next) => {
     const { course_id, section_order } = req.body;
+    const userId = req.user.user_id;
+    const isAdmin = req.user.role === "admin";
 
-    const course = await Course.findById(course_id);
+    const course = await Course.findById(course_id, userId, isAdmin);
     if (!course) return errorResponse(res, "Course not found", 404);
 
     if (
@@ -41,7 +43,10 @@ const createSection = asyncHandler(async (req, res, next) => {
 
 const getSectionsByCourseId = asyncHandler(async (req, res, next) => {
     const { course_id } = req.params;
-    const course = await Course.findById(course_id);
+    const userId = req.user?.user_id || null;
+    const isAdmin = req.user?.role === "admin";
+
+    const course = await Course.findById(course_id, userId, isAdmin);
 
     if (!course) return errorResponse(res, "Course not found", 404);
 
@@ -55,8 +60,10 @@ const getSectionsByCourseId = asyncHandler(async (req, res, next) => {
 
 const updateSection = asyncHandler(async (req, res, next) => {
     const { course_id, section_order } = req.params;
+    const userId = req.user.user_id;
+    const isAdmin = req.user.role === "admin";
 
-    const course = await Course.findById(course_id);
+    const course = await Course.findById(course_id, userId, isAdmin);
     if (!course) return errorResponse(res, "Course not found", 404);
 
     if (
@@ -80,8 +87,10 @@ const updateSection = asyncHandler(async (req, res, next) => {
 
 const deleteSection = asyncHandler(async (req, res, next) => {
     const { course_id, section_order } = req.params;
+    const userId = req.user.user_id;
+    const isAdmin = req.user.role === "admin";
 
-    const course = await Course.findById(course_id);
+    const course = await Course.findById(course_id, userId, isAdmin);
     if (!course) return errorResponse(res, "Course not found", 404);
 
     if (

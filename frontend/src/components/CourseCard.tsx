@@ -89,14 +89,17 @@ const CourseCard = ({ course, showProgress = false, progress }: CourseCardProps)
             <div className="mt-auto pt-4 flex items-center justify-between">
               <div className="flex items-baseline gap-2">
                 {course.price === 0 ? (
-                  <span className="text-lg font-bold text-green-600">Free</span>
-                ) : course.price ? (
-                  <span className="text-lg font-bold text-primary">${course.price}</span>
-                ) : course.original_price ? (
-                  <span className="text-lg font-bold text-primary">${course.original_price}</span>
-                ) : null}
+                  <span className="text-lg font-bold text-emerald-600">Free</span>
+                ) : (
+                  <span className="text-lg font-bold text-primary">
+                    ${course.price ?? course.original_price}
+                  </span>
+                )}
 
-                {course.price !== undefined && course.price !== null && course.price < course.original_price && (
+                {course.price !== undefined && 
+                 course.price !== null && 
+                 course.price > 0 && 
+                 course.price < course.original_price && (
                   <span className="text-small text-muted-foreground line-through">
                     ${course.original_price}
                   </span>

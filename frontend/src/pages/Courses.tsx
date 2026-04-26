@@ -3,17 +3,16 @@ import { useSearchParams } from "react-router-dom";
 import {
     Search,
     SlidersHorizontal,
-    ChevronLeft,
-    ChevronRight,
     Loader2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import MainLayout from "@/layouts/MainLayout";
 import CourseCard from "@/components/CourseCard";
 import { coursesApi } from "@/lib/courses-api";
 import { categoryApi } from "@/lib/categories-api";
 import { AppSelect } from "@/components/ui/app-select";
 import { useQuery } from "@tanstack/react-query";
+
+import { AppPagination } from "@/components/ui/app-pagination";
 
 const levels = ["All Levels", "Beginner", "Intermediate", "Advanced"];
 
@@ -94,34 +93,7 @@ const Courses = () => {
     };
 
     const handlePageChange = (p: number) => {
-        if (p >= 1 && p <= totalPages) {
-            updateParams({ page: p.toString() });
-        }
-    };
-
-    const renderPageButtons = () => {
-        const buttons = [];
-        let startPage = Math.max(1, page - 2);
-        const endPage = Math.min(totalPages, startPage + 4);
-        
-        if (endPage - startPage < 4) {
-            startPage = Math.max(1, endPage - 4);
-        }
-
-        for (let i = startPage; i <= endPage; i++) {
-            buttons.push(
-                <Button
-                    key={i}
-                    variant={page === i ? "default" : "outline"}
-                    size="sm"
-                    className={`w-9 h-9 rounded-button p-0 font-bold ${page === i ? 'gradient-primary border-0' : ''}`}
-                    onClick={() => handlePageChange(i)}
-                >
-                    {i}
-                </Button>
-            );
-        }
-        return buttons;
+        updateParams({ page: p.toString() });
     };
 
     return (
@@ -251,31 +223,11 @@ const Courses = () => {
 
                 {/* Pagination */}
                 {!showInitialLoading && totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-2 mt-10">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-9 h-9 rounded-button p-0"
-                            onClick={() => handlePageChange(page - 1)}
-                            disabled={page === 1}
-                        >
-                            <ChevronLeft size={16} />
-                        </Button>
-                        
-                        <div className="flex items-center gap-1">
-                            {renderPageButtons()}
-                        </div>
-
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-9 h-9 rounded-button p-0"
-                            onClick={() => handlePageChange(page + 1)}
-                            disabled={page === totalPages}
-                        >
-                            <ChevronRight size={16} />
-                        </Button>
-                    </div>
+                    <AppPagination 
+                        currentPage={page} 
+                        totalPages={totalPages} 
+                        onPageChange={handlePageChange} 
+                    />
                 )}
             </div>
         </MainLayout>

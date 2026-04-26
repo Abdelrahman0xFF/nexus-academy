@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { authApi } from "@/lib/auth-api";
+import { authApi, LoginForm } from "@/lib/auth-api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -35,7 +35,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState<LoginForm>({ email: "", password: "" });
 
   const validate = () => {
     const newErrors: typeof errors = {};
