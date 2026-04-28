@@ -3,6 +3,8 @@ import fs from "fs";
 import { deleteFile } from "../utils/file.js";
 import axios from "axios";
 
+const metadataCache = new Map();
+
 export const uploadUrlToDrive = async (url, fileName, retries = 3) => {
     let lastError;
     for (let i = 0; i < retries; i++) {
@@ -24,10 +26,11 @@ export const uploadUrlToDrive = async (url, fileName, retries = 3) => {
                     mimeType: mimeType,
                     body: responseStream.data,
                 },
-                fields: "id",
+                fields: "id, size, mimeType",
             });
 
-            const fileId = response.data.id;
+            const { id: fileId, size, mimeType: driveMimeType } = response.data;
+            metadataCache.set(fileId, { size: parseInt(size, 10), mimeType: driveMimeType });
 
             await driveConfig.permissions.create({
                 fileId,
@@ -59,10 +62,11 @@ export const uploadToDrive = async (file, retries = 3) => {
                     mimeType: file.mimetype,
                     body: fs.createReadStream(file.path),
                 },
-                fields: "id",
+                fields: "id, size, mimeType",
             });
 
-            const fileId = response.data.id;
+            const { id: fileId, size, mimeType: driveMimeType } = response.data;
+            metadataCache.set(fileId, { size: parseInt(size, 10), mimeType: driveMimeType });
 
             await driveConfig.permissions.create({
                 fileId,
@@ -86,21 +90,28 @@ export const uploadToDrive = async (file, retries = 3) => {
 };
 
 export const getDriveStream = async (fileId, rangeHeader = null) => {
-    const { data: metadata } = await driveConfig.files.get({
-        fileId,
-        fields: "size, mimeType",
-    });
+    let metadata = metadataCache.get(fileId);
 
-    const fileSize = parseInt(metadata.size, 10);
+    if (!metadata) {
+        const { data } = await driveConfig.files.get({
+            fileId,
+            fields: "size, mimeType",
+        });
+        metadata = { size: parseInt(data.size, 10), mimeType: data.mimeType };
+        metadataCache.set(fileId, metadata);
+    }
+
+    const fileSize = metadata.size;
     const options = { fileId, alt: "media" };
     const requestConfig = { responseType: "stream" };
 
     if (rangeHeader) {
         const parts = rangeHeader.replace(/bytes=/, "").split("-");
         const start = parseInt(parts[0], 10);
+        const CHUNK_SIZE = 5 * 1024 * 1024; 
         const end = parts[1]
             ? parseInt(parts[1], 10)
-            : Math.min(start + 10 ** 6 - 1, fileSize - 1);
+            : Math.min(start + CHUNK_SIZE - 1, fileSize - 1);
 
         requestConfig.headers = { Range: `bytes=${start}-${end}` };
         return {
@@ -118,6 +129,7 @@ export const getDriveStream = async (fileId, rangeHeader = null) => {
 };
 
 export const deleteFromDrive = async (fileId, retries = 3) => {
+    metadataCache.delete(fileId);
     let lastError;
     for (let i = 0; i < retries; i++) {
         try {

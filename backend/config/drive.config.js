@@ -17,4 +17,4 @@ oauth2Client.setCredentials({
 
 const driveConfig = google.drive({ version: "v3", auth: oauth2Client });
 
-export { driveConfig, PARENT_FOLDER_ID };
+export { driveConfig, PARENT_FOLDER_ID, oauth2Client };

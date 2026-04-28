@@ -14,8 +14,8 @@ export const generateAndSendOTP = async (email) => {
     try {
         let html = await fs.promises.readFile(templatePath, "utf8");
         html = html.replace("{{otp}}", otp);
-        
-        await sendEmail(email, "NexsusAcademy - One-Time Password (OTP)", html);
+
+        await sendEmail(email, "NexusAcademy - One-Time Password (OTP)", html);
     } catch (error) {
         console.error("Failed to send OTP email:", error);
         throw new Error("Failed to send OTP email");
