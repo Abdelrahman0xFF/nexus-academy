@@ -224,6 +224,8 @@ class Course {
                 ? order.toUpperCase()
                 : "ASC";
 
+            const sortColumn = sortBy === "price" ? "ISNULL(c.price, c.original_price)" : sortBy;
+
             const query = `
                 SELECT c.*, 
                 u.first_name + ' ' + u.last_name as instructor_name, 
@@ -252,7 +254,7 @@ class Course {
                     GROUP BY course_id
                 ) e_count ON c.course_id = e_count.course_id
                 ${filterQuery}
-                ORDER BY ${sortBy} ${validOrder}
+                ORDER BY ${sortColumn} ${validOrder}
                 OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
 
                 SELECT COUNT(*) as total FROM courses c ${filterQuery};

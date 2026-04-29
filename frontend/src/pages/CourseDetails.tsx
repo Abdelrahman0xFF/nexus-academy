@@ -308,7 +308,7 @@ const CourseDetails = () => {
             <div className="container relative z-20 mt-20 mx-auto px-4 lg:px-8 pb-20">
                 <div className="grid lg:grid-cols-3 gap-10">
                     {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-10 pt-4 lg:pt-10">
+                    <div className="lg:col-span-2 space-y-10">
                         {/* What you'll learn */}
                         <div className="bg-card rounded-card card-shadow p-6">
                             <h2 className="text-h3 text-card-foreground mb-4">
