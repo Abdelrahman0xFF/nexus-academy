@@ -25,12 +25,25 @@ export const enroll = asyncHandler(async (req, res) => {
         return errorResponse(res, "Already enrolled in this course", 400);
     }
 
-    const result = await Enrollment.create(user_id, course_id, payment_method);
+    if (course.price > 0) {
+        return errorResponse(
+            res, 
+            "This is a paid course. Enrollment must be completed via payment.", 
+            402
+        );
+    }
 
-    if (result) {
-        return successResponse(res, null, "Enrolled successfully", 201);
-    } else {
-        return errorResponse(res, "Failed to enroll in course", 500);
+    try {
+        const result = await Enrollment.create(user_id, course_id, "free");
+
+        if (result) {
+            return successResponse(res, null, "Enrolled successfully", 201);
+        } else {
+            return errorResponse(res, "Failed to enroll in course", 500);
+        }
+    } catch (error) {
+        console.error("Enrollment error:", error);
+        return errorResponse(res, error.message || "Failed to enroll in course", 500);
     }
 });
 

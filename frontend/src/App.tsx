@@ -37,6 +37,8 @@ import PageTransition from "./components/PageTransition";
 import MainLayout from "./layouts/MainLayout";
 import VerifyOTP from "./pages/VerifyOTP";
 import VerifyCertificate from "./pages/VerifyCertificate";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailed from "./pages/PaymentFailed";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -70,6 +72,8 @@ const App = () => (
                     <Route path="/verify-certificate" element={<VerifyCertificate />} />
                     <Route path="/courses" element={<Courses />} />
                     <Route path="/courses/:id" element={<CourseDetails />} />
+                    <Route path="/payment-success" element={<PaymentSuccess />} />
+                    <Route path="/payment-failed" element={<PaymentFailed />} />
                     <Route
                         path="/help"
                         element={
@@ -83,7 +87,7 @@ const App = () => (
                         path="/dashboard"
                         element={
                             <ProtectedRoute
-                                allowedRoles={["user", "instructor", "admin"]}
+                                allowedRoles={["user"]}
                             >
                                 <StudentDashboard />
                             </ProtectedRoute>
@@ -93,7 +97,7 @@ const App = () => (
                         path="/dashboard/courses"
                         element={
                             <ProtectedRoute
-                                allowedRoles={["user", "instructor", "admin"]}
+                                allowedRoles={["user"]}
                             >
                                 <StudentCourses />
                             </ProtectedRoute>
@@ -103,7 +107,7 @@ const App = () => (
                         path="/dashboard/progress"
                         element={
                             <ProtectedRoute
-                                allowedRoles={["user", "instructor", "admin"]}
+                                allowedRoles={["user"]}
                             >
                                 <StudentProgress />
                             </ProtectedRoute>
@@ -113,7 +117,7 @@ const App = () => (
                         path="/dashboard/certificates"
                         element={
                             <ProtectedRoute
-                                allowedRoles={["user", "instructor", "admin"]}
+                                allowedRoles={["user"]}
                             >
                                 <StudentCertificates />
                             </ProtectedRoute>
@@ -123,7 +127,7 @@ const App = () => (
                         path="/dashboard/settings"
                         element={
                             <ProtectedRoute
-                                allowedRoles={["user", "instructor", "admin"]}
+                                allowedRoles={["user"]}
                             >
                                 <StudentSettings />
                             </ProtectedRoute>

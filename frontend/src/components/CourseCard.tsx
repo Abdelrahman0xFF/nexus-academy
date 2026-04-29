@@ -44,10 +44,10 @@ const CourseCard = ({ course, showProgress = false, progress }: CourseCardProps)
               {course.level}
             </span>
           </div>
-          {course.price && (
+          {course.price !== null && course.price !== undefined && course.price < course.original_price && (
             <div className="absolute top-3 right-3">
               <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-destructive text-destructive-foreground">
-                {Math.round((1 - course.price / course.original_price) * 100)}% OFF
+                {course.price === 0 ? "FREE" : `${Math.round((1 - course.price / course.original_price) * 100)}% OFF`}
               </span>
             </div>
           )}

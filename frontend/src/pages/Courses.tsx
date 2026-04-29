@@ -252,7 +252,6 @@ const Courses = () => {
                             </p>
                             <Button
                                 variant="outline"
-                                className="rounded-button hover:bg-muted transition-all"
                                 onClick={() => setSearchInput("")}
                             >
                                 Clear all filters

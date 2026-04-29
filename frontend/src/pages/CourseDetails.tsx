@@ -39,6 +39,7 @@ import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { coursesApi } from "@/lib/courses-api";
 import { enrollmentApi } from "@/lib/enrollment-api";
+import { paymentApi } from "@/lib/payment-api";
 import { reviewApi, Review } from "@/lib/reviews-api";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -104,7 +105,7 @@ const CourseDetails = () => {
             });
             queryClient.invalidateQueries({ queryKey: ["my-enrollments"] });
             setIsDialogOpen(false);
-            navigate(`/learn/${courseId}`);
+            navigate(`/payment-success?session_id=free`);
         },
         onError: (error: any) => {
             toast.error(error.response?.data?.message || "Enrollment failed");
@@ -114,31 +115,21 @@ const CourseDetails = () => {
         },
     });
 
-    const reviewMutation = useMutation({
-        mutationFn: (data: { rating: number; comment: string }) =>
-            isEditingReview
-                ? reviewApi.update(courseId, data)
-                : reviewApi.create(courseId, data),
-        onSuccess: () => {
-            toast.success(
-                isEditingReview
-                    ? "Review updated successfully!"
-                    : "Review submitted successfully!",
-            );
-            queryClient.invalidateQueries({
-                queryKey: ["course-reviews", courseId],
-            });
-            queryClient.invalidateQueries({ queryKey: ["course", courseId] });
-            queryClient.invalidateQueries({
-                queryKey: ["user-review", courseId],
-            });
-            setReviewComment("");
-            setShowReviewForm(false);
+    const checkoutMutation = useMutation({
+        mutationFn: () => paymentApi.createCheckoutSession(courseId),
+        onSuccess: (response: any) => {
+            if (response.data?.url) {
+                // If it's a Stripe URL or a direct success redirect
+                window.location.href = response.data.url;
+            } else {
+                toast.error("Failed to process enrollment");
+            }
         },
         onError: (error: any) => {
-            toast.error(
-                error.response?.data?.message || "Failed to submit review",
-            );
+            toast.error(error.response?.data?.message || "Enrollment failed");
+        },
+        onSettled: () => {
+            setIsEnrolling(false);
         },
     });
 
@@ -149,7 +140,12 @@ const CourseDetails = () => {
             return;
         }
         setIsEnrolling(true);
-        enrollMutation.mutate("card");
+
+        if (course.price === 0) {
+            enrollMutation.mutate("free");
+        } else {
+            checkoutMutation.mutate();
+        }
     };
 
     const handleSubmitReview = () => {
@@ -619,6 +615,7 @@ const CourseDetails = () => {
 
                                 {course.price !== null &&
                                     course.price !== undefined &&
+                                    course.price > 0 &&
                                     course.price < course.original_price && (
                                         <>
                                             <span className="text-body text-muted-foreground line-through">
@@ -671,7 +668,7 @@ const CourseDetails = () => {
                                                 <div className="flex justify-between text-small">
                                                     <span>Course Price</span>
                                                     <span className="font-bold">
-                                                        ${course.price}
+                                                        ${course.price ?? course.original_price}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between text-small text-muted-foreground">
@@ -681,40 +678,9 @@ const CourseDetails = () => {
                                                 <div className="border-t border-border pt-2 flex justify-between font-bold">
                                                     <span>Total</span>
                                                     <span className="text-primary">
-                                                        ${course.price}
+                                                        ${course.price ?? course.original_price}
                                                     </span>
                                                 </div>
-                                            </div>
-                                            <div className="space-y-3">
-                                                <div className="relative">
-                                                    <CreditCard
-                                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                                                        size={16}
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Card Number"
-                                                        className="w-full pl-10 pr-4 py-2 text-small border border-border rounded-md outline-none focus:ring-2 focus:ring-primary/20"
-                                                    />
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    <input
-                                                        type="text"
-                                                        placeholder="MM/YY"
-                                                        className="w-full px-4 py-2 text-small border border-border rounded-md outline-none focus:ring-2 focus:ring-primary/20"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        placeholder="CVC"
-                                                        className="w-full px-4 py-2 text-small border border-border rounded-md outline-none focus:ring-2 focus:ring-primary/20"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground justify-center">
-                                                <Lock size={10} /> Secure SSL
-                                                Encrypted Payment
-                                                <ShieldCheck size={10} /> 30-Day
-                                                Money Back Guarantee
                                             </div>
                                         </div>
                                         <DialogFooter>
@@ -725,7 +691,9 @@ const CourseDetails = () => {
                                             >
                                                 {isEnrolling
                                                     ? "Processing..."
-                                                    : `Pay $${course.price} & Enroll`}
+                                                    : course.price === 0 
+                                                        ? "Enroll for Free" 
+                                                        : `Pay $${course.price ?? course.original_price} & Enroll`}
                                             </Button>
                                         </DialogFooter>
                                     </DialogContent>

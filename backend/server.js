@@ -8,6 +8,7 @@ import passport from "passport";
 import router from "./routes/router.js";
 import errorHandler from "./middleware/error.middleware.js";
 import requestLogger from "./middleware/logger.middleware.js";
+import paymentRoutes from "./routes/payment.route.js";
 
 const swaggerDocument = JSON.parse(
     readFileSync(new URL("./swagger.json", import.meta.url)),
@@ -15,6 +16,12 @@ const swaggerDocument = JSON.parse(
 
 const app = express();
 app.use(requestLogger);
+
+// stripe webhook requires the raw body to verify the signature
+app.use("/api/payments/webhook", express.raw({ type: "application/json" }), (req, res, next) => {
+    next();
+});
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
@@ -30,6 +37,7 @@ app.use(
     }),
 );
 
+app.use("/api/payments", paymentRoutes);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use("/api", router);
 

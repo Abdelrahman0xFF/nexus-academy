@@ -1,21 +1,33 @@
 import { sql, poolPromise } from "../config/db.config.js";
 
 class Enrollment {
-    static async create(user_id, course_id, payment_method) {
+    static async create(user_id, course_id, payment_method, transaction_id = null) {
         try {
             const pool = await poolPromise;
+            
+            if (transaction_id) {
+                const checkTx = await pool.request()
+                    .input("transaction_id", sql.NVarChar, transaction_id)
+                    .query("SELECT 1 FROM enrollments WHERE transaction_id = @transaction_id");
+                
+                if (checkTx.recordset.length > 0) return { message: "Already processed" };
+            }
+
             const result = await pool
                 .request()
                 .input("user_id", sql.Int, user_id)
                 .input("course_id", sql.Int, course_id)
-                .input("payment_method", sql.NVarChar, payment_method).query(`
-                    INSERT INTO enrollments (course_id, user_id, payment_method, payment_status, enrollment_cost)
+                .input("payment_method", sql.NVarChar, payment_method)
+                .input("transaction_id", sql.NVarChar, transaction_id)
+                .query(`
+                    INSERT INTO enrollments (course_id, user_id, payment_method, payment_status, enrollment_cost, transaction_id)
                     SELECT 
                         @course_id, 
                         @user_id, 
                         ISNULL(@payment_method, 'card'),
                         'paid',
-                        ISNULL(price, original_price)
+                        ISNULL(price, original_price),
+                        @transaction_id
                     FROM courses
                     WHERE course_id = @course_id;
                 `);
