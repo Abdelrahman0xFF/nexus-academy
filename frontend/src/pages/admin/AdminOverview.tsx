@@ -2,207 +2,379 @@ import {
     Users,
     BookOpen,
     DollarSign,
-    ArrowUpRight,
-    Clock,
     Star,
-    ShieldCheck,
-    Activity,
+    Loader2,
+    MessageSquare,
+    Settings,
     ArrowRight,
+    Plus,
 } from "lucide-react";
-import { Link } from "react-router-dom";
 import DashboardLayout from "@/layouts/DashboardLayout";
+import { useQuery } from "@tanstack/react-query";
+import { coursesApi } from "@/lib/courses-api";
+import { categoryApi } from "@/lib/categories-api";
+import { enrollmentApi } from "@/lib/enrollment-api";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const AdminOverview = () => {
+    const { data: coursesData, isLoading: isCoursesLoading } = useQuery({
+        queryKey: ["admin-overview-courses"],
+        queryFn: () => coursesApi.getAll({ page: 1, limit: 5, order: "DESC" }),
+    });
+
+    const { data: coursesStatsData, isLoading: isStatsLoading } = useQuery({
+        queryKey: ["admin-overview-courses-stats"],
+        queryFn: () => coursesApi.getAll({ page: 1, limit: 1000 }),
+    });
+
+    const { data: recentEnrollmentsRes, isLoading: isEnrollmentsLoading } =
+        useQuery({
+            queryKey: ["admin-overview-recent-enrollments"],
+            queryFn: () => enrollmentApi.getRecentEnrollments(),
+        });
+
+    const { data: categories, isLoading: isCategoriesLoading } = useQuery({
+        queryKey: ["admin-overview-categories"],
+        queryFn: () => categoryApi.getAll(),
+    });
+
+    const latestCourses = coursesData?.courses || [];
+    const recentEnrollments = recentEnrollmentsRes?.data || [];
+    const allCourses = coursesStatsData?.courses || [];
+
+    const totalStudents = allCourses.reduce(
+        (sum, c) => sum + (c.students_count || 0),
+        0,
+    );
+    const totalRevenue = allCourses.reduce(
+        (sum, c) => sum + (c.price || 0) * (c.students_count || 0),
+        0,
+    );
+    const avgRating =
+        allCourses.length > 0
+            ? (
+                  allCourses.reduce((sum, c) => sum + (c.rating || 0), 0) /
+                  allCourses.length
+              ).toFixed(1)
+            : "0.0";
+
     const stats = [
         {
             label: "Total Students",
-            value: "12,482",
+            value: totalStudents.toLocaleString(),
             icon: Users,
             color: "text-primary",
             bg: "bg-primary/10",
         },
         {
             label: "Total Revenue",
-            value: "$84,250",
+            value: `$${totalRevenue.toLocaleString()}`,
             icon: DollarSign,
             color: "text-secondary",
             bg: "bg-secondary/10",
         },
         {
             label: "Active Courses",
-            value: "145",
+            value: (coursesStatsData?.total || 0).toLocaleString(),
             icon: BookOpen,
             color: "text-amber-600",
             bg: "bg-amber-500/10",
         },
         {
             label: "Avg. Rating",
-            value: "4.8",
+            value: avgRating,
             icon: Star,
             color: "text-emerald-600",
             bg: "bg-emerald-500/10",
         },
     ];
 
-    const recentActivities = [
-        {
-            id: 1,
-            type: "user",
-            text: "New instructor registration: Sarah Miller",
-            time: "2 hours ago",
-        },
-        {
-            id: 2,
-            type: "payment",
-            text: "Successful payment of $49.99 from John D.",
-            time: "4 hours ago",
-        },
-        {
-            id: 3,
-            type: "course",
-            text: "Course 'Advanced React' approved by Admin",
-            time: "5 hours ago",
-        },
-        {
-            id: 4,
-            type: "review",
-            text: "New 5-star review on 'Python Masterclass'",
-            time: "Yesterday",
-        },
-    ];
+    const formatDate = (dateString: string) => {
+        const d = new Date(dateString);
+        return d.toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+    };
 
     return (
         <DashboardLayout type="admin">
-            {/* Header - Catchy Greeting */}
-            <div className="mb-8">
-                <h1 className="text-h1 text-foreground">
-                    Admin Command Center
-                </h1>
-                <p className="text-body text-muted-foreground mt-1">
-                    Real-time platform insights and oversight
-                </p>
+            <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-h1 text-foreground font-black tracking-tight">
+                        Admin Command Center
+                    </h1>
+                    <p className="text-body text-muted-foreground mt-1">
+                        Real-time platform insights and oversight
+                    </p>
+                </div>
+                <div className="flex gap-2">
+                    <Button asChild variant="outline" className="rounded-button">
+                        <Link to="/admin/settings">
+                            <Settings size={18} className="mr-2" /> Settings
+                        </Link>
+                    </Button>
+                </div>
             </div>
 
-            {/* Stats Grid - Matching Student/Inst Style */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                {stats.map((s) => (
-                    <div
-                        key={s.label}
-                        className="bg-card rounded-card card-shadow p-5 hover-lift"
-                    >
-                        <div
-                            className={`w-10 h-10 rounded-lg ${s.bg} ${s.color} flex items-center justify-center mb-3`}
-                        >
-                            <s.icon size={20} />
-                        </div>
-                        <div className="text-2xl font-bold text-card-foreground">
-                            {s.value}
-                        </div>
-                        <div className="text-small text-muted-foreground">
-                            {s.label}
-                        </div>
-                    </div>
-                ))}
+                {isStatsLoading
+                    ? Array.from({ length: 4 }).map((_, i) => (
+                          <div
+                              key={i}
+                              className="bg-card rounded-card card-shadow p-5 h-28 animate-pulse"
+                          />
+                      ))
+                    : stats.map((s) => (
+                          <div
+                              key={s.label}
+                              className="bg-card rounded-card card-shadow p-5 hover-lift border border-border/50 transition-all hover:shadow-lg"
+                          >
+                              <div
+                                  className={`w-10 h-10 rounded-lg ${s.bg} ${s.color} flex items-center justify-center mb-3`}
+                              >
+                                  <s.icon size={20} />
+                              </div>
+                              <div className="text-2xl font-bold text-card-foreground">
+                                  {s.value}
+                              </div>
+                              <div className="text-small text-muted-foreground uppercase tracking-widest text-[10px] font-black mt-1">
+                                  {s.label}
+                              </div>
+                          </div>
+                      ))}
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-8">
-                {/* Recent Activity - Catchy List Style */}
-                <div className="lg:col-span-2">
-                    <div className="bg-card rounded-card card-shadow p-6 h-full">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-h3 text-card-foreground flex items-center gap-2">
-                                <Activity size={20} className="text-primary" />{" "}
-                                Recent Activity
-                            </h2>
-                            <Link
-                                to="/admin/logs"
-                                className="text-primary text-small font-medium hover:underline flex items-center gap-1"
-                            >
-                                View All <ArrowRight size={14} />
-                            </Link>
-                        </div>
-                        <div className="space-y-4">
-                            {recentActivities.map((activity) => (
-                                <div
-                                    key={activity.id}
-                                    className="flex items-center gap-4 p-4 rounded-lg hover:bg-muted/50 transition-colors group border border-transparent hover:border-border"
-                                >
-                                    <div className="w-12 h-12 rounded-lg gradient-primary flex items-center justify-center shrink-0">
-                                        {activity.type === "user" ? (
-                                            <Users
-                                                size={20}
-                                                className="text-white"
+            <div className="grid lg:grid-cols-3 gap-6 mb-6">
+                <div className="lg:col-span-2 bg-card rounded-card card-shadow p-6 border border-border/50">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-h3 text-card-foreground">
+                            Latest Courses
+                        </h2>
+                        <Link to="/admin/courses" className="text-primary text-xs font-bold flex items-center gap-1 hover:underline">
+                            View All <ArrowRight size={14} />
+                        </Link>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-border bg-muted/20">
+                                    <th className="text-left text-[10px] font-black text-muted-foreground tracking-widest px-4 py-3 uppercase">
+                                        Title
+                                    </th>
+                                    <th className="text-left text-[10px] font-black text-muted-foreground tracking-widest px-4 py-3 uppercase">
+                                        Price
+                                    </th>
+                                    <th className="text-left text-[10px] font-black text-muted-foreground tracking-widest px-4 py-3 uppercase">
+                                        Rating
+                                    </th>
+                                    <th className="text-left text-[10px] font-black text-muted-foreground tracking-widest px-4 py-3 uppercase">
+                                        Level
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {isCoursesLoading ? (
+                                    <tr>
+                                        <td
+                                            colSpan={4}
+                                            className="px-4 py-8 text-center"
+                                        >
+                                            <Loader2
+                                                className="animate-spin text-primary mx-auto"
+                                                size={22}
                                             />
-                                        ) : (
-                                            <DollarSign
-                                                size={20}
-                                                className="text-white"
-                                            />
-                                        )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-small font-semibold text-card-foreground truncate group-hover:text-primary transition-colors">
-                                            {activity.text}
-                                        </h3>
-                                        <p className="text-xs text-muted-foreground mt-0.5">
-                                            {activity.time}
-                                        </p>
-                                    </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="rounded-full text-muted-foreground"
-                                    >
-                                        <ArrowUpRight size={16} />
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
+                                        </td>
+                                    </tr>
+                                ) : latestCourses.length > 0 ? (
+                                    latestCourses.map((course) => (
+                                        <tr
+                                            key={course.course_id}
+                                            className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors"
+                                        >
+                                            <td className="px-4 py-3 text-small font-bold text-card-foreground max-w-[260px] truncate">
+                                                {course.title}
+                                            </td>
+                                            <td className="px-4 py-3 text-small text-card-foreground font-medium">
+                                                {course.price === 0
+                                                    ? "Free"
+                                                    : `$${course.price}`}
+                                            </td>
+                                            <td className="px-4 py-3 text-small text-card-foreground">
+                                                <div className="flex items-center gap-1">
+                                                    <Star size={12} className="text-amber-400 fill-amber-400" />
+                                                    {course.rating?.toFixed(1) || "0.0"}
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 text-small text-muted-foreground font-bold text-[10px]">
+                                                {course.level}
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td
+                                            colSpan={4}
+                                            className="px-4 py-8 text-center text-muted-foreground"
+                                        >
+                                            No courses found.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                {/* System Health Card - Catchy Sidebar Style */}
                 <div className="space-y-6">
-                    <div className="bg-card rounded-card card-shadow p-6 border-t-4 border-primary">
-                        <h2 className="text-body font-bold text-foreground mb-6">
-                            System Health
+                    <div className="bg-card rounded-card card-shadow p-6 border border-border/50">
+                        <h2 className="text-h3 text-card-foreground mb-4">
+                            Quick Actions
                         </h2>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100">
+                        <div className="space-y-3">
+                            <Link to="/admin/courses" className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all group border border-border/50">
                                 <div className="flex items-center gap-3">
-                                    <ShieldCheck size={18} />
-                                    <span className="text-xs font-bold">
-                                        API Status
-                                    </span>
+                                    <BookOpen size={18} className="text-primary" />
+                                    <span className="text-small font-bold">Manage Courses</span>
                                 </div>
-                                <span className="text-[10px] font-black uppercase tracking-tighter">
-                                    Healthy
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50 text-blue-700 border border-blue-100">
+                                <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </Link>
+                            <Link to="/admin/users" className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all group border border-border/50">
                                 <div className="flex items-center gap-3">
-                                    <Clock size={18} />
-                                    <span className="text-xs font-bold">
-                                        Last Backup
-                                    </span>
+                                    <Users size={18} className="text-primary" />
+                                    <span className="text-small font-bold">User Directory</span>
                                 </div>
-                                <span className="text-[10px] font-black uppercase tracking-tighter">
-                                    Recent
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="mt-8 pt-6 border-t border-border">
-                            <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-                                <span>Storage Usage</span>
-                                <span className="text-primary">82%</span>
-                            </div>
-                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full gradient-primary w-[82%] transition-all duration-1000" />
-                            </div>
+                                <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </Link>
+                            <Link to="/admin/reviews" className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all group border border-border/50">
+                                <div className="flex items-center gap-3">
+                                    <MessageSquare size={18} className="text-primary" />
+                                    <span className="text-small font-bold">Audit Reviews</span>
+                                </div>
+                                <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </Link>
+                            <Link to="/admin/payments" className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all group border border-border/50">
+                                <div className="flex items-center gap-3">
+                                    <DollarSign size={18} className="text-primary" />
+                                    <span className="text-small font-bold">Payment History</span>
+                                </div>
+                                <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </Link>
                         </div>
                     </div>
+
+                    <div className="bg-card rounded-card card-shadow p-6 border border-border/50">
+                        <h2 className="text-h3 text-card-foreground mb-4">
+                            Platform Categories
+                        </h2>
+                        <div className="flex flex-wrap gap-2">
+                            {isCategoriesLoading ? (
+                                <div className="py-4 flex justify-center w-full">
+                                    <Loader2
+                                        className="animate-spin text-primary"
+                                        size={22}
+                                    />
+                                </div>
+                            ) : categories && categories.length > 0 ? (
+                                categories.map((category: any) => (
+                                    <div
+                                        key={category.category_id}
+                                        className="px-3 py-1.5 rounded-full border border-border bg-background text-[10px] font-black uppercase tracking-tighter text-muted-foreground hover:bg-muted/50 transition-colors"
+                                    >
+                                        {category.name}
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-small text-muted-foreground py-2">
+                                    No categories available.
+                                </div>
+                            )}
+                        </div>
+                        <Link to="/admin/categories" className="text-primary text-[10px] font-black uppercase tracking-widest mt-4 block hover:underline">
+                            Manage Categories
+                        </Link>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-card rounded-card card-shadow p-6 border border-border/50">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-h3 text-card-foreground">
+                        Recent Enrollments
+                    </h2>
+                    <Link to="/admin/payments" className="text-primary text-xs font-bold flex items-center gap-1 hover:underline">
+                        View History <ArrowRight size={14} />
+                    </Link>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-border bg-muted/20">
+                                <th className="text-left text-[10px] font-black text-muted-foreground tracking-widest px-4 py-3 uppercase">
+                                    Student
+                                </th>
+                                <th className="text-left text-[10px] font-black text-muted-foreground tracking-widest px-4 py-3 uppercase">
+                                    Course
+                                </th>
+                                <th className="text-left text-[10px] font-black text-muted-foreground tracking-widest px-4 py-3 uppercase">
+                                    Enrolled Date
+                                </th>
+                                <th className="text-right text-[10px] font-black text-muted-foreground tracking-widest px-4 py-3 uppercase">
+                                    Cost
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {isEnrollmentsLoading ? (
+                                <tr>
+                                    <td colSpan={4} className="px-4 py-8 text-center">
+                                        <Loader2
+                                            className="animate-spin text-primary mx-auto"
+                                            size={22}
+                                        />
+                                    </td>
+                                </tr>
+                            ) : recentEnrollments.length > 0 ? (
+                                recentEnrollments.map((enrollment, index) => (
+                                    <tr
+                                        key={`${enrollment.user_id}-${enrollment.course_title}-${index}`}
+                                        className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors"
+                                    >
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary border border-primary/20">
+                                                    {enrollment.first_name?.[0]}
+                                                </div>
+                                                <span className="text-small font-bold text-card-foreground">
+                                                    {`${enrollment.first_name} ${enrollment.last_name}`}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-small text-card-foreground font-medium">
+                                            {enrollment.course_title}
+                                        </td>
+                                        <td className="px-4 py-3 text-small text-muted-foreground">
+                                            {formatDate(enrollment.enrolled_at)}
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-small font-black text-primary">
+                                            ${enrollment.enrollment_cost?.toLocaleString()}
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td
+                                        colSpan={4}
+                                        className="px-4 py-8 text-center text-muted-foreground"
+                                    >
+                                        No recent enrollments found.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </DashboardLayout>

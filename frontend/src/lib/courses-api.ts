@@ -82,6 +82,11 @@ export const coursesApi = {
     return response.data;
   },
 
+  getRecentCourses: async (limit = 5): Promise<Course[]> => {
+    const response = await api.get<any, ApiResponse<{ courses: Course[] }>>(`/courses/recent?limit=${limit}`);
+    return response.data.courses;
+  } ,
+  
   create: async (formData: FormData): Promise<Course> => {
     const response = await api.post<any, ApiResponse<Course>>("/courses", formData, {
       headers: {

@@ -1,29 +1,48 @@
 import {
   Save,
   Camera,
-  User,
-  CheckCircle2,
-  XCircle,
   Mail,
   Briefcase,
+  CheckCircle2,
+  XCircle,
   Shield,
+  User as UserIcon,
+  Loader2,
 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import { authApi } from "@/lib/auth-api";
+import { toast } from "sonner";
+import { getMediaUrl } from "@/lib/utils";
 
 const AdminSettings = () => {
+  const { user, refreshUser } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: "Zeyad",
-    lastName: "Mostafa",
-    nickname: "El ZooZ",
-    email: "zeyad.mostafa@nexusacademy.com",
-    bio: "Full-stack developer and platform administrator.",
-    title: "Chief Administrator",
-    avatar: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    bio: "",
+    title: "",
+    avatar: null as File | null,
+    avatarPreview: "",
   });
 
-  const [displayedProfile, setDisplayedProfile] = useState({ ...formData });
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: user.first_name || "",
+        lastName: user.last_name || "",
+        email: user.email || "",
+        bio: user.bio || "",
+        title: user.title || "",
+        avatarPreview: user.avatar_url ? getMediaUrl(user.avatar_url) : "",
+      }));
+    }
+  }, [user]);
 
   const [passwords, setPasswords] = useState({
     old: "",
@@ -40,17 +59,8 @@ const AdminSettings = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, avatar: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      setFormData({ ...formData, avatar: file, avatarPreview: URL.createObjectURL(file) });
     }
-  };
-
-  const handleSave = () => {
-    setDisplayedProfile({ ...formData });
-    setPasswords({ old: "", new: "", confirm: "" });
   };
 
   const passwordCriteria = {
@@ -63,32 +73,64 @@ const AdminSettings = () => {
   };
 
   const isPasswordValid = Object.values(passwordCriteria).every(Boolean);
-
   const canSave = passwords.new === "" ? true : isPasswordValid;
+
+  const handleSave = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const profileData = new FormData();
+      profileData.append("first_name", formData.firstName);
+      profileData.append("last_name", formData.lastName);
+      profileData.append("bio", formData.bio);
+      profileData.append("title", formData.title);
+      if (formData.avatar) {
+        profileData.append("avatar", formData.avatar);
+      }
+
+      await authApi.updateProfile(user.id, profileData);
+
+      if (passwords.new) {
+        await authApi.changePassword({
+          old_password: passwords.old,
+          new_password: passwords.new,
+          confirm_password: passwords.confirm,
+        });
+      }
+
+      await refreshUser();
+      toast.success("Settings updated successfully");
+      setPasswords({ old: "", new: "", confirm: "" });
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update settings");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <DashboardLayout type="admin">
-      <div className="mb-8">
-        <h1 className="text-h1 text-foreground"> Settings</h1>
+      <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+        <h1 className="text-h1 text-foreground">Admin Settings</h1>
         <p className="text-body text-muted-foreground mt-1">
-          Manage your admin profile and preferences
+          Manage your administrative profile and platform preferences
         </p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-card rounded-card card-shadow p-6">
+          <div className="bg-card rounded-card card-shadow p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100 fill-mode-both">
             <h2 className="text-h3 text-card-foreground mb-8 flex items-center gap-2">
               Personal Information
-              <User size={20} className="text-muted-foreground" />
+              <UserIcon size={20} className="text-muted-foreground" />
             </h2>
 
             <div className="flex flex-col md:flex-row gap-8 items-start mb-8">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-sm flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD]">
-                  {formData.avatar ? (
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-sm flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD] transition-transform duration-500 group-hover:scale-105">
+                  {formData.avatarPreview ? (
                     <img
-                      src={formData.avatar}
+                      src={formData.avatarPreview}
                       alt="Profile"
                       className="w-full h-full object-cover"
                     />
@@ -101,7 +143,7 @@ const AdminSettings = () => {
                 </div>
                 <button
                   onClick={handleImageClick}
-                  className="absolute bottom-1 right-1 p-2 bg-white text-slate-500 rounded-full border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                  className="absolute bottom-1 right-1 p-2 bg-white text-slate-500 rounded-full border border-slate-200 hover:bg-slate-50 transition-all shadow-sm hover:scale-110 active:scale-90"
                 >
                   <Camera size={18} />
                 </button>
@@ -126,7 +168,7 @@ const AdminSettings = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, firstName: e.target.value })
                       }
-                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background transition-all"
                     />
                   </div>
                   <div>
@@ -139,15 +181,16 @@ const AdminSettings = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, lastName: e.target.value })
                       }
-                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background transition-all"
                     />
                   </div>
                 </div>
+
                 <div className="flex flex-col gap-4 w-full">
                   <div className="w-full">
                     <label className="text-small font-medium text-foreground block mb-1.5 flex items-center gap-2">
                       <Briefcase size={14} className="text-primary" />{" "}
-                      Professional Title
+                      Administrative Title
                     </label>
                     <input
                       type="text"
@@ -155,20 +198,7 @@ const AdminSettings = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, title: e.target.value })
                       }
-                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
-                      placeholder="e.g. Senior Instructor"
-                    />
-                  </div>
-
-                  <div className="w-full">
-                    <label className="text-small font-medium text-foreground block mb-1.5 flex items-center gap-2">
-                      <Mail size={14} className="text-primary" /> Email Address
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      readOnly
-                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none bg-muted/30 cursor-not-allowed opacity-70"
+                      className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background transition-all"
                     />
                   </div>
                 </div>
@@ -185,13 +215,13 @@ const AdminSettings = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, bio: e.target.value })
                   }
-                  className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background h-28 resize-none"
+                  className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background h-28 resize-none transition-all"
                 />
               </div>
             </div>
           </div>
 
-          <div className="bg-card rounded-card card-shadow p-6">
+          <div className="bg-card rounded-card card-shadow p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 fill-mode-both">
             <h2 className="text-h3 text-card-foreground mb-6 flex items-center gap-2">
               <Shield size={20} className="text-primary" /> Security & Password
             </h2>
@@ -207,7 +237,7 @@ const AdminSettings = () => {
                   onChange={(e) =>
                     setPasswords({ ...passwords, old: e.target.value })
                   }
-                  className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                  className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background transition-all"
                 />
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -222,7 +252,7 @@ const AdminSettings = () => {
                     onChange={(e) =>
                       setPasswords({ ...passwords, new: e.target.value })
                     }
-                    className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                    className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background transition-all"
                   />
                 </div>
                 <div>
@@ -236,7 +266,7 @@ const AdminSettings = () => {
                     onChange={(e) =>
                       setPasswords({ ...passwords, confirm: e.target.value })
                     }
-                    className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background"
+                    className="w-full px-4 py-2.5 text-small border border-border rounded-button outline-none focus:ring-2 focus:ring-primary/20 bg-background transition-all"
                   />
                 </div>
               </div>
@@ -251,14 +281,14 @@ const AdminSettings = () => {
                     label: "Symbol (@, %, *)",
                     met: passwordCriteria.hasSymbol,
                   },
-                  { label: "Match Match", met: passwordCriteria.match },
+                  { label: "Match Passwords", met: passwordCriteria.match },
                 ].map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-2 text-[11px]"
+                    className="flex items-center gap-2 text-[11px] transition-all duration-300"
                   >
                     {item.met ? (
-                      <CheckCircle2 size={14} className="text-emerald-500" />
+                      <CheckCircle2 size={14} className="text-emerald-500 animate-in zoom-in duration-300" />
                     ) : (
                       <XCircle size={14} className="text-muted-foreground/30" />
                     )}
@@ -278,47 +308,44 @@ const AdminSettings = () => {
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="bg-card rounded-card card-shadow p-6 text-center border-b-4 border-primary overflow-hidden relative">
-            <div className="w-28 h-28 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-md flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD]">
-              {displayedProfile.avatar ? (
+        <div className="space-y-6 sticky top-6 self-start animate-in fade-in slide-in-from-right-4 duration-500 delay-300 fill-mode-both">
+          <div className="bg-card rounded-card card-shadow p-6 text-center border-b-4 border-primary overflow-hidden relative group hover:shadow-lg transition-all duration-300">
+            <div className="w-28 h-28 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-md flex items-center justify-center bg-gradient-to-br from-[#2D7A85] to-[#5BA4AD] transition-transform duration-500 group-hover:scale-110">
+              {formData.avatarPreview ? (
                 <img
-                  src={displayedProfile.avatar}
+                  src={formData.avatarPreview}
                   alt="Preview"
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <span className="text-white text-3xl font-bold tracking-tighter">
-                  {displayedProfile.firstName[0]}
-                  {displayedProfile.lastName[0]}
+                  {formData.firstName?.[0]}
+                  {formData.lastName?.[0]}
                 </span>
               )}
             </div>
 
-            <h3 className="text-h3 font-black text-foreground truncate">
-              {displayedProfile.firstName} {displayedProfile.lastName}
+            <h3 className="text-h3 font-black text-foreground truncate group-hover:text-primary transition-colors">
+              {formData.firstName} {formData.lastName}
             </h3>
-            <p className="text-[10px] font-black text-primary mb-1 uppercase tracking-[0.2em]">
-              {displayedProfile.nickname}
-            </p>
             <p className="text-xs font-medium text-muted-foreground mb-4 px-2 line-clamp-1">
-              {displayedProfile.title}
+              {formData.title}
             </p>
 
-            <div className="py-2.5 px-4 bg-muted/40 rounded-xl flex items-center justify-center gap-2 text-[11px] text-muted-foreground border border-border shadow-sm">
+            <div className="py-2.5 px-4 bg-muted/40 rounded-xl flex items-center justify-center gap-2 text-[11px] text-muted-foreground border border-border shadow-sm transition-all group-hover:bg-muted/60">
               <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
               <span className="font-medium truncate">
-                {displayedProfile.email}
+                {formData.email}
               </span>
             </div>
           </div>
 
           <Button
             onClick={handleSave}
-            className="w-full gradient-primary border-0 text-primary-foreground font-black rounded-button shadow-xl py-6 hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
-            disabled={!canSave}
+            disabled={!canSave || loading}
+            className="w-full gradient-primary border-0 text-primary-foreground font-black rounded-button shadow-xl py-6 hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save size={20} className="mr-2" /> Save Changes
+            {loading ? <Loader2 className="animate-spin" /> : <Save size={20} className="mr-2" />} Save Changes
           </Button>
         </div>
       </div>

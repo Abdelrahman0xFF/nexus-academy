@@ -1,264 +1,323 @@
 import {
-  Search,
-  MoreVertical,
-  Edit2,
-  Trash2,
-  Eye,
-  ExternalLink,
-  BookOpen,
-  Users,
-  Star,
+    Search,
+    MoreVertical,
+    Eye,
+    ExternalLink,
+    BookOpen,
+    Users,
+    Star,
+    Loader2,
+    EyeOff,
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { courses as initialCourses } from "@/lib/data";
 import { AppSelect } from "@/components/ui/app-select";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { coursesApi } from "@/lib/courses-api";
+import { getMediaUrl } from "@/lib/utils";
+import { toast } from "sonner";
+import { categoryApi } from "@/lib/categories-api";
 
 const AdminCourses = () => {
-  const [courses, setCourses] = useState(initialCourses);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All Categories");
-  const [statusFilter, setStatusFilter] = useState("All Status");
-  const navigate = useNavigate();
+    const [searchQuery, setSearchQuery] = useState("");
+    const [categoryFilter, setCategoryFilter] = useState("all");
+    const [statusFilter, setStatusFilter] = useState("all");
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
-  const filteredCourses = courses
-    .map((course, index) => ({ course, index }))
-    .filter(({ course, index }) => {
-      const matchesSearch =
-        course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.instructor.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesCategory =
-        categoryFilter === "All Categories" ||
-        course.category === categoryFilter;
-
-      const status = index % 4 === 3 ? "Draft" : "Published";
-      const matchesStatus =
-        statusFilter === "All Status" || status === statusFilter;
-
-      return matchesSearch && matchesCategory && matchesStatus;
+    const { data: coursesData, isLoading } = useQuery({
+        queryKey: ["admin-courses", searchQuery, categoryFilter, statusFilter],
+        queryFn: () =>
+            coursesApi.getAll({
+                search: searchQuery || undefined,
+                category_id: categoryFilter === "all" ? undefined : Number(categoryFilter),
+                sortBy: "created_at",
+                order: "DESC",
+            }),
     });
 
-  const handleDelete = (id: string) => {
-    setCourses(courses.filter((c) => c.id !== id));
-  };
+    const { data: categories } = useQuery({
+        queryKey: ["categories"],
+        queryFn: () => categoryApi.getAll(),
+    });
 
-  return (
-    <DashboardLayout type="admin">
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-h1 text-foreground font-black tracking-tight">
-            Course Inventory
-          </h1>
-          <p className="text-body text-muted-foreground mt-1">
-            Audit, edit, and moderate platform content
-          </p>
-        </div>
-      </div>
+    const toggleVisibilityMutation = useMutation({
+        mutationFn: ({ id, is_available }: { id: number; is_available: boolean }) => {
+            const formData = new FormData();
+            formData.append("is_available", String(is_available));
+            return coursesApi.update(id, formData);
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["admin-courses"] });
+            toast.success(`Course is now ${variables.is_available ? "visible" : "invisible"}`);
+        },
+        onError: (error: any) => {
+            toast.error(error.message || "Failed to update visibility");
+        },
+    });
 
-      <div className="bg-card rounded-card card-shadow p-5 mb-6 border border-border/50">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative max-w-md w-full">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <input
-              type="text"
-              placeholder="Search by title or instructor..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 text-small bg-muted/30 rounded-xl border border-border outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-            />
-          </div>
-          <div className="flex gap-3 w-full md:w-auto">
-            <AppSelect
-              options={[
-                "All Categories",
-                "Web Development",
-                "Data Science",
-                "Design",
-              ]}
-              value={categoryFilter}
-              onValueChange={setCategoryFilter}
-              className="flex-1 md:w-[270px]"
-            />
-            <AppSelect
-              options={["All Status", "Published", "Draft"]}
-              value={statusFilter}
-              onValueChange={setStatusFilter}
-              className="flex-1 md:w-[130px]"
-            />
-          </div>
-        </div>
-      </div>
+    const courses = coursesData?.courses || [];
 
-      <div className="bg-card rounded-card card-shadow overflow-hidden border border-border/50">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-border bg-muted/20">
-                <th className="px-6 py-4 text-[10px] font-black text-muted-foreground tracking-widest uppercase">
-                  Course Information
-                </th>
-                <th className="px-6 py-4 text-[10px] font-black text-muted-foreground tracking-widest uppercase">
-                  Instructor
-                </th>
-                <th className="px-6 py-4 text-[10px] font-black text-muted-foreground tracking-widest uppercase">
-                  Performance
-                </th>
-                <th className="px-6 py-4 text-[10px] font-black text-muted-foreground tracking-widest uppercase">
-                  Pricing
-                </th>
-                <th className="px-6 py-4 text-[10px] font-black text-muted-foreground tracking-widest uppercase">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-[10px] font-black text-muted-foreground tracking-widest uppercase text-right">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filteredCourses.map(({ course: c, index: i }) => {
-                const status = i % 4 === 3 ? "Draft" : "Published";
-                return (
-                  <tr
-                    key={c.id}
-                    className="hover:bg-muted/10 transition-colors group"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-10 rounded-lg overflow-hidden bg-muted shrink-0 border border-border flex items-center justify-center">
-                          {c.image ? (
-                            <img
-                              src={c.image}
-                              alt={c.title}
-                              className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"
-                            />
-                          ) : (
-                            <BookOpen
-                              size={20}
-                              className="text-muted-foreground/40"
-                            />
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="text-[13px] font-bold text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors">
-                            {c.title}
-                          </div>
-                          <div className="text-[10px] font-bold text-muted-foreground tracking-tighter">
-                            {c.category}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border border-border">
-                          {c.instructor[0]}
-                        </div>
-                        <span className="text-xs font-bold text-foreground">
-                          {c.instructor}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-foreground">
-                          <Users size={12} className="text-primary" />
-                          {c.students.toLocaleString()}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground">
-                          <Star
-                            size={10}
-                            className="text-amber-400 fill-amber-400"
-                          />
-                          {c.rating}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-[14px] font-black text-primary">
-                        ${c.price}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-3 py-1 text-[10px] font-black rounded-full tracking-tighter border ${
-                          status === "Published"
-                            ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 shadow-sm"
-                            : "bg-amber-500/10 text-amber-600 border-amber-500/20 shadow-sm"
-                        }`}
-                      >
-                        {status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-xl hover:bg-muted group-hover:text-primary transition-colors"
-                          >
-                            <MoreVertical size={18} />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                          className="w-52 rounded-xl p-2 shadow-2xl"
-                        >
-                          <DropdownMenuItem
-                            className="gap-3 cursor-pointer rounded-lg py-2.5 font-medium"
-                            onClick={() => navigate(`/courses/${c.id}`)}
-                          >
-                            <Eye size={16} className="text-primary" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="gap-3 cursor-pointer rounded-lg py-2.5 font-medium"
-                            onClick={() =>
-                              navigate(`/instructor/upload`, { state: c })
-                            }
-                          >
-                            <Edit2 size={16} className="text-primary" />
-                            Edit Content
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="gap-3 cursor-pointer rounded-lg py-2.5 font-medium">
-                            <ExternalLink
-                              size={16}
-                              className="text-emerald-500"
-                            />
-                            Preview Player
-                          </DropdownMenuItem>
-                          <div className="h-px bg-border my-1" />
-                          <DropdownMenuItem
-                            className="gap-3 cursor-pointer rounded-lg py-2.5 font-medium text-destructive focus:text-white focus:bg-destructive"
-                            onClick={() => handleDelete(c.id)}
-                          >
-                            <Trash2 size={16} />
-                            Unpublish Course
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </DashboardLayout>
-  );
+    const filteredCourses = courses.filter((course) => {
+        if (statusFilter === "all") return true;
+        if (statusFilter === "Published") return course.is_available;
+        if (statusFilter === "Draft") return !course.is_available;
+        return true;
+    });
+
+    const categoryOptions = [
+        { label: "All Categories", value: "all" },
+        ...(categories?.map((c: any) => ({ label: c.name, value: c.category_id.toString() })) || []),
+    ];
+
+    const statusOptions = [
+        { label: "All Status", value: "all" },
+        { label: "Published", value: "Published" },
+        { label: "Draft", value: "Draft" },
+    ];
+
+    return (
+        <DashboardLayout type="admin">
+            <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-h1 text-foreground font-black tracking-tight">
+                        Course Inventory
+                    </h1>
+                    <p className="text-body text-muted-foreground mt-1">
+                        Audit, monitor, and manage platform visibility
+                    </p>
+                </div>
+            </div>
+
+            <div className="bg-card rounded-card card-shadow p-5 mb-6 border border-border/50">
+                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div className="relative max-w-md w-full">
+                        <Search
+                            size={16}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                        />
+                        <input
+                            type="text"
+                            placeholder="Search courses..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 text-small bg-muted/30 rounded-xl border border-border outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                        />
+                    </div>
+                    <div className="flex gap-3 w-full md:w-auto">
+                        <AppSelect
+                            options={categoryOptions.map(o => o.label)}
+                            value={categoryOptions.find(o => o.value === categoryFilter)?.label || "All Categories"}
+                            onValueChange={(val) => {
+                                const option = categoryOptions.find(o => o.label === val);
+                                if (option) setCategoryFilter(option.value);
+                            }}
+                            className="flex-1 md:w-[270px]"
+                        />
+                        <AppSelect
+                            options={statusOptions.map(o => o.label)}
+                            value={statusOptions.find(o => o.value === statusFilter)?.label || "All Status"}
+                            onValueChange={(val) => {
+                                const option = statusOptions.find(o => o.label === val);
+                                if (option) setStatusFilter(option.value);
+                            }}
+                            className="flex-1 md:w-[130px]"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-card rounded-card card-shadow overflow-hidden border border-border/50">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-border bg-muted/20">
+                                <th className="px-6 py-4 text-[10px] font-black text-muted-foreground tracking-widest uppercase">
+                                    Course Information
+                                </th>
+                                <th className="px-6 py-4 text-[10px] font-black text-muted-foreground tracking-widest uppercase">
+                                    Instructor
+                                </th>
+                                <th className="px-6 py-4 text-[10px] font-black text-muted-foreground tracking-widest uppercase">
+                                    Performance
+                                </th>
+                                <th className="px-6 py-4 text-[10px] font-black text-muted-foreground tracking-widest uppercase">
+                                    Pricing
+                                </th>
+                                <th className="px-6 py-4 text-[10px] font-black text-muted-foreground tracking-widest uppercase">
+                                    Status
+                                </th>
+                                <th className="px-6 py-4 text-[10px] font-black text-muted-foreground tracking-widest uppercase text-right">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center">
+                                        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+                                    </td>
+                                </tr>
+                            ) : filteredCourses.length > 0 ? (
+                                filteredCourses.map((c) => (
+                                    <tr
+                                        key={c.course_id}
+                                        className="hover:bg-muted/10 transition-colors group"
+                                    >
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-16 h-10 rounded-lg overflow-hidden bg-muted shrink-0 border border-border flex items-center justify-center">
+                                                    {c.thumbnail_url ? (
+                                                        <img
+                                                            src={getMediaUrl(c.thumbnail_url)}
+                                                            alt={c.title}
+                                                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"
+                                                        />
+                                                    ) : (
+                                                        <BookOpen
+                                                            size={20}
+                                                            className="text-muted-foreground/40"
+                                                        />
+                                                    )}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="text-[13px] font-bold text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors">
+                                                        {c.title}
+                                                    </div>
+                                                    <div className="text-[10px] font-bold text-muted-foreground tracking-tighter">
+                                                        {c.category_name}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full bg-slate-100 overflow-hidden flex items-center justify-center text-[10px] font-black text-slate-500 border border-border">
+                                                    {c.instructor_avatar ? (
+                                                        <img src={getMediaUrl(c.instructor_avatar)} className="w-full h-full object-cover" alt={c.instructor_name} />
+                                                    ) : (
+                                                        c.instructor_name?.[0] || "I"
+                                                    )}
+                                                </div>
+                                                <span className="text-xs font-bold text-foreground">
+                                                    {c.instructor_name}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-1.5 text-[11px] font-bold text-foreground">
+                                                    <Users size={12} className="text-primary" />
+                                                    {c.students_count?.toLocaleString() || 0}
+                                                </div>
+                                                <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground">
+                                                    <Star
+                                                        size={10}
+                                                        className="text-amber-400 fill-amber-400"
+                                                    />
+                                                    {c.rating?.toFixed(1) || "0.0"}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="text-[14px] font-black text-primary">
+                                                {c.price === 0 ? "Free" : `$${c.price}`}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span
+                                                className={`px-3 py-1 text-[10px] font-black rounded-full tracking-tighter border ${
+                                                    c.is_available
+                                                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 shadow-sm"
+                                                        : "bg-amber-500/10 text-amber-600 border-amber-500/20 shadow-sm"
+                                                }`}
+                                            >
+                                                {c.is_available ? "Published" : "Draft"}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 rounded-xl hover:bg-muted group-hover:text-primary transition-colors"
+                                                    >
+                                                        <MoreVertical size={18} />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent
+                                                    align="end"
+                                                    className="w-52 rounded-xl p-2 shadow-2xl"
+                                                >
+                                                    <DropdownMenuItem
+                                                        className="gap-3 cursor-pointer rounded-lg py-2.5 font-medium"
+                                                        onClick={() => navigate(`/courses/${c.course_id}`)}
+                                                    >
+                                                        <Eye size={16} className="text-primary" />
+                                                        View Details
+                                                    </DropdownMenuItem>
+                                                    
+                                                    <DropdownMenuItem 
+                                                        className="gap-3 cursor-pointer rounded-lg py-2.5 font-medium"
+                                                        onClick={() =>
+                                                            toggleVisibilityMutation.mutate({ 
+                                                                id: c.course_id, 
+                                                                is_available: !c.is_available 
+                                                            })
+                                                        }
+                                                    >
+                                                        {c.is_available ? (
+                                                            <>
+                                                                <EyeOff size={16} className="text-amber-500" />
+                                                                Make Invisible
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Eye size={16} className="text-emerald-500" />
+                                                                Make Visible
+                                                            </>
+                                                        )}
+                                                    </DropdownMenuItem>
+
+                                                    <DropdownMenuItem 
+                                                        className="gap-3 cursor-pointer rounded-lg py-2.5 font-medium"
+                                                        onClick={() => navigate(`/learn/${c.course_id}`)}
+                                                    >
+                                                        <ExternalLink
+                                                            size={16}
+                                                            className="text-primary"
+                                                        />
+                                                        Preview Player
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
+                                        No courses found matching your criteria.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </DashboardLayout>
+    );
 };
 
 export default AdminCourses;
+

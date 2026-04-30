@@ -32,6 +32,7 @@ export interface InstructorStudent {
   }[];
 }
 
+
 export const enrollmentApi = {
   getInstructorStudents: async (page = 1, limit = 100, search?: string, courseId?: number): Promise<ApiResponse<{ students: InstructorStudent[]; total: number }>> => {
     const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
@@ -42,6 +43,10 @@ export const enrollmentApi = {
   getInstructorEnrollments: async (page = 1, limit = 10, courseId?: number): Promise<ApiResponse<{ enrollments: any[]; total: number }>> => {
     const courseParam = courseId ? `&course_id=${courseId}` : '';
     return api.get<never, ApiResponse<{ enrollments: any[]; total: number }>>(`/enrollments/instructor?page=${page}&limit=${limit}${courseParam}`);
+  },
+
+ getRecentEnrollments: async (limit = 5): Promise<ApiResponse<{ enrollments: any[] }>> => { 
+    return api.get<never, ApiResponse<{ enrollments: any[] }>>(`/enrollments/recent?limit=${limit}`);
   },
 
   getMyEnrollments: async (page = 1, limit = 10, params?: { search?: string; status?: string }): Promise<ApiResponse<{ enrollments: any[]; total: number }>> => {
