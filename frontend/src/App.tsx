@@ -28,6 +28,7 @@ import AdminPayments from "./pages/admin/AdminPayments";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminReviews from "./pages/admin/AdminReviews";
+import AdminEnrollments from "./pages/admin/AdminEnrollments";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -240,6 +241,14 @@ const App = () => (
                         element={
                             <ProtectedRoute allowedRoles={["admin"]}>
                                 <AdminOverview />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/enrollments"
+                        element={
+                            <ProtectedRoute allowedRoles={["admin"]}>
+                                <AdminEnrollments />
                             </ProtectedRoute>
                         }
                     />

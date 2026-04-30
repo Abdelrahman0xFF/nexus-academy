@@ -1,4 +1,13 @@
-import { Loader2, Search, Eye, ShieldAlert, Star, Trash2 } from "lucide-react";
+import {
+    Loader2,
+    Search,
+    Eye,
+    ShieldAlert,
+    Star,
+    Trash2,
+    Filter,
+    X,
+} from "lucide-react";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { reviewApi } from "@/lib/reviews-api";
@@ -34,7 +43,8 @@ const AdminReviews = () => {
     const queryClient = useQueryClient();
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
-    const [courseFilter, setCourseFilter] = useState("Select a Course");
+    const [courseFilter, setCourseFilter] = useState("All Courses");
+    const [ratingFilter, setRatingFilter] = useState("All Ratings");
     const [page, setPage] = useState(1);
     const limit = 10;
 
@@ -50,32 +60,50 @@ const AdminReviews = () => {
     }, [searchQuery]);
 
     const { data: coursesData } = useQuery({
-        queryKey: ["admin-all-courses"],
-        queryFn: () => coursesApi.getAll({ page: 1, limit: 100 }),
+        queryKey: ["admin-all-courses-for-reviews"],
+        queryFn: () => coursesApi.getAll({ page: 1, limit: 1000 }),
     });
 
     const courses = coursesData?.courses || [];
 
     const selectedCourseId =
-        courseFilter === "Select a Course"
+        courseFilter === "All Courses"
             ? undefined
             : courses.find((c) => c.title === courseFilter)?.course_id;
 
+    const selectedRating =
+        ratingFilter === "All Ratings" ? undefined : parseInt(ratingFilter[0]);
+
     const { data: reviewsRes, isLoading } = useQuery({
-        queryKey: ["admin-course-reviews", selectedCourseId, page],
+        queryKey: [
+            "admin-all-reviews",
+            debouncedSearch,
+            selectedCourseId,
+            selectedRating,
+            page,
+        ],
         queryFn: () =>
-            selectedCourseId 
-                ? reviewApi.getByCourse(selectedCourseId, { page, limit })
-                : Promise.resolve({ reviews: [], total: 0 }),
-        enabled: !!selectedCourseId,
+            reviewApi.getAllReviews({
+                page,
+                limit,
+                search: debouncedSearch || undefined,
+                course_id: selectedCourseId,
+                rating: selectedRating,
+            }),
     });
 
     const deleteMutation = useMutation({
-        mutationFn: ({ courseId, userId }: { courseId: number; userId: number }) => {
-            return reviewApi.delete(courseId, { user_id: userId } as any);
+        mutationFn: ({
+            courseId,
+            userId,
+        }: {
+            courseId: number;
+            userId: number;
+        }) => {
+            return reviewApi.delete(courseId, { user_id: userId });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["admin-course-reviews"] });
+            queryClient.invalidateQueries({ queryKey: ["admin-all-reviews"] });
             toast.success("Review deleted successfully");
             setIsDialogOpen(false);
         },
@@ -88,49 +116,75 @@ const AdminReviews = () => {
     const total = reviewsRes?.total || 0;
     const totalPages = Math.ceil(total / limit);
 
-    const courseOptions = ["Select a Course", ...courses.map((c) => c.title)];
-
-    const stats = [
-        { label: "Total Audited", value: total, icon: Star, color: "bg-primary/10 text-primary" },
-        { label: "Flagged", value: "0", icon: ShieldAlert, color: "bg-destructive/10 text-destructive" },
+    const courseOptions = ["All Courses", ...courses.map((c) => c.title)];
+    const ratingOptions = [
+        "All Ratings",
+        "5 Stars",
+        "4 Stars",
+        "3 Stars",
+        "2 Stars",
+        "1 Star",
     ];
 
     return (
         <DashboardLayout type="admin">
             <div className="mb-8">
-                <h1 className="text-h1 text-foreground font-black tracking-tight">Review Moderation</h1>
-                <p className="text-body text-muted-foreground mt-1">Audit, moderate, and manage student feedback across the platform</p>
+                <h1 className="text-h1 text-foreground font-black tracking-tight">
+                    Review Moderation
+                </h1>
+                <p className="text-body text-muted-foreground mt-1">
+                    Audit and manage student feedback globally across the
+                    platform
+                </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                {stats.map((s, i) => (
-                    <div key={i} className="bg-card rounded-card card-shadow p-6 transition-all hover:scale-[1.02] border border-border/50">
-                        <div className="flex items-center gap-4">
-                            <div className={`w-12 h-12 rounded-xl ${s.color} flex items-center justify-center shrink-0`}>
-                                <s.icon size={24} />
-                            </div>
-                            <div>
-                                <div className="text-small text-muted-foreground font-medium uppercase tracking-widest text-[10px]">{s.label}</div>
-                                <div className="text-2xl font-bold text-foreground">{s.value}</div>
-                            </div>
+            {/* Advanced Filters */}
+            <div className="bg-card rounded-card card-shadow p-6 mb-6 border border-border/50">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div className="md:col-span-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block">
+                            Search Feedback
+                        </label>
+                        <div className="relative">
+                            <Search
+                                size={16}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Search by student name, course, or comment..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 text-small bg-muted/30 rounded-xl border border-border outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                            />
                         </div>
                     </div>
-                ))}
-            </div>
-
-            {/* Filters */}
-            <div className="bg-card rounded-card card-shadow p-6 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between border border-border/50">
-                <div className="flex-1 w-full">
-                   <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block">Select Course to Moderate</label>
-                    <AppSelect
-                        options={courseOptions}
-                        value={courseFilter}
-                        onValueChange={(val) => {
-                            setCourseFilter(val);
-                            setPage(1);
-                        }}
-                        className="w-full"
-                    />
+                    <div>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block">
+                            Course Filter
+                        </label>
+                        <AppSelect
+                            options={courseOptions}
+                            value={courseFilter}
+                            onValueChange={(val) => {
+                                setCourseFilter(val);
+                                setPage(1);
+                            }}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block">
+                            Rating Filter
+                        </label>
+                        <AppSelect
+                            options={ratingOptions}
+                            value={ratingFilter}
+                            onValueChange={(val) => {
+                                setRatingFilter(val);
+                                setPage(1);
+                            }}
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -142,6 +196,9 @@ const AdminReviews = () => {
                             <tr className="border-b border-border bg-muted/20">
                                 <th className="px-6 py-4 text-[10px] font-black text-muted-foreground tracking-widest uppercase">
                                     Student
+                                </th>
+                                <th className="px-6 py-4 text-[10px] font-black text-muted-foreground tracking-widest uppercase">
+                                    Course
                                 </th>
                                 <th className="px-6 py-4 text-[10px] font-black text-muted-foreground tracking-widest uppercase">
                                     Rating
@@ -159,45 +216,50 @@ const AdminReviews = () => {
                         </thead>
 
                         <tbody className="divide-y divide-border">
-                            {!selectedCourseId ? (
-                                <tr>
-                                    <td colSpan={5} className="text-center py-20 text-muted-foreground">
-                                        Please select a course to view reviews.
-                                    </td>
-                                </tr>
-                            ) : isLoading ? (
+                            {isLoading ? (
                                 <tr>
                                     <td
-                                        colSpan={5}
-                                        className="text-center py-12"
+                                        colSpan={6}
+                                        className="text-center py-20"
                                     >
                                         <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
                                     </td>
                                 </tr>
                             ) : reviews.length > 0 ? (
                                 reviews.map((r, i) => (
-                                    <tr key={i} className="hover:bg-muted/30 transition-colors group">
+                                    <tr
+                                        key={i}
+                                        className="hover:bg-muted/30 transition-colors group"
+                                    >
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center shrink-0 overflow-hidden border border-border shadow-sm">
+                                                <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shrink-0 overflow-hidden border border-border shadow-sm">
                                                     {r.avatar_url ? (
                                                         <img
-                                                            src={getMediaUrl(r.avatar_url)}
+                                                            src={getMediaUrl(
+                                                                r.avatar_url,
+                                                            )}
                                                             alt={r.first_name}
-                                                            className="w-full h-full object-cover"
+                                                            className="w-10 h-10 rounded-xl object-cover"
                                                         />
                                                     ) : (
-                                                        <span className="text-[10px] font-black text-primary-foreground uppercase">
-                                                            {r.first_name?.[0]}{r.last_name?.[0]}
-                                                        </span>
+                                                        <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center text-white font-black shadow-sm">
+                                                            {r
+                                                                .first_name?.[0] ||
+                                                                r.last_name?.[0]?.toUpperCase()}
+                                                        </div>
                                                     )}
                                                 </div>
                                                 <div className="min-w-0">
                                                     <div className="text-small font-bold text-foreground truncate group-hover:text-primary transition-colors">
-                                                        {r.first_name} {r.last_name}
+                                                        {r.first_name}{" "}
+                                                        {r.last_name}
                                                     </div>
                                                 </div>
                                             </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-[11px] font-bold text-muted-foreground max-w-[150px] truncate">
+                                            {r.course_title}
                                         </td>
                                         <td className="px-6 py-4">
                                             <RatingStars
@@ -207,13 +269,15 @@ const AdminReviews = () => {
                                             />
                                         </td>
                                         <td className="px-6 py-4 hidden lg:table-cell max-w-xs">
-                                            <p className="text-[11px] text-muted-foreground italic line-clamp-2 leading-relaxed max-w-[300px]">
+                                            <p className="text-[11px] text-muted-foreground italic line-clamp-1 leading-relaxed">
                                                 "{r.comment}"
                                             </p>
                                         </td>
                                         <td className="px-6 py-4 hidden sm:table-cell whitespace-nowrap">
                                             <div className="text-small font-medium text-muted-foreground">
-                                                {new Date(r.reviewed_at).toLocaleDateString()}
+                                                {new Date(
+                                                    r.reviewed_at,
+                                                ).toLocaleDateString()}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
@@ -226,7 +290,6 @@ const AdminReviews = () => {
                                                         setSelectedReview(r);
                                                         setIsDialogOpen(true);
                                                     }}
-                                                    title="View Full Message"
                                                 >
                                                     <Eye size={16} />
                                                 </Button>
@@ -237,23 +300,37 @@ const AdminReviews = () => {
                                                             variant="ghost"
                                                             size="icon"
                                                             className="hover:bg-destructive/10 hover:text-destructive transition-colors h-8 w-8"
-                                                            title="Delete Review"
                                                         >
                                                             <Trash2 size={16} />
                                                         </Button>
                                                     </AlertDialogTrigger>
-                                                    <AlertDialogContent className="rounded-card border-border bg-card">
+                                                    <AlertDialogContent>
                                                         <AlertDialogHeader>
-                                                            <AlertDialogTitle className="text-h3">Delete Review?</AlertDialogTitle>
-                                                            <AlertDialogDescription className="text-body">
-                                                                Are you sure you want to remove this feedback? This action cannot be undone.
+                                                            <AlertDialogTitle>
+                                                                Delete Review?
+                                                            </AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                Permanently
+                                                                remove this
+                                                                feedback from
+                                                                the platform?
                                                             </AlertDialogDescription>
                                                         </AlertDialogHeader>
                                                         <AlertDialogFooter>
-                                                            <AlertDialogCancel className="rounded-button">Cancel</AlertDialogCancel>
-                                                            <AlertDialogAction 
-                                                                className="rounded-button bg-destructive hover:bg-destructive/90"
-                                                                onClick={() => deleteMutation.mutate({ courseId: r.course_id, userId: r.user_id })}
+                                                            <AlertDialogCancel>
+                                                                Cancel
+                                                            </AlertDialogCancel>
+                                                            <AlertDialogAction
+                                                                className="bg-destructive"
+                                                                onClick={() =>
+                                                                    deleteMutation.mutate(
+                                                                        {
+                                                                            courseId:
+                                                                                r.course_id,
+                                                                            userId: r.user_id,
+                                                                        },
+                                                                    )
+                                                                }
                                                             >
                                                                 Delete
                                                             </AlertDialogAction>
@@ -267,10 +344,10 @@ const AdminReviews = () => {
                             ) : (
                                 <tr>
                                     <td
-                                        colSpan={5}
+                                        colSpan={6}
                                         className="text-center py-20 text-muted-foreground"
                                     >
-                                        No reviews found for this course.
+                                        No reviews found matching your filters.
                                     </td>
                                 </tr>
                             )}
@@ -279,12 +356,14 @@ const AdminReviews = () => {
                 </div>
             </div>
 
-            {total > limit && (
-                <AppPagination 
-                    currentPage={page} 
-                    totalPages={totalPages} 
-                    onPageChange={setPage} 
-                />
+            {totalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                    <AppPagination
+                        currentPage={page}
+                        totalPages={totalPages}
+                        onPageChange={setPage}
+                    />
+                </div>
             )}
 
             {/* Dialog for Full Message */}
@@ -299,8 +378,9 @@ const AdminReviews = () => {
                     {selectedReview && (
                         <>
                             <DialogHeader>
-                                <DialogTitle className="text-h3">
-                                    Feedback from {selectedReview.first_name} {selectedReview.last_name}
+                                <DialogTitle className="text-h3 font-black">
+                                    {selectedReview.first_name}{" "}
+                                    {selectedReview.last_name}
                                 </DialogTitle>
                                 <DialogDescription className="text-body">
                                     Full student feedback for moderation audit
@@ -308,55 +388,80 @@ const AdminReviews = () => {
                             </DialogHeader>
 
                             <div className="flex flex-col gap-4 mt-2">
-                                <div className="flex items-center justify-between">
-                                    <RatingStars
-                                        rating={selectedReview.rating}
-                                        showValue={true}
-                                    />
-                                    <span className="text-[10px] font-black text-muted-foreground uppercase">
-                                        {new Date(selectedReview.reviewed_at).toLocaleString()}
+                                <div className="flex items-center gap-2">
+                                    <span className="text-muted-foreground text-small font-bold">
+                                        Course:
+                                    </span>
+                                    <span className="text-small font-black text-primary">
+                                        {selectedReview.course_title}
                                     </span>
                                 </div>
+
+                                <RatingStars
+                                    rating={selectedReview.rating}
+                                    showValue={false}
+                                />
 
                                 <div className="bg-muted/30 p-5 rounded-xl text-sm italic border border-border leading-relaxed">
                                     "{selectedReview.comment}"
                                 </div>
 
-                                <div className="flex justify-between items-center mt-6">
-                                   <div className="flex gap-2">
-                                       <Button 
-                                            variant="destructive" 
-                                            className="rounded-button" 
-                                            onClick={() => {
-                                                toast.info("Moderation report filed. Action pending backend audit.");
-                                            }}
-                                       >
-                                           <ShieldAlert size={16} className="mr-2" /> Flag Content
-                                       </Button>
-                                   </div>
-                                   <div className="flex gap-2">
-                                       <Button variant="outline" className="rounded-button" onClick={() => setIsDialogOpen(false)}>Close</Button>
-                                       <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button variant="ghost" className="rounded-button text-destructive hover:bg-destructive/10">Delete</Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                                                    <AlertDialogDescription>Delete this student feedback permanently?</AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction 
-                                                        className="bg-destructive"
-                                                        onClick={() => deleteMutation.mutate({ courseId: selectedReview.course_id, userId: selectedReview.user_id })}
-                                                    >
-                                                        Yes, Delete
-                                                    </AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                       </AlertDialog>
-                                   </div>
+                                <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                    {new Date(
+                                        selectedReview.reviewed_at,
+                                    ).toLocaleString()}
+                                </div>
+
+                                <div className="flex justify-end gap-2 pt-4">
+                                    <Button
+                                        variant="outline"
+                                        className="rounded-button"
+                                        onClick={() => setIsDialogOpen(false)}
+                                    >
+                                        Close
+                                    </Button>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button
+                                                variant="destructive"
+                                                className="rounded-button"
+                                            >
+                                                <Trash2
+                                                    size={16}
+                                                    className="mr-2"
+                                                />{" "}
+                                                Delete Review
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>
+                                                    Confirm Deletion
+                                                </AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Delete this student feedback
+                                                    permanently?
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>
+                                                    Cancel
+                                                </AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    className="bg-destructive"
+                                                    onClick={() =>
+                                                        deleteMutation.mutate({
+                                                            courseId:
+                                                                selectedReview.course_id,
+                                                            userId: selectedReview.user_id,
+                                                        })
+                                                    }
+                                                >
+                                                    Yes, Delete
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
                                 </div>
                             </div>
                         </>

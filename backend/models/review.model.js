@@ -70,6 +70,57 @@ class Review {
         }
     }
 
+    static async findGlobal(page = 1, limit = 10, filters = {}) {
+        try {
+            const offset = (page - 1) * limit;
+            const pool = await poolPromise;
+            const request = pool.request();
+
+            let filterQuery = "WHERE 1=1";
+            if (filters.course_id) {
+                filterQuery += " AND r.course_id = @course_id";
+                request.input("course_id", sql.Int, filters.course_id);
+            }
+            if (filters.rating) {
+                filterQuery += " AND r.rating = @rating";
+                request.input("rating", sql.Int, filters.rating);
+            }
+            if (filters.search) {
+                filterQuery += " AND (u.first_name LIKE @search OR u.last_name LIKE @search OR r.comment LIKE @search OR c.title LIKE @search)";
+                request.input("search", sql.NVarChar, `%${filters.search}%`);
+            }
+
+            const query = `
+                SELECT r.*, u.first_name, u.last_name, u.avatar_url, c.title as course_title
+                FROM reviews r
+                JOIN users u ON r.user_id = u.user_id
+                JOIN courses c ON r.course_id = c.course_id
+                ${filterQuery}
+                ORDER BY r.reviewed_at DESC
+                OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
+
+                SELECT COUNT(*) as total 
+                FROM reviews r
+                JOIN users u ON r.user_id = u.user_id
+                JOIN courses c ON r.course_id = c.course_id
+                ${filterQuery};
+            `;
+
+            const result = await request
+                .input("limit", sql.Int, limit)
+                .input("offset", sql.Int, offset)
+                .query(query);
+
+            return {
+                reviews: result.recordsets[0],
+                total: result.recordsets[1][0].total
+            };
+        } catch (err) {
+            console.error("Error finding global reviews: ", err);
+            throw err;
+        }
+    }
+
     static async update(user_id, course_id, rating, comment) {
         try {
             const pool = await poolPromise;

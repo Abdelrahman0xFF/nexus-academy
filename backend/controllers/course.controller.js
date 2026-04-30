@@ -71,6 +71,7 @@ const getAllCourses = asyncHandler(async (req, res, next) => {
         search,
         category_id,
         level,
+        is_available,
         sortBy = "Time",
         order = "ASC",
     } = req.query;
@@ -92,7 +93,12 @@ const getAllCourses = asyncHandler(async (req, res, next) => {
         Number(limit),
         userId,
         isAdmin,
-        { search, category_id, level },
+        { 
+            search, 
+            category_id, 
+            level, 
+            is_available: is_available === undefined ? undefined : is_available === "true" 
+        },
         sortColumn,
         order,
     );

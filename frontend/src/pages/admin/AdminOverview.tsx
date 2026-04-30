@@ -7,13 +7,15 @@ import {
     MessageSquare,
     Settings,
     ArrowRight,
-    Plus,
+    Scroll,
 } from "lucide-react";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { useQuery } from "@tanstack/react-query";
 import { coursesApi } from "@/lib/courses-api";
 import { categoryApi } from "@/lib/categories-api";
 import { enrollmentApi } from "@/lib/enrollment-api";
+import { earningsApi } from "@/lib/earnings-api";
+import { getMediaUrl } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -28,10 +30,15 @@ const AdminOverview = () => {
         queryFn: () => coursesApi.getAll({ page: 1, limit: 1000 }),
     });
 
+    const { data: earningsSummary, isLoading: isEarningsLoading } = useQuery({
+        queryKey: ["admin-overview-earnings"],
+        queryFn: () => earningsApi.getSummary(1, 1),
+    });
+
     const { data: recentEnrollmentsRes, isLoading: isEnrollmentsLoading } =
         useQuery({
             queryKey: ["admin-overview-recent-enrollments"],
-            queryFn: () => enrollmentApi.getRecentEnrollments(),
+            queryFn: () => enrollmentApi.getAll({ page: 1, limit: 5 }),
         });
 
     const { data: categories, isLoading: isCategoriesLoading } = useQuery({
@@ -40,17 +47,16 @@ const AdminOverview = () => {
     });
 
     const latestCourses = coursesData?.courses || [];
-    const recentEnrollments = recentEnrollmentsRes?.data || [];
+    const recentEnrollments = recentEnrollmentsRes?.data?.enrollments || [];
     const allCourses = coursesStatsData?.courses || [];
 
     const totalStudents = allCourses.reduce(
         (sum, c) => sum + (c.students_count || 0),
         0,
     );
-    const totalRevenue = allCourses.reduce(
-        (sum, c) => sum + (c.price || 0) * (c.students_count || 0),
-        0,
-    );
+
+    const totalRevenue = earningsSummary?.total_revenue || 0;
+
     const avgRating =
         allCourses.length > 0
             ? (
@@ -68,7 +74,7 @@ const AdminOverview = () => {
             bg: "bg-primary/10",
         },
         {
-            label: "Total Revenue",
+            label: "Platform Revenue",
             value: `$${totalRevenue.toLocaleString()}`,
             icon: DollarSign,
             color: "text-secondary",
@@ -111,7 +117,11 @@ const AdminOverview = () => {
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    <Button asChild variant="outline" className="rounded-button">
+                    <Button
+                        asChild
+                        variant="outline"
+                        className="rounded-button"
+                    >
                         <Link to="/admin/settings">
                             <Settings size={18} className="mr-2" /> Settings
                         </Link>
@@ -153,7 +163,10 @@ const AdminOverview = () => {
                         <h2 className="text-h3 text-card-foreground">
                             Latest Courses
                         </h2>
-                        <Link to="/admin/courses" className="text-primary text-xs font-bold flex items-center gap-1 hover:underline">
+                        <Link
+                            to="/admin/courses"
+                            className="text-primary text-xs font-bold flex items-center gap-1 hover:underline"
+                        >
                             View All <ArrowRight size={14} />
                         </Link>
                     </div>
@@ -204,8 +217,13 @@ const AdminOverview = () => {
                                             </td>
                                             <td className="px-4 py-3 text-small text-card-foreground">
                                                 <div className="flex items-center gap-1">
-                                                    <Star size={12} className="text-amber-400 fill-amber-400" />
-                                                    {course.rating?.toFixed(1) || "0.0"}
+                                                    <Star
+                                                        size={12}
+                                                        className="text-amber-400 fill-amber-400"
+                                                    />
+                                                    {course.rating?.toFixed(
+                                                        1,
+                                                    ) || "0.0"}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-small text-muted-foreground font-bold text-[10px]">
@@ -234,38 +252,97 @@ const AdminOverview = () => {
                             Quick Actions
                         </h2>
                         <div className="space-y-3">
-                            <Link to="/admin/courses" className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all group border border-border/50">
+                            <Link
+                                to="/admin/courses"
+                                className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all group border border-border/50"
+                            >
                                 <div className="flex items-center gap-3">
-                                    <BookOpen size={18} className="text-primary" />
-                                    <span className="text-small font-bold">Manage Courses</span>
+                                    <BookOpen
+                                        size={18}
+                                        className="text-primary"
+                                    />
+                                    <span className="text-small font-bold">
+                                        Manage Courses
+                                    </span>
                                 </div>
-                                <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <ArrowRight
+                                    size={14}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                />
                             </Link>
-                            <Link to="/admin/users" className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all group border border-border/50">
+                            <Link
+                                to="/admin/users"
+                                className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all group border border-border/50"
+                            >
                                 <div className="flex items-center gap-3">
                                     <Users size={18} className="text-primary" />
-                                    <span className="text-small font-bold">User Directory</span>
+                                    <span className="text-small font-bold">
+                                        User Directory
+                                    </span>
                                 </div>
-                                <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <ArrowRight
+                                    size={14}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                />
                             </Link>
-                            <Link to="/admin/reviews" className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all group border border-border/50">
+                            <Link
+                                to="/admin/enrollments"
+                                className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all group border border-border/50"
+                            >
                                 <div className="flex items-center gap-3">
-                                    <MessageSquare size={18} className="text-primary" />
-                                    <span className="text-small font-bold">Audit Reviews</span>
+                                    <Scroll
+                                        size={18}
+                                        className="text-primary"
+                                    />
+                                    <span className="text-small font-bold">
+                                        Enrollment History
+                                    </span>
                                 </div>
-                                <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <ArrowRight
+                                    size={14}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                />
                             </Link>
-                            <Link to="/admin/payments" className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all group border border-border/50">
+                            <Link
+                                to="/admin/reviews"
+                                className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all group border border-border/50"
+                            >
                                 <div className="flex items-center gap-3">
-                                    <DollarSign size={18} className="text-primary" />
-                                    <span className="text-small font-bold">Payment History</span>
+                                    <MessageSquare
+                                        size={18}
+                                        className="text-primary"
+                                    />
+                                    <span className="text-small font-bold">
+                                        Audit Reviews
+                                    </span>
                                 </div>
-                                <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <ArrowRight
+                                    size={14}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                />
+                            </Link>
+                            <Link
+                                to="/admin/payments"
+                                className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all group border border-border/50"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <DollarSign
+                                        size={18}
+                                        className="text-primary"
+                                    />
+                                    <span className="text-small font-bold">
+                                        Payment History
+                                    </span>
+                                </div>
+                                <ArrowRight
+                                    size={14}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                />
                             </Link>
                         </div>
                     </div>
 
-                    <div className="bg-card rounded-card card-shadow p-6 border border-border/50">
+                    {/* <div className="bg-card rounded-card card-shadow p-6 border border-border/50">
                         <h2 className="text-h3 text-card-foreground mb-4">
                             Platform Categories
                         </h2>
@@ -292,10 +369,13 @@ const AdminOverview = () => {
                                 </div>
                             )}
                         </div>
-                        <Link to="/admin/categories" className="text-primary text-[10px] font-black uppercase tracking-widest mt-4 block hover:underline">
+                        <Link
+                            to="/admin/categories"
+                            className="text-primary text-[10px] font-black uppercase tracking-widest mt-4 block hover:underline"
+                        >
                             Manage Categories
                         </Link>
-                    </div>
+                    </div> */}
                 </div>
             </div>
 
@@ -304,7 +384,10 @@ const AdminOverview = () => {
                     <h2 className="text-h3 text-card-foreground">
                         Recent Enrollments
                     </h2>
-                    <Link to="/admin/payments" className="text-primary text-xs font-bold flex items-center gap-1 hover:underline">
+                    <Link
+                        to="/admin/enrollments"
+                        className="text-primary text-xs font-bold flex items-center gap-1 hover:underline"
+                    >
                         View History <ArrowRight size={14} />
                     </Link>
                 </div>
@@ -329,7 +412,10 @@ const AdminOverview = () => {
                         <tbody>
                             {isEnrollmentsLoading ? (
                                 <tr>
-                                    <td colSpan={4} className="px-4 py-8 text-center">
+                                    <td
+                                        colSpan={4}
+                                        className="px-4 py-8 text-center"
+                                    >
                                         <Loader2
                                             className="animate-spin text-primary mx-auto"
                                             size={22}
@@ -344,8 +430,24 @@ const AdminOverview = () => {
                                     >
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary border border-primary/20">
-                                                    {enrollment.first_name?.[0]}
+                                                <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center text-white font-black shadow-sm group-hover:scale-110 transition-transform overflow-hidden">
+                                                    {enrollment.avatar_url ? (
+                                                        <img
+                                                            src={getMediaUrl(
+                                                                enrollment.avatar_url,
+                                                            )}
+                                                            alt={
+                                                                enrollment.first_name
+                                                            }
+                                                            className="w-10 h-10 rounded-xl object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center text-white font-black shadow-sm">
+                                                            {enrollment
+                                                                .first_name?.[0] ||
+                                                                enrollment.email?.[0]?.toUpperCase()}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <span className="text-small font-bold text-card-foreground">
                                                     {`${enrollment.first_name} ${enrollment.last_name}`}
@@ -359,7 +461,8 @@ const AdminOverview = () => {
                                             {formatDate(enrollment.enrolled_at)}
                                         </td>
                                         <td className="px-4 py-3 text-right text-small font-black text-primary">
-                                            ${enrollment.enrollment_cost?.toLocaleString()}
+                                            $
+                                            {enrollment.enrollment_cost?.toLocaleString()}
                                         </td>
                                     </tr>
                                 ))

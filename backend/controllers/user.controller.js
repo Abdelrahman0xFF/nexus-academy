@@ -33,7 +33,7 @@ const getUserById = asyncHandler(async (req, res) => {
 });
 
 const getAllUsers = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, sortBy = "Time", order = "ASC" } = req.query;
+    const { page = 1, limit = 10, sortBy = "Time", order = "ASC", search = null, role = null } = req.query;
 
     const sortMap = {
         FirstName: "first_name",
@@ -45,13 +45,14 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
     const sortColumn = sortMap[sortBy] || "created_at";
 
-    const users = await User.find(
+    const { users, total } = await User.find(
         Number(page),
         Number(limit),
         sortColumn,
         order,
+        { search, role }
     );
-    return successResponse(res, users);
+    return successResponse(res, { users, total });
 });
 
 const updateUser = asyncHandler(async (req, res) => {

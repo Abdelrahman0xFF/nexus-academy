@@ -34,11 +34,16 @@ export const reviewApi = {
     return response.data;
   },
 
+  getAllReviews: async (params?: { page?: number; limit?: number; course_id?: number | string; rating?: number | string; search?: string }): Promise<{ reviews: InstructorReview[]; total: number }> => {
+    const response = await api.get<any, ApiResponse<{ reviews: InstructorReview[]; total: number }>>(`/reviews/`, { params });
+    return response.data;
+  },
+
   update: async (courseId: number, data: { rating: number; comment: string }): Promise<ApiResponse<null>> => {
     return api.put<any, ApiResponse<null>>(`/reviews/${courseId}`, data);
   },
 
-  delete: async (courseId: number): Promise<ApiResponse<null>> => {
-    return api.delete<any, ApiResponse<null>>(`/reviews/${courseId}`);
+  delete: async (courseId: number, params?: { user_id?: number }): Promise<ApiResponse<null>> => {
+    return api.delete<any, ApiResponse<null>>(`/reviews/${courseId}`, { params });
   },
 };

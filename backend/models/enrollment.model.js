@@ -260,6 +260,60 @@ class Enrollment {
         }
     }
 
+    static async findGlobal(page = 1, limit = 10, filters = {}) {
+        try {
+            const offset = (page - 1) * limit;
+            const pool = await poolPromise;
+            const request = pool.request();
+            const { search, course_id, payment_status } = filters;
+            
+            let filterQuery = "WHERE 1=1";
+            if (search) {
+                request.input("search", sql.NVarChar, `%${search}%`);
+                filterQuery += " AND (u.first_name LIKE @search OR u.last_name LIKE @search OR c.title LIKE @search OR u.email LIKE @search)";
+            }
+
+            if (course_id) {
+                request.input("course_id", sql.Int, course_id);
+                filterQuery += " AND e.course_id = @course_id";
+            }
+
+            if (payment_status) {
+                request.input("payment_status", sql.NVarChar, payment_status);
+                filterQuery += " AND e.payment_status = @payment_status";
+            }
+
+            const query = `
+                SELECT e.*, u.first_name, u.last_name, u.avatar_url, u.email, c.title as course_title, c.thumbnail_url
+                FROM enrollments e
+                JOIN users u ON e.user_id = u.user_id
+                JOIN courses c ON e.course_id = c.course_id
+                ${filterQuery}
+                ORDER BY e.enrolled_at DESC
+                OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
+
+                SELECT COUNT(*) as total 
+                FROM enrollments e
+                JOIN users u ON e.user_id = u.user_id
+                JOIN courses c ON e.course_id = c.course_id
+                ${filterQuery};
+            `;
+
+            const result = await request
+                .input("limit", sql.Int, limit)
+                .input("offset", sql.Int, offset)
+                .query(query);
+
+            return {
+                enrollments: result.recordsets[0],
+                total: result.recordsets[1][0].total
+            };
+        } catch (err) {
+            console.error("Error finding global enrollments: ", err);
+            throw err;
+        }
+    }
+
     static async getUniqueStudentsByInstructorId(instructor_id, page = 1, limit = 10, search = null, course_id = null) {
         try {
             const offset = (page - 1) * limit;

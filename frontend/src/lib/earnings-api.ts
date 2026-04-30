@@ -1,15 +1,23 @@
 import { api, ApiResponse } from "./api-client";
 
-export interface EarningDetail {
+export interface InstructorEarningDetail {
   course_id: number;
   title: string;
   total_students: number;
   earning: number;
 }
 
-export interface EarningsSummary {
+export interface AdminEarningDetail {
+  user_id: number;
+  first_name: string;
+  last_name: string;
+  earning: number;
+  instructor_earning: number;
+}
+
+export interface EarningsSummary<T = any> {
   total_revenue: number;
-  details: EarningDetail[];
+  details: T[];
   total: number;
 }
 
@@ -19,8 +27,8 @@ export interface EarningsAnalytics {
 }
 
 export const earningsApi = {
-  getSummary: async (page = 1, limit = 10): Promise<EarningsSummary> => {
-    const response = await api.get<any, ApiResponse<EarningsSummary>>(`/earnings?page=${page}&limit=${limit}`);
+  getSummary: async <T = any>(page = 1, limit = 10): Promise<EarningsSummary<T>> => {
+    const response = await api.get<any, ApiResponse<EarningsSummary<T>>>(`/earnings?page=${page}&limit=${limit}`);
     return response.data;
   },
 

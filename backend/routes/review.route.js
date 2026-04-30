@@ -3,6 +3,7 @@ import {
     createReview,
     getCourseReviews,
     getInstructorReviews,
+    getAllReviews,
     getReview,
     updateReview,
     deleteReview,
@@ -13,6 +14,7 @@ import { reviewSchema } from "../validators/review.validator.js";
 
 const router = Router();
 
+router.get("/", authenticate, authorize("admin"), getAllReviews);
 router.get("/instructor", authenticate, authorize("instructor"), getInstructorReviews);
 router.get("/:course_id", getCourseReviews);
 router.get("/:course_id/me", authenticate, getReview);

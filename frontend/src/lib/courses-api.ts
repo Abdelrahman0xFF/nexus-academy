@@ -77,6 +77,7 @@ export const coursesApi = {
     level?: string;
     sortBy?: string;
     order?: string;
+    is_available?: boolean;
   }): Promise<{ courses: Course[]; total: number }> => {
     const response = await api.get<any, ApiResponse<{ courses: Course[]; total: number }>>("/courses", { params });
     return response.data;

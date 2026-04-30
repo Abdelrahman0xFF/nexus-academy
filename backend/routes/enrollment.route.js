@@ -5,6 +5,7 @@ import {
     getMyEnrollments,
     getInstructorStudents,
     getInstructorEnrollments,
+    getAllEnrollments,
     unenroll,
 } from "../controllers/enrollment.controller.js";
 import { authenticate, authorize } from "../middleware/auth.middleware.js";
@@ -13,6 +14,7 @@ import { enrollmentSchema } from "../validators/enrollment.validator.js";
 
 const router = express.Router();
 
+router.get("/", authenticate, authorize("admin"), getAllEnrollments);
 router.post("/", authenticate, validateRequest(enrollmentSchema), enroll);
 router.get("/my", authenticate, getMyEnrollments);
 router.get("/instructor/students", authenticate, authorize("instructor"), getInstructorStudents);

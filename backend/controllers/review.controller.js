@@ -26,6 +26,21 @@ export const createReview = asyncHandler(async (req, res) => {
     return successResponse(res, null, "Review added successfully", 201);
 });
 
+export const getAllReviews = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 10, course_id, rating, search } = req.query;
+
+    const { reviews, total } = await Review.findGlobal(
+        Number(page),
+        Number(limit),
+        {
+            course_id: course_id ? Number(course_id) : null,
+            rating: rating ? Number(rating) : null,
+            search: search || null,
+        }
+    );
+    return successResponse(res, { reviews, total });
+});
+
 export const getReview = asyncHandler(async (req, res) => {
     const { course_id } = req.params;
     const user_id = req.user.user_id;

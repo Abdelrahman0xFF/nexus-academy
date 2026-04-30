@@ -145,6 +145,16 @@ export const getInstructorStudents = asyncHandler(async (req, res) => {
     return successResponse(res, { students: formattedStudents, total });
 });
 
+export const getAllEnrollments = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 10, search = null, course_id = null, payment_status = null } = req.query;
+    const result = await Enrollment.findGlobal(
+        Number(page),
+        Number(limit),
+        { search, course_id, payment_status }
+    );
+    return successResponse(res, result);
+});
+
 export const unenroll = asyncHandler(async (req, res) => {
     const { user_id, course_id } = req.body;
 

@@ -220,6 +220,11 @@ class Course {
                 filterQuery += " AND c.level = @level";
             }
 
+            if (filters.is_available !== undefined && filters.is_available !== null) {
+                request.input("is_available_filter", sql.Bit, filters.is_available);
+                filterQuery += " AND c.is_available = @is_available_filter";
+            }
+
             const validOrder = ["ASC", "DESC"].includes(order.toUpperCase())
                 ? order.toUpperCase()
                 : "ASC";

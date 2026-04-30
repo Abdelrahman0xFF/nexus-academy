@@ -97,10 +97,12 @@ class User {
         }
     }
 
-    static async find(page, limit, sortBy = "created_at", order = "ASC") {
+    static async find(page, limit, sortBy = "created_at", order = "ASC", filters = {}) {
         try {
             const offset = (page - 1) * limit;
             const pool = await poolPromise;
+            const request = pool.request();
+            const { search, role } = filters;
 
             const allowedSortColumns = [
                 "first_name",
@@ -117,17 +119,36 @@ class User {
                 ? order.toUpperCase()
                 : "ASC";
 
-            const result = await pool
-                .request()
+            let filterQuery = "WHERE 1=1";
+            if (search) {
+                request.input("search", sql.NVarChar, `%${search}%`);
+                filterQuery += " AND (first_name LIKE @search OR last_name LIKE @search OR email LIKE @search)";
+            }
+
+            if (role) {
+                request.input("role", sql.NVarChar, role);
+                filterQuery += " AND role = @role";
+            }
+
+            const query = `
+                SELECT user_id, first_name, last_name, email, role, avatar_url, title, bio, is_verified, created_at 
+                FROM users 
+                ${filterQuery}
+                ORDER BY ${sortBy} ${validOrder} 
+                OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
+
+                SELECT COUNT(*) as total FROM users ${filterQuery};
+            `;
+
+            const result = await request
                 .input("limit", sql.Int, limit)
                 .input("offset", sql.Int, offset)
-                .query(
-                    `SELECT user_id, first_name, last_name, email, role, avatar_url, title, bio, is_verified, created_at 
-                     FROM users 
-                     ORDER BY ${sortBy} ${validOrder} 
-                     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`,
-                );
-            return result.recordset;
+                .query(query);
+
+            return {
+                users: result.recordsets[0],
+                total: result.recordsets[1][0].total
+            };
         } catch (err) {
             console.error("Error finding users: ", err);
             throw err;

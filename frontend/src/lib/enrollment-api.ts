@@ -45,8 +45,8 @@ export const enrollmentApi = {
     return api.get<never, ApiResponse<{ enrollments: any[]; total: number }>>(`/enrollments/instructor?page=${page}&limit=${limit}${courseParam}`);
   },
 
- getRecentEnrollments: async (limit = 5): Promise<ApiResponse<{ enrollments: any[] }>> => { 
-    return api.get<never, ApiResponse<{ enrollments: any[] }>>(`/enrollments/recent?limit=${limit}`);
+  getAll: async (params?: { page?: number; limit?: number; search?: string; course_id?: number; payment_status?: string }): Promise<ApiResponse<{ enrollments: any[]; total: number }>> => {
+    return api.get<never, ApiResponse<{ enrollments: any[]; total: number }>>("/enrollments/", { params });
   },
 
   getMyEnrollments: async (page = 1, limit = 10, params?: { search?: string; status?: string }): Promise<ApiResponse<{ enrollments: any[]; total: number }>> => {
@@ -62,9 +62,9 @@ export const enrollmentApi = {
     });
   },
 
-  unenroll: async (courseId: number): Promise<ApiResponse<null>> => {
+  unenroll: async (courseId: number, userId?: number): Promise<ApiResponse<null>> => {
     return api.delete<any, ApiResponse<null>>("/enrollments", {
-      data: { course_id: courseId },
+      data: { course_id: courseId, user_id: userId },
     });
   },
 
