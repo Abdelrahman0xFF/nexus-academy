@@ -88,6 +88,14 @@ export const authApi = {
     return api.post<never, ApiResponse<null>>("/auth/logout");
   },
 
+  forgotPassword: async (email: string): Promise<ApiResponse<null>> => {
+    return api.post<{ email: string }, ApiResponse<null>>("/auth/forgot-password", { email });
+  },
+
+  resetPassword: async (data: any): Promise<ApiResponse<null>> => {
+    return api.post<any, ApiResponse<null>>("/auth/reset-password", data);
+  },
+
   getGoogleAuthUrl: () => {
     return `${api.defaults.baseURL}/auth/google`;
   }

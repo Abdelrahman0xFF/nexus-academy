@@ -7,6 +7,8 @@ import {
     me,
     changePassword,
     logout,
+    forgotPassword,
+    resetPassword,
     googleAuthCallback,
 } from "../controllers/auth.controller.js";
 import { imageUpload, fileCleanup } from "../middleware/multer.js";
@@ -17,6 +19,8 @@ import {
     loginSchema,
     resendOtpSchema,
     changePasswordSchema,
+    forgotPasswordSchema,
+    resetPasswordSchema,
 } from "../validators/user.validator.js";
 import passport from "../config/passport.config.js";
 
@@ -33,6 +37,8 @@ router.post("/verify-otp", verifyOtp);
 router.post("/resend-otp", validateRequest(resendOtpSchema), resendOtp);
 router.post("/login", validateRequest(loginSchema), login);
 router.post("/logout", logout);
+router.post("/forgot-password", validateRequest(forgotPasswordSchema), forgotPassword);
+router.post("/reset-password", validateRequest(resetPasswordSchema), resetPassword);
 
 router.get("/me", authenticate, me);
 router.put(

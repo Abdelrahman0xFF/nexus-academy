@@ -184,6 +184,43 @@ const logout = asyncHandler(async (req, res) => {
     return successResponse(res, null, "Logged out successfully");
 });
 
+const forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    const user = await User.findByEmail(email);
+
+    if (!user) {
+        return successResponse(res, null, "If an account exists for this email, an OTP has been sent.");
+    }
+
+    const { hashedOtp, otpExpires } = await generateAndSendOTP(email);
+    await User.updateOTP(email, hashedOtp, otpExpires);
+
+    return successResponse(res, null, "If an account exists for this email, an OTP has been sent.");
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+    const { email, otp, new_password } = req.body;
+    const user = await User.findByEmail(email);
+
+    if (!user) return errorResponse(res, "Invalid request", 400);
+
+    if (Date.now() > user.otp_expires) {
+        return errorResponse(res, "OTP expired. Please try again.", 400);
+    }
+
+    const isOtpValid = await comparePassword(otp, user.otp);
+    if (!isOtpValid) return errorResponse(res, "Invalid OTP", 400);
+
+    const hashedPassword = await hashPassword(new_password);
+    await User.update(user.user_id, { 
+        hashed_password: hashedPassword,
+        otp: null,
+        otp_expires: null 
+    });
+
+    return successResponse(res, null, "Password reset successfully. You can now log in.");
+});
+
 const googleAuthCallback = asyncHandler(async (req, res) => {
     const user = req.user;
 
@@ -209,5 +246,7 @@ export {
     me,
     changePassword,
     logout,
+    forgotPassword,
+    resetPassword,
     googleAuthCallback,
 };

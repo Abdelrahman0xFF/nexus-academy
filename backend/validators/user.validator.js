@@ -41,10 +41,28 @@ const updateUserSchema = Joi.object({
     role: Joi.string().valid("user", "instructor", "admin"),
 });
 
+const forgotPasswordSchema = Joi.object({
+    email: Joi.string().email().required(),
+});
+
+const resetPasswordSchema = Joi.object({
+    email: Joi.string().email().required(),
+    otp: Joi.string().length(6).required(),
+    new_password: Joi.string().min(6).required(),
+    confirm_password: Joi.string()
+        .valid(Joi.ref("new_password"))
+        .required()
+        .messages({
+            "any.only": "Confirm password must match new password",
+        }),
+});
+
 export {
     registerSchema,
     loginSchema,
     resendOtpSchema,
     changePasswordSchema,
     updateUserSchema,
+    forgotPasswordSchema,
+    resetPasswordSchema,
 };

@@ -31,6 +31,8 @@ import AdminReviews from "./pages/admin/AdminReviews";
 import AdminEnrollments from "./pages/admin/AdminEnrollments";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import HelpCenter from "./pages/HelpCenter";
 import ScrollToTopOnNavigation from "./components/ScrollToTopOnNavigation";
@@ -66,6 +68,22 @@ const App = () => (
                         element={
                             <PageTransition>
                                 <Signup />
+                            </PageTransition>
+                        }
+                    />
+                    <Route
+                        path="/forgot-password"
+                        element={
+                            <PageTransition>
+                                <ForgotPassword />
+                            </PageTransition>
+                        }
+                    />
+                    <Route
+                        path="/reset-password"
+                        element={
+                            <PageTransition>
+                                <ResetPassword />
                             </PageTransition>
                         }
                     />
