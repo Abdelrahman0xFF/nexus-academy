@@ -469,6 +469,53 @@
                 }
             }
         },
+        "/auth/forgot-password": {
+            "post": {
+                "tags": ["Auth"],
+                "summary": "Request password reset OTP",
+                "security": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["email"],
+                                "properties": { "email": { "type": "string" } }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "OTP sent if user exists" }
+                }
+            }
+        },
+        "/auth/reset-password": {
+            "post": {
+                "tags": ["Auth"],
+                "summary": "Reset password using OTP",
+                "security": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["email", "otp", "new_password", "confirm_password"],
+                                "properties": {
+                                    "email": { "type": "string" },
+                                    "otp": { "type": "string" },
+                                    "new_password": { "type": "string" },
+                                    "confirm_password": { "type": "string" }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Password reset successful" }
+                }
+            }
+        },
         "/auth/google": {
             "get": {
                 "tags": ["Auth"],
@@ -634,6 +681,16 @@
                         }
                     },
                     "403": { "$ref": "#/components/responses/Forbidden" }
+                }
+            }
+        },
+        "/users/best-instructors": {
+            "get": {
+                "tags": ["Users"],
+                "summary": "Get top rated instructors",
+                "security": [],
+                "responses": {
+                    "200": { "description": "List of instructors" }
                 }
             }
         },
@@ -911,6 +968,33 @@
                 }
             }
         },
+        "/courses/my": {
+            "get": {
+                "tags": ["Courses"],
+                "summary": "Get my courses (Instructor)",
+                "responses": {
+                    "200": { "description": "List of courses" }
+                }
+            }
+        },
+        "/courses/instructor/{instructor_id}": {
+            "get": {
+                "tags": ["Courses"],
+                "summary": "Get courses by instructor ID",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "instructor_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "List of courses" }
+                }
+            }
+        },
         "/courses/{course_id}": {
             "get": {
                 "tags": ["Courses"],
@@ -990,7 +1074,7 @@
         "/courses/{course_id}/content": {
             "get": {
                 "tags": ["Courses"],
-                "summary": "Get course content",
+                "summary": "Get course content (curriculum)",
                 "security": [],
                 "parameters": [
                     {
@@ -1002,6 +1086,24 @@
                 ],
                 "responses": {
                     "200": { "description": "Curriculum" }
+                }
+            }
+        },
+        "/courses/{course_id}/sections": {
+            "get": {
+                "tags": ["Courses"],
+                "summary": "Get all sections of a course",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "List of sections" }
                 }
             }
         },
@@ -1093,6 +1195,23 @@
                 ],
                 "responses": {
                     "200": { "description": "List of reviews" }
+                }
+            }
+        },
+        "/courses/{course_id}/stats": {
+            "get": {
+                "tags": ["Courses"],
+                "summary": "Get course analytics/stats (Instructor/Admin)",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "Course stats" }
                 }
             }
         },
@@ -1344,9 +1463,38 @@
             }
         },
         "/enrollments": {
+            "get": {
+                "tags": ["Enrollments"],
+                "summary": "Get all enrollments (Admin)",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 1 }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 10 }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "course_id",
+                        "in": "query",
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "List of all enrollments" }
+                }
+            },
             "post": {
                 "tags": ["Enrollments"],
-                "summary": "Enroll",
+                "summary": "Enroll in a course",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -1363,6 +1511,36 @@
                 },
                 "responses": {
                     "201": { "description": "Enrolled" }
+                }
+            },
+            "delete": {
+                "tags": ["Enrollments"],
+                "summary": "Admin or Instructor unenroll a user",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["course_id", "user_id"],
+                                "properties": {
+                                    "course_id": {
+                                        "type": "integer",
+                                        "example": 12
+                                    },
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 46
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User unenrolled successfully"
+                    }
                 }
             }
         },
@@ -1403,6 +1581,32 @@
                 "responses": { "200": { "description": "List" } }
             }
         },
+        "/enrollments/instructor": {
+            "get": {
+                "tags": ["Enrollments"],
+                "summary": "Get enrollments for an instructor's courses",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "query",
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 1 }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 10 }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "List of enrollments" }
+                }
+            }
+        },
         "/enrollments/instructor/students": {
             "get": {
                 "tags": ["Enrollments"],
@@ -1437,29 +1641,10 @@
                 }
             }
         },
-        "/enrollments/instructor/recent": {
-            "get": {
-                "tags": ["Enrollments"],
-                "summary": "Get recent enrollments for an instructor's courses (Instructor)",
-                "parameters": [
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "schema": { "type": "integer", "default": 10 }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "List of recent enrollments with student and course details"
-                    },
-                    "403": { "$ref": "#/components/responses/Forbidden" }
-                }
-            }
-        },
         "/enrollments/progress/{course_id}": {
             "get": {
                 "tags": ["Enrollments"],
-                "summary": "Get progress",
+                "summary": "Get progress in a course",
                 "parameters": [
                     {
                         "name": "course_id",
@@ -1471,51 +1656,80 @@
                 "responses": { "200": { "description": "Progress" } }
             }
         },
-        "/enrollments/": {
-            "delete": {
-                "tags": ["Enrollments"],
-                "summary": "Admin or Instructor unenroll a user",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "required": ["course_id", "user_id"],
-                                "properties": {
-                                    "course_id": {
-                                        "type": "integer",
-                                        "example": 12
-                                    },
-                                    "user_id": {
-                                        "type": "integer",
-                                        "example": 46
-                                    }
-                                }
-                            }
-                        }
+        "/reviews": {
+            "get": {
+                "tags": ["Reviews"],
+                "summary": "Get all reviews (Admin)",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 1 }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 10 }
+                    },
+                    {
+                        "name": "course_id",
+                        "in": "query",
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "rating",
+                        "in": "query",
+                        "schema": { "type": "integer" }
                     }
-                },
+                ],
                 "responses": {
-                    "200": {
-                        "description": "User unenrolled successfully"
+                    "200": { "description": "List of all reviews" }
+                }
+            }
+        },
+        "/reviews/instructor": {
+            "get": {
+                "tags": ["Reviews"],
+                "summary": "Get reviews for an instructor's courses",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 1 }
                     },
-                    "400": {
-                        "description": "Invalid input"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Enrollment not found"
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 10 }
                     }
+                ],
+                "responses": {
+                    "200": { "description": "List of reviews" }
+                }
+            }
+        },
+        "/reviews/best": {
+            "get": {
+                "tags": ["Reviews"],
+                "summary": "Get top rated reviews",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 4 }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "List of best reviews" }
                 }
             }
         },
         "/reviews/{course_id}": {
             "get": {
                 "tags": ["Reviews"],
-                "summary": "Get my review",
+                "summary": "Get reviews for a course",
+                "security": [],
                 "parameters": [
                     {
                         "name": "course_id",
@@ -1524,7 +1738,7 @@
                         "schema": { "type": "integer" }
                     }
                 ],
-                "responses": { "200": { "description": "Review" } }
+                "responses": { "200": { "description": "List of reviews" } }
             },
             "post": {
                 "tags": ["Reviews"],
@@ -1580,6 +1794,21 @@
                 "responses": { "200": { "description": "Deleted" } }
             }
         },
+        "/reviews/{course_id}/me": {
+            "get": {
+                "tags": ["Reviews"],
+                "summary": "Get my review for a course",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": { "200": { "description": "Review" } }
+            }
+        },
         "/certificates": {
             "get": {
                 "tags": ["Certificates"],
@@ -1609,7 +1838,7 @@
         "/certificates/verify/{certificate_id}": {
             "get": {
                 "tags": ["Certificates"],
-                "summary": "Verify",
+                "summary": "Verify certificate",
                 "security": [],
                 "parameters": [
                     {
@@ -1625,7 +1854,7 @@
         "/certificates/download/{course_id}": {
             "get": {
                 "tags": ["Certificates"],
-                "summary": "Download",
+                "summary": "Download certificate as PDF",
                 "parameters": [
                     {
                         "name": "course_id",
@@ -1640,21 +1869,21 @@
         "/earnings": {
             "get": {
                 "tags": ["Earnings"],
-                "summary": "Get earnings",
+                "summary": "Get earnings (Instructor/Admin)",
                 "responses": { "200": { "description": "List" } }
             }
         },
         "/earnings/analytics": {
             "get": {
                 "tags": ["Earnings"],
-                "summary": "Get analytics",
+                "summary": "Get earnings analytics (Instructor/Admin)",
                 "responses": { "200": { "description": "Analytics" } }
             }
         },
         "/media": {
             "post": {
                 "tags": ["Media"],
-                "summary": "Upload",
+                "summary": "Upload media (Admin/Instructor)",
                 "requestBody": {
                     "content": {
                         "multipart/form-data": {
@@ -1677,7 +1906,7 @@
         "/media/{fileId}": {
             "get": {
                 "tags": ["Media"],
-                "summary": "Stream",
+                "summary": "Stream media",
                 "security": [],
                 "parameters": [
                     {
@@ -1691,7 +1920,7 @@
             },
             "delete": {
                 "tags": ["Media"],
-                "summary": "Delete",
+                "summary": "Delete media (Admin/Instructor)",
                 "parameters": [
                     {
                         "name": "fileId",
