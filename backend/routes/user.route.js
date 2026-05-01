@@ -14,10 +14,10 @@ import { updateUserSchema } from "../validators/user.validator.js";
 
 const router = Router();
 
-router.use(authenticate);
-
-router.get("/", authorize("admin"), getAllUsers);
 router.get("/best-instructors", getBestInstructors);
+
+router.use(authenticate);
+router.get("/", authorize("admin"), getAllUsers);
 router.get("/:user_id", getUserById);
 router.put(
     "/:user_id",

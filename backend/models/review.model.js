@@ -121,6 +121,29 @@ class Review {
         }
     }
 
+    static async findBestReviews(limit) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool
+                .request()
+                .input("limit", sql.Int, limit)
+                .query(`
+                    SELECT TOP (@limit) r.*, u.first_name, u.last_name, u.avatar_url, c.title as course_title
+                    FROM reviews r
+                    JOIN users u ON r.user_id = u.user_id
+                    JOIN courses c ON r.course_id = c.course_id
+                    WHERE r.rating >= 4
+                    ORDER BY r.reviewed_at DESC;
+                `);
+            return result.recordset;
+        } catch (err) {
+            console.error("Error finding best reviews: ", err);
+            throw err;
+        }
+    }
+            
+
+
     static async update(user_id, course_id, rating, comment) {
         try {
             const pool = await poolPromise;

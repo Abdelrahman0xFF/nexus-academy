@@ -41,6 +41,13 @@ export const getAllReviews = asyncHandler(async (req, res) => {
     return successResponse(res, { reviews, total });
 });
 
+export const getBestReviews = asyncHandler(async (req, res) => {
+    const { limit = 4 } = req.query;
+
+    const reviews = await Review.findBestReviews(Number(limit));
+    return successResponse(res, { reviews });
+});
+
 export const getReview = asyncHandler(async (req, res) => {
     const { course_id } = req.params;
     const user_id = req.user.user_id;

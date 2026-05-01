@@ -39,6 +39,11 @@ export const reviewApi = {
     return response.data;
   },
 
+  getBestReviews: async (): Promise<{ reviews: InstructorReview[]; total: number }> => {
+    const response = await api.get<any, ApiResponse<{ reviews: InstructorReview[]; total: number }>>(`/reviews/best`);
+    return response.data;
+  },
+
   update: async (courseId: number, data: { rating: number; comment: string }): Promise<ApiResponse<null>> => {
     return api.put<any, ApiResponse<null>>(`/reviews/${courseId}`, data);
   },

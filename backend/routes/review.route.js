@@ -5,6 +5,7 @@ import {
     getInstructorReviews,
     getAllReviews,
     getReview,
+    getBestReviews,
     updateReview,
     deleteReview,
 } from "../controllers/review.controller.js";
@@ -16,6 +17,7 @@ const router = Router();
 
 router.get("/", authenticate, authorize("admin"), getAllReviews);
 router.get("/instructor", authenticate, authorize("instructor"), getInstructorReviews);
+router.get("/best", getBestReviews);
 router.get("/:course_id", getCourseReviews);
 router.get("/:course_id/me", authenticate, getReview);
 router.post(

@@ -6,7 +6,6 @@ import {
     Award,
     TrendingUp,
     Star,
-    Quote,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,10 +13,12 @@ import MainLayout from "@/layouts/MainLayout";
 import CourseCard from "@/components/CourseCard";
 import InstructorCard from "@/components/InstructorCard";
 import CategoryCard from "@/components/CategoryCard";
+import ReviewCard from "@/components/ReviewCard";
 import RatingStars from "@/components/RatingStars";
 import ScrollReveal from "@/components/ScrollReveal";
 import { testimonials } from "@/lib/data";
 import { categoryApi } from "@/lib/categories-api";
+import { reviewApi } from "@/lib/reviews-api";
 import { coursesApi, type Course } from "@/lib/courses-api";
 import heroImage from "@/assets/landing-img.svg";
 import Marquee from "@/components/Marquee";
@@ -27,24 +28,28 @@ const Landing = () => {
     const [categories, setCategories] = useState<any[]>([]);
     const [instructors, setInstructors] = useState<any[]>([]);
     const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
+    const [bestReviews, setBestReviews] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const [categoriesData, coursesData, instructorsData] = await Promise.all([
-                    categoryApi.getAll(),
-                    coursesApi.getAll({
-                        limit: 4,
-                        sortBy: "Rating",
-                        order: "DESC",
-                    }),
-                    usersApi.getBestInstructors(),
-                ]);
+                const [categoriesData, coursesData, instructorsData, bestReviewsData] =
+                    await Promise.all([
+                        categoryApi.getAll(),
+                        coursesApi.getAll({
+                            limit: 4,
+                            sortBy: "Rating",
+                            order: "DESC",
+                        }),
+                        usersApi.getBestInstructors(),
+                        reviewApi.getBestReviews(),
+                    ]);
                 setCategories(categoriesData);
                 setFeaturedCourses(coursesData.courses);
                 setInstructors(instructorsData);
+                setBestReviews(bestReviewsData.reviews);
             } catch (error) {
                 console.error("Failed to fetch landing data:", error);
             } finally {
@@ -116,7 +121,13 @@ const Landing = () => {
                                         value: "1,200+",
                                     },
                                 ].map((stat, idx) => (
-                                    <div key={stat.label} className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both" style={{ animationDelay: `${idx * 150 + 500}ms` }}>
+                                    <div
+                                        key={stat.label}
+                                        className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both"
+                                        style={{
+                                            animationDelay: `${idx * 150 + 500}ms`,
+                                        }}
+                                    >
                                         <div className="text-2xl font-bold text-primary">
                                             {stat.value}
                                         </div>
@@ -206,7 +217,11 @@ const Landing = () => {
                             to="/courses"
                             className="hidden sm:flex items-center gap-1 text-primary font-medium text-small hover:underline group"
                         >
-                            View All <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                            View All{" "}
+                            <ArrowRight
+                                size={16}
+                                className="group-hover:translate-x-1 transition-transform"
+                            />
                         </Link>
                     </div>
                 </ScrollReveal>
@@ -280,9 +295,9 @@ const Landing = () => {
                 </ScrollReveal>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {instructors.map((i, index) => (
-                        <ScrollReveal 
-                            key={i.id} 
-                            animation="slide-up" 
+                        <ScrollReveal
+                            key={i.id}
+                            animation="slide-up"
                             delay={index * 100}
                         >
                             <InstructorCard instructor={i} />
@@ -305,46 +320,13 @@ const Landing = () => {
                         </div>
                     </ScrollReveal>
                     <div className="grid md:grid-cols-3 gap-6">
-                        {testimonials.map((t, index) => (
-                            <ScrollReveal 
-                                key={t.id} 
-                                animation="slide-up" 
+                        {bestReviews.map((r, index) => (
+                            <ScrollReveal
+                                key={r.user_id + '-' + r.course_id}
+                                animation="slide-up"
                                 delay={index * 100}
                             >
-                                <div className="bg-background rounded-card card-shadow p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group h-full">
-                                    <Quote
-                                        size={24}
-                                        className="text-primary/30 mb-4 group-hover:text-primary/50 transition-colors"
-                                    />
-                                    <p className="text-body text-muted-foreground leading-relaxed mb-6">
-                                        {t.content}
-                                    </p>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center group-hover:scale-110 transition-transform">
-                                            <span className="text-small font-bold text-primary-foreground">
-                                                {t.name
-                                                    .split(" ")
-                                                    .map((n) => n[0])
-                                                    .join("")}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <div className="text-small font-semibold text-foreground">
-                                                {t.name}
-                                            </div>
-                                            <div className="text-xs text-muted-foreground">
-                                                {t.role}
-                                            </div>
-                                        </div>
-                                        <div className="ml-auto">
-                                            <RatingStars
-                                                rating={t.rating}
-                                                size={12}
-                                                showValue={false}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
+                             <ReviewCard {...r} />
                             </ScrollReveal>
                         ))}
                     </div>
