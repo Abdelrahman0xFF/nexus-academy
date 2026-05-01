@@ -1,216 +1,109 @@
-# 🎓 LMS Platform
+# 🎓 Nexus Academy - Learning Management System
 
-A modern **Learning Management System (LMS)** designed to deliver structured online courses, manage instructors and students, and track learning progress.
-The platform aims to provide an intuitive experience for both learners and instructors while maintaining a scalable backend architecture.
-
----
-
-# 📌 Project Overview
-
-This project is an **online learning platform** inspired by popular e-learning systems.
-It allows instructors to publish courses and students to enroll, watch lessons, and track their learning progress.
-
-The system focuses on:
-
-- Structured course delivery
-- Progress tracking
-- Instructor content management
-- Scalable backend architecture
-
-This project is currently **under development**.
+A full-stack Learning Management System (LMS) built with React and Node.js, designed for students, instructors, and administrators.
 
 ---
 
-# 🚀 Tech Stack
+## ✨ Core Features
 
-### Frontend
+### For Students
+- **Course Catalog:** Browse, search, and enroll in courses.
+- **Learning Dashboard:** Track progress, view active courses, and access earned certificates.
+- **Interactive Player:** Watch lessons and automatically save your progress.
+- **PDF Certificates:** Automatically receive a certificate upon 95% course completion.
 
-- React
-- Tailwind CSS
+### For Instructors
+- **Course Management:** Create, edit, and manage courses, sections, and lessons.
+- **Media Uploads:** Securely upload and stream video content via Google Drive.
+- **Analytics:** Monitor student enrollment, course ratings, and revenue.
+- **Revenue Tracking:** Integrated dashboard to view earnings and payment history.
 
-### Backend
-
-- Node.js
-- Express.js
-
-### Database
-
-- SQL (Relational Database)
-
-### Version Control
-
-- Git
-- GitHub
+### For Administrators
+- **User Management:** Oversee all platform users and manage roles.
+- **Content Oversight:** Manage course categories and review content.
+- **System Analytics:** View high-level data on enrollments, users, and revenue.
 
 ---
 
-# 🏗️ System Architecture
+## 🛠️ Tech Stack
 
-The system follows a **full-stack web architecture**:
+#### **Backend**
+- **Runtime:** Node.js with Express.js
+- **Database:** MS SQL Server (`mssql`, `msnodesqlv8`)
+- **Authentication:** JWT, Passport.js (Google OAuth 2.0)
+- **Payments:** Stripe API
+- **File Storage:** Google Drive API
+- **Services:** Nodemailer (Emails), Puppeteer (PDF Generation)
 
-```
-Frontend (React)
-        │
-        │ API Requests
-        ▼
-Backend (Node.js + Express)
-        │
-        │ Database Queries
-        ▼
-SQL Database
-```
-
----
-
-# 👥 User Roles
-
-The system will support multiple roles:
-
-### Student
-
-- Browse available courses
-- Enroll in courses
-- Watch lessons
-- Track course progress
-- Receive certificates after completion
-
-### Instructor
-
-- Create and manage courses
-- Upload lessons and learning materials
-- Monitor enrolled students
-- Track course engagement
-
-### Admin (Future Enhancement)
-
-- Manage users
-- Manage courses
-- Monitor system activity
+#### **Frontend**
+- **Framework:** React (Vite) with TypeScript
+- **Styling:** Tailwind CSS & Shadcn UI
+- **State Management:** TanStack Query (React Query)
+- **Routing:** React Router DOM
 
 ---
 
-# 📚 Core Features
+## 🚀 Getting Started
 
-## Course Management
+### Prerequisites
+- Node.js (v16+)
+- MS SQL Server
+- Stripe, Google Cloud, and Gmail API credentials.
 
-- Create and publish courses
-- Organize courses into lessons
-- Structured course content
+### Installation
 
-## Enrollment System
+**1. Backend Setup**
+```bash
+# Navigate to the backend folder
+cd backend
 
-- Students can enroll in courses
-- Track active enrollments
+# Install dependencies
+npm install
 
-## Lesson Progress Tracking
+# Create and configure your environment file
+cp .env.example .env
+# Open .env and add your API keys and database credentials
 
-- Track student progress per lesson
-- Calculate completion percentage
-
-## Reviews & Ratings
-
-- Students can rate courses
-- Provide feedback to instructors
-
-## Certificates
-
-- Generate certificates upon course completion
-
----
-
-# 🗄️ Database Design
-
-The system will be based on a **relational SQL database**.
-
-Main entities include:
-
-- Users
-- Courses
-- Lessons
-- Enrollments
-- Lesson Progress
-- Reviews
-- Certificates
-
-The database will follow proper **normalization and relational integrity**.
-
----
-
-# 📂 Project Structure (Planned)
-
-```
-lms-platform
-│
-├── frontend
-│   ├── components
-│   ├── pages
-│   ├── services
-│   └── utils
-│
-├── backend
-│   ├── controllers
-│   ├── routes
-│   ├── models
-│   ├── middleware
-│   └── config
-│
-└── database
-    └── schema.sql
+# Start the server
+npm start
 ```
 
----
+**2. Frontend Setup**
+```bash
+# Navigate to the frontend folder
+cd frontend
 
-# 🔐 Authentication (Planned)
+# Install dependencies
+npm install
 
-Authentication will include:
-
-- Secure login system
-- Role-based access control
-- Session or token-based authentication
-
----
-
-# 📈 Future Improvements
-
-Possible enhancements for future versions:
-
-- Video streaming integration
-- Payment system for paid courses
-- Instructor analytics dashboard
-- Course recommendation system
-- Mobile responsive UI improvements
+# Start the development server
+npm run dev
+```
+The frontend will be available at `http://localhost:8081`.
 
 ---
 
-# 🎯 Project Goal
+## 🔑 Configuration
 
-The goal of this project is to build a **scalable and practical LMS system** that demonstrates:
+The backend relies on an `.env` file for configuration. Key variables include:
 
-- Full-stack development
-- Database design
-- REST API architecture
-- Modern frontend development with React
-
----
-
-# 📌 Status
-
-🟡 **Planning Phase**
-
-Development will start with:
-
-1. Database schema design
-2. Backend API implementation
-3. Frontend UI development
+- `DB_SERVER`, `DB_NAME`, `DB_INSTANCE`: Your MS SQL Server connection details.
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`: Stripe API keys.
+- `CLIENT_ID`, `CLIENT_SECRET`: Google OAuth credentials.
+- `PARENT_FOLDER_ID`: The Google Drive folder ID for media uploads.
+- `JWT_SECRET`: A secret key for signing tokens.
+- `OTP_EMAIL`, `OTP_PASSWORD`: Credentials for sending emails via Nodemailer.
+- `FRONTEND_URL`: The base URL of the running frontend application.
 
 ---
 
-# 🤝 Contributing
+## 📖 API Documentation
 
-Contributions, ideas, and suggestions are welcome.
+Once the backend server is running, you can explore the interactive API documentation at:
+[http://localhost:4000/api-docs](http://localhost:4000/api-docs)
 
 ---
 
-# 📜 License
+## 📜 License
 
-This project is created for **educational purposes**.
+This project is licensed under the ISC License.
