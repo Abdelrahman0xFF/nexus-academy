@@ -139,6 +139,7 @@ class Course {
             const query = `
                     SELECT c.*, 
                     r.rating,
+                    r.reviews_count as review_count,
                     ISNULL(l.duration, 0) AS duration,
                     ISNULL(e_count.students_count, 0) AS students_count,
                     cat.name as category_name,
@@ -148,7 +149,7 @@ class Course {
                     JOIN users u ON c.instructor_id = u.user_id
                     LEFT JOIN categories cat ON c.category_id = cat.category_id
                     LEFT JOIN (
-                        SELECT course_id, AVG(CAST(rating AS FLOAT)) AS rating 
+                        SELECT course_id, AVG(CAST(rating AS FLOAT)) AS rating, COUNT(*) as reviews_count 
                         FROM reviews 
                         GROUP BY course_id
                     ) r ON c.course_id = r.course_id

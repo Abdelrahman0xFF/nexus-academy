@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { earningsApi } from "@/lib/earnings-api";
 import { enrollmentApi } from "@/lib/enrollment-api";
 import { AppPagination } from "@/components/ui/app-pagination";
+import TopEarningsChart from "@/components/TopEarningsChart";
 
 const InstructorRevenue = () => {
     const [enrollmentPage, setEnrollmentPage] = useState(1);
@@ -19,7 +20,7 @@ const InstructorRevenue = () => {
 
     const { data: summary, isLoading: isSummaryLoading } = useQuery({
         queryKey: ["earnings-summary", coursePage],
-        queryFn: () => earningsApi.getSummary(coursePage, 5),
+        queryFn: () => earningsApi.getSummary(coursePage, 4),
     });
 
     const { data: analytics = [], isLoading: isAnalyticsLoading } = useQuery({
@@ -37,7 +38,13 @@ const InstructorRevenue = () => {
     const totalEnrollments = recentRes?.data?.total || 0;
     const totalEnrollmentPages = Math.ceil(totalEnrollments / limit);
 
-    const courseEarnings = summary?.details || [];
+    const courseEarningsData = (summary?.details || []).map((c) => ({
+        id: c.course_id,
+        label: c.title,
+        value: c.earning,
+        subLabel: `${c.total_students} students`,
+    }));
+
     const totalCourses = summary?.total || 0;
     const totalCoursePages = Math.ceil(totalCourses / 5);
 
@@ -131,71 +138,26 @@ const InstructorRevenue = () => {
             </div>
 
             {/* Revenue by Course */}
-            <div className="bg-card rounded-card card-shadow p-6 mb-8">
-                <h2 className="text-h3 text-card-foreground mb-5">
-                    Revenue by Course
-                </h2>
-                {isSummaryLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                        <Loader2 className="animate-spin text-primary" />
-                    </div>
-                ) : courseEarnings.length > 0 ? (
-                    <div className="space-y-6">
-                        <div className="space-y-4">
-                            {courseEarnings.map((c) => {
-                                const maxRevenue = Math.max(
-                                    ...courseEarnings.map(
-                                        (item) => item.earning,
-                                    ),
-                                    1,
-                                );
-                                const percentage =
-                                    (c.earning / maxRevenue) * 100;
-                                return (
-                                    <div key={c.course_id}>
-                                        <div className="flex items-center justify-between text-small mb-1.5">
-                                            <div className="flex flex-col min-w-0">
-                                                <span className="font-medium text-card-foreground truncate">
-                                                    {c.title}
-                                                </span>
-                                                <span className="text-[10px] text-muted-foreground">
-                                                    {c.total_students} students
-                                                </span>
-                                            </div>
-                                            <span className="font-bold text-primary shrink-0">
-                                                $
-                                                {(
-                                                    c.earning || 0
-                                                ).toLocaleString()}
-                                            </span>
-                                        </div>
-                                        <div className="h-2 rounded-full bg-muted">
-                                            <div
-                                                className="h-full rounded-full gradient-primary transition-all"
-                                                style={{
-                                                    width: `${percentage}%`,
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+            <div className="mb-8">
+                <TopEarningsChart
+                    data={courseEarningsData}
+                    isLoading={isSummaryLoading}
+                    title="Revenue by Course"
+                    // maxItems={}
+                />
+                {totalCoursePages > 1 && (
+                    <div className="mt-4 flex justify-center">
                         <AppPagination
                             currentPage={coursePage}
                             totalPages={totalCoursePages}
                             onPageChange={setCoursePage}
                         />
                     </div>
-                ) : (
-                    <p className="text-center text-muted-foreground py-8">
-                        No revenue data available.
-                    </p>
                 )}
             </div>
 
             {/* Recent Transactions */}
-            <div className="bg-card rounded-card card-shadow">
+            <div className="bg-card rounded-card card-shadow overflow-hidden border border-border/50 transition-all duration-300 hover:shadow-md">
                 <div className="p-6 border-b border-border">
                     <h2 className="text-h3 text-card-foreground">
                         Recent Enrollments
@@ -204,21 +166,18 @@ const InstructorRevenue = () => {
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b border-border">
-                                <th className="text-left text-xs font-medium text-muted-foreground uppercase px-6 py-3">
+                            <tr className="border-b border-border bg-muted/20">
+                                <th className="text-left text-[10px] font-black text-muted-foreground tracking-widest px-6 py-4 uppercase">
                                     Student
                                 </th>
-                                <th className="text-left text-xs font-medium text-muted-foreground uppercase px-6 py-3">
+                                <th className="text-left text-[10px] font-black text-muted-foreground tracking-widest px-6 py-4 uppercase">
                                     Course
                                 </th>
-                                <th className="text-left text-xs font-medium text-muted-foreground uppercase px-6 py-3 hidden md:table-cell">
+                                <th className="text-left text-[10px] font-black text-muted-foreground tracking-widest px-6 py-4 uppercase">
                                     Date
                                 </th>
-                                <th className="text-left text-xs font-medium text-muted-foreground uppercase px-6 py-3">
-                                    Method
-                                </th>
-                                <th className="text-right text-xs font-medium text-muted-foreground uppercase px-6 py-3">
-                                    Amount
+                                <th className="text-right text-[10px] font-black text-muted-foreground tracking-widest px-6 py-4 uppercase">
+                                    Earning
                                 </th>
                             </tr>
                         </thead>
@@ -226,72 +185,71 @@ const InstructorRevenue = () => {
                             {isRecentLoading ? (
                                 <tr>
                                     <td
-                                        colSpan={5}
+                                        colSpan={4}
                                         className="px-6 py-12 text-center"
                                     >
-                                        <Loader2 className="animate-spin text-primary mx-auto" />
+                                        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
                                     </td>
                                 </tr>
                             ) : transactions.length > 0 ? (
-                                transactions.map((t: any, i: number) => (
+                                transactions.map((t, idx) => (
                                     <tr
-                                        key={i}
+                                        key={idx}
                                         className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors"
                                     >
                                         <td className="px-6 py-4">
                                             <div className="text-small font-medium text-card-foreground">
                                                 {t.first_name} {t.last_name}
                                             </div>
-                                            <div className="text-[10px] text-muted-foreground">
-                                                {t.email}
-                                            </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="text-small text-card-foreground max-w-[200px] truncate">
+                                            <div className="text-small text-muted-foreground truncate max-w-[200px]">
                                                 {t.course_title}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 hidden md:table-cell text-small text-muted-foreground">
-                                            {new Date(
-                                                t.enrolled_at,
-                                            ).toLocaleDateString()}
-                                        </td>
                                         <td className="px-6 py-4">
-                                            <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-primary/10 text-primary uppercase">
-                                                {t.payment_method}
-                                            </span>
+                                            <div className="text-small text-muted-foreground">
+                                                {new Date(
+                                                    t.enrolled_at,
+                                                ).toLocaleDateString()}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <span className="text-small font-semibold text-emerald-600">
-                                                +$
+                                            <div className="text-small font-bold text-primary">
+                                                $
                                                 {(
-                                                    t.enrollment_cost || 0
-                                                ).toLocaleString()}
-                                            </span>
+                                                    t.enrollment_cost * 0.7
+                                                ).toLocaleString(undefined, {
+                                                    minimumFractionDigits: 2,
+                                                })}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
                                     <td
-                                        colSpan={5}
+                                        colSpan={4}
                                         className="px-6 py-12 text-center text-muted-foreground"
                                     >
-                                        No recent enrollments.
+                                        No recent enrollments found.
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
-                <div className="p-4 border-t border-border">
+            </div>
+
+            {totalEnrollmentPages > 1 && (
+                <div className="mt-8 flex justify-center">
                     <AppPagination
                         currentPage={enrollmentPage}
                         totalPages={totalEnrollmentPages}
                         onPageChange={setEnrollmentPage}
                     />
                 </div>
-            </div>
+            )}
         </DashboardLayout>
     );
 };

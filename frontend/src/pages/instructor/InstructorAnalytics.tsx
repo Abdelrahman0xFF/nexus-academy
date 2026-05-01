@@ -4,6 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { earningsApi } from "@/lib/earnings-api";
 import { coursesApi } from "@/lib/courses-api";
 
+import MonthlyRevenueChart from "@/components/MonthlyRevenueChart";
+import TopEarningsChart from "@/components/TopEarningsChart";
+
 const InstructorAnalytics = () => {
     const { data: analytics, isLoading: isAnalyticsLoading } = useQuery({
         queryKey: ["earnings-analytics"],
@@ -46,10 +49,19 @@ const InstructorAnalytics = () => {
         },
         {
             label: "Avg. Rating",
-            value: (
-                courses.reduce((sum, c) => sum + (c.rating || 0), 0) /
-                (courses.length || 1)
-            ).toFixed(1),
+            value: (() => {
+                const totalRating = courses.reduce(
+                    (sum, c) => sum + (c.rating || 0) * (c.review_count || 0),
+                    0,
+                );
+                const totalReviews = courses.reduce(
+                    (sum, c) => sum + (c.review_count || 0),
+                    0,
+                );
+                return totalReviews > 0
+                    ? (totalRating / totalReviews).toFixed(1)
+                    : "0.0";
+            })(),
             icon: Clock,
         },
     ];
@@ -60,6 +72,13 @@ const InstructorAnalytics = () => {
     }, {});
 
     const levels = ["Beginner", "Intermediate", "Advanced"];
+
+    const topEarningCourses = (summary?.details || []).map((c: any) => ({
+        id: c.course_id,
+        label: c.title,
+        value: c.earning,
+        subLabel: `${c.total_students} students`,
+    }));
 
     return (
         <DashboardLayout type="instructor">
@@ -103,191 +122,76 @@ const InstructorAnalytics = () => {
                       ))}
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-8">
-                    {/* Revenue Chart */}
-                    <div className="bg-card rounded-card card-shadow p-6 transition-all duration-300 hover:shadow-md animate-in fade-in slide-in-from-left-4 duration-700 delay-200 fill-mode-both">
-                        <h2 className="text-h3 text-card-foreground mb-6">
-                            Monthly Revenue
-                        </h2>
-                        {isAnalyticsLoading ? (
-                            <div className="flex items-center justify-center h-52">
+            <div className="mb-8">
+                <MonthlyRevenueChart
+                    data={analytics}
+                    isLoading={isAnalyticsLoading}
+                    title="Monthly Revenue"
+                    sliceCount={12}
+                />
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-8 mb-8">
+                <TopEarningsChart
+                    data={topEarningCourses}
+                    isLoading={isSummaryLoading}
+                    title="Top Earning Courses"
+                    maxItems={4}
+                />
+
+                {/* Level Distribution */}
+                <div className="bg-card rounded-card card-shadow p-6 transition-all duration-300 hover:shadow-md border border-border/50 h-[380px]">
+                    <h2 className="text-h3 text-card-foreground mb-6 font-black uppercase tracking-widest text-xs">
+                        Level Distribution
+                    </h2>
+                    <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar max-h-[280px]">
+                        {isCoursesLoading ? (
+                            <div className="flex items-center justify-center py-8">
                                 <Loader2
                                     className="animate-spin text-primary"
-                                    size={32}
+                                    size={20}
                                 />
                             </div>
-                        ) : analytics && analytics.length > 0 ? (
-                            <div className="flex items-end gap-2 h-52 overflow-x-auto pb-2 custom-scrollbar">
-                                {analytics.map((d, i) => {
-                                    const maxRevenue = Math.max(
-                                        ...analytics.map(
-                                            (item) => item.revenue,
-                                        ),
-                                        1,
-                                    );
-                                    const percentage =
-                                        (d.revenue / maxRevenue) * 90;
-                                    return (
-                                        <div
-                                            key={i}
-                                            className="flex-1 flex flex-col items-center justify-end gap-1 min-w-[40px] group relative h-full"
-                                        >
-                                            <div className="absolute -top-6 opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap z-10">
-                                                $
-                                                {(
-                                                    d.revenue || 0
-                                                ).toLocaleString()}
-                                            </div>
-                                            <div className="text-[9px] font-bold text-primary mb-1">
-                                                {d.revenue > 0
-                                                    ? `$${Math.round(d.revenue)}`
-                                                    : ""}
-                                            </div>
-                                            <div
-                                                className="w-full rounded-t-sm gradient-primary opacity-80 hover:opacity-100 transition-all duration-500 cursor-pointer"
-                                                style={{
-                                                    height: `${percentage}%`,
-                                                }}
-                                            />
-                                            <span className="text-[10px] text-muted-foreground mt-1 shrink-0">
-                                                {d.month}
+                        ) : courses.length > 0 ? (
+                            levels.map((level) => {
+                                const count = levelDist[level] || 0;
+                                const percentage =
+                                    (count / courses.length) * 100;
+                                return (
+                                    <div key={level} className="group">
+                                        <div className="flex justify-between text-small mb-1.5">
+                                            <span className="text-muted-foreground group-hover:text-foreground transition-colors text-xs font-bold">
+                                                {level}
+                                            </span>
+                                            <span className="font-black text-foreground text-xs">
+                                                {count} courses
                                             </span>
                                         </div>
-                                    );
-                                })}
-                            </div>
+                                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden transition-colors group-hover:bg-muted/80">
+                                            <div
+                                                className={`h-full rounded-full transition-all duration-1000 ease-out ${
+                                                    level === "Beginner"
+                                                        ? "bg-emerald-500"
+                                                        : level ===
+                                                            "Intermediate"
+                                                          ? "bg-amber-500"
+                                                          : level === "Advanced"
+                                                            ? "bg-red-500"
+                                                            : "bg-primary"
+                                                }`}
+                                                style={{
+                                                    width: `${percentage}%`,
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })
                         ) : (
-                            <div className="flex items-center justify-center h-52 text-muted-foreground text-small">
-                                No revenue analytics available.
-                            </div>
+                            <p className="text-center text-muted-foreground text-small py-4">
+                                No course data.
+                            </p>
                         )}
-                        <div className="flex items-center gap-6 mt-4">
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <div className="w-3 h-3 rounded-sm gradient-primary" />{" "}
-                                Revenue
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Top Courses by Earning */}
-                    <div className="bg-card rounded-card card-shadow p-6 transition-all duration-300 hover:shadow-md animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-both">
-                        <h2 className="text-h3 text-card-foreground mb-6">
-                            Top Earning Courses
-                        </h2>
-                        <div className="space-y-6">
-                            {isSummaryLoading ? (
-                                <div className="flex items-center justify-center py-12">
-                                    <Loader2
-                                        className="animate-spin text-primary"
-                                        size={24}
-                                    />
-                                </div>
-                            ) : summary?.details &&
-                              summary.details.length > 0 ? (
-                                summary.details.slice(0, 5).map((c, i) => {
-                                    const maxEarning = Math.max(
-                                        ...summary.details.map(
-                                            (d) => d.earning,
-                                        ),
-                                        1,
-                                    );
-                                    const percentage =
-                                        (c.earning / maxEarning) * 100;
-                                    return (
-                                        <div key={i} className="group">
-                                            <div className="flex justify-between text-small mb-2">
-                                                <span className="font-medium text-foreground truncate mr-4 group-hover:text-primary transition-colors">
-                                                    {c.title}
-                                                </span>
-                                                <span className="font-bold text-primary">
-                                                    $
-                                                    {(
-                                                        c.earning || 0
-                                                    ).toLocaleString()}
-                                                </span>
-                                            </div>
-                                            <div className="h-2 w-full bg-muted rounded-full overflow-hidden transition-colors group-hover:bg-muted/80">
-                                                <div
-                                                    className="h-full gradient-primary rounded-full transition-all duration-1000 ease-out"
-                                                    style={{
-                                                        width: `${percentage}%`,
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className="flex justify-between mt-1">
-                                                <span className="text-[10px] text-muted-foreground">
-                                                    {c.total_students} students
-                                                </span>
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            ) : (
-                                <p className="text-center text-muted-foreground text-small py-8">
-                                    No earning data available.
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="space-y-8 sticky top-6 self-start">
-                    {/* Level Distribution */}
-                    <div className="bg-card rounded-card card-shadow p-6 transition-all duration-300 hover:shadow-md animate-in fade-in slide-in-from-right-4 duration-700 delay-400 fill-mode-both">
-                        <h2 className="text-h3 text-card-foreground mb-6">
-                            Level Distribution
-                        </h2>
-                        <div className="space-y-4">
-                            {isCoursesLoading ? (
-                                <div className="flex items-center justify-center py-8">
-                                    <Loader2
-                                        className="animate-spin text-primary"
-                                        size={20}
-                                    />
-                                </div>
-                            ) : courses.length > 0 ? (
-                                levels.map((level) => {
-                                    const count = levelDist[level] || 0;
-                                    const percentage =
-                                        (count / courses.length) * 100;
-                                    return (
-                                        <div key={level} className="group">
-                                            <div className="flex justify-between text-small mb-1.5">
-                                                <span className="text-muted-foreground group-hover:text-foreground transition-colors">
-                                                    {level}
-                                                </span>
-                                                <span className="font-medium text-foreground">
-                                                    {count} courses
-                                                </span>
-                                            </div>
-                                            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden transition-colors group-hover:bg-muted/80">
-                                                <div
-                                                    className={`h-full rounded-full transition-all duration-1000 ease-out ${
-                                                        level === "Beginner"
-                                                            ? "bg-emerald-500"
-                                                            : level ===
-                                                                "Intermediate"
-                                                              ? "bg-amber-500"
-                                                              : level ===
-                                                                  "Advanced"
-                                                                ? "bg-red-500"
-                                                                : "bg-primary"
-                                                    }`}
-                                                    style={{
-                                                        width: `${percentage}%`,
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            ) : (
-                                <p className="text-center text-muted-foreground text-small py-4">
-                                    No course data.
-                                </p>
-                            )}
-                        </div>
                     </div>
                 </div>
             </div>

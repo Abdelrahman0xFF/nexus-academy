@@ -1,21 +1,11 @@
-import {
-    Search,
-    Download,
-    TrendingUp,
-    DollarSign,
-    Users,
-    BookOpen,
-    ArrowUpRight,
-    CreditCard,
-    Calendar,
-    Loader2,
-} from "lucide-react";
+import { DollarSign, Users, TrendingUp, Loader2 } from "lucide-react";
 import DashboardLayout from "@/layouts/DashboardLayout";
-import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { earningsApi, AdminEarningDetail } from "@/lib/earnings-api";
 import { AppPagination } from "@/components/ui/app-pagination";
 import { useState } from "react";
+import MonthlyRevenueChart from "@/components/MonthlyRevenueChart";
+import TopEarningsChart from "@/components/TopEarningsChart";
 
 const AdminPayments = () => {
     const [page, setPage] = useState(1);
@@ -26,9 +16,20 @@ const AdminPayments = () => {
         queryFn: () => earningsApi.getSummary<AdminEarningDetail>(page, limit),
     });
 
+    const { data: analytics, isLoading: isAnalyticsLoading } = useQuery({
+        queryKey: ["admin-overview-analytics"],
+        queryFn: () => earningsApi.getAnalytics(),
+    });
+
     const details = summaryData?.details || [];
     const total = summaryData?.total || 0;
     const totalPages = Math.ceil(total / limit);
+
+    const earningInstructors = (details || []).map((i) => ({
+        id: i.user_id,
+        label: `${i.first_name} ${i.last_name}`,
+        value: i.earning,
+    }));
 
     return (
         <DashboardLayout type="admin">
@@ -74,7 +75,31 @@ const AdminPayments = () => {
                 </div>
             </div>
 
-            {/* Transactions Table (Instructor Shares) */}
+            {/* Graphs Section */}
+            <div className="grid lg:grid-cols-3 gap-6 mb-8">
+                {/* Platform Revenue Overview — scrollable on small screens */}
+                <div className="lg:col-span-2 overflow-x-auto bg-card rounded-card card-shadow border border-border/50">
+                    <div className="min-w-[560px] h-full">
+                        <MonthlyRevenueChart
+                            data={analytics}
+                            isLoading={isAnalyticsLoading}
+                            title="Platform Revenue Overview"
+                            showPlatformFeeLabel={true}
+                            sliceCount={12}
+                        />
+                    </div>
+                </div>
+
+                <TopEarningsChart
+                    data={earningInstructors}
+                    isLoading={isLoading}
+                    title="Revenue Contribution"
+                    icon={TrendingUp}
+                    maxItems={5}
+                />
+            </div>
+
+            {/* Transactions Table (Instructor Shares) — scrollable on small screens */}
             <div className="bg-card rounded-card card-shadow overflow-hidden border border-border/50">
                 <div className="p-5 border-b border-border bg-muted/20 flex flex-col sm:flex-row gap-4 items-center justify-between">
                     <h3 className="text-small font-black text-foreground uppercase tracking-widest">
@@ -82,7 +107,7 @@ const AdminPayments = () => {
                     </h3>
                 </div>
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse min-w-[520px]">
                         <thead>
                             <tr className="border-b border-border bg-muted/10">
                                 <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
@@ -99,13 +124,19 @@ const AdminPayments = () => {
                         <tbody className="divide-y divide-border">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={3} className="py-12 text-center">
+                                    <td
+                                        colSpan={3}
+                                        className="py-12 text-center"
+                                    >
                                         <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
                                     </td>
                                 </tr>
                             ) : details.length === 0 ? (
                                 <tr>
-                                    <td colSpan={3} className="py-12 text-center text-muted-foreground text-sm">
+                                    <td
+                                        colSpan={3}
+                                        className="py-12 text-center text-muted-foreground text-sm"
+                                    >
                                         No financial data found
                                     </td>
                                 </tr>
@@ -117,14 +148,18 @@ const AdminPayments = () => {
                                     >
                                         <td className="px-6 py-4">
                                             <div className="text-small font-bold text-foreground group-hover:text-primary transition-colors">
-                                                {item.first_name} {item.last_name}
+                                                {item.first_name}{" "}
+                                                {item.last_name}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-small font-black text-emerald-600">
                                             ${item.earning?.toFixed(2)}
                                         </td>
                                         <td className="px-6 py-4 text-small font-black text-primary">
-                                            ${item.instructor_earning?.toFixed(2)}
+                                            $
+                                            {item.instructor_earning?.toFixed(
+                                                2,
+                                            )}
                                         </td>
                                     </tr>
                                 ))
