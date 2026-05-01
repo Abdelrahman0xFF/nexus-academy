@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import asyncHandler from "../utils/asyncHandler.js";
 import puppeteer from "puppeteer";
+import { sendCertificateEmail } from "../services/certificate.service.js";
 
 const generateCertificateHtml = async (user_id, course_id) => {
     let cert = await Certificate.getByStudentAndCourse(user_id, course_id);
@@ -133,6 +134,7 @@ export const verifyCertificate = asyncHandler(async (req, res) => {
 
 export const getAllUserCertificates = asyncHandler(async (req, res) => {
     const user_id = req.user.user_id;
+    const downloadBaseUrl = `${req.protocol}://${req.get("host")}`;
     
     const { enrollments } = await Enrollment.findByUserId(user_id, 1, 100);
     
@@ -141,6 +143,11 @@ export const getAllUserCertificates = asyncHandler(async (req, res) => {
             const certExists = await Certificate.getByStudentAndCourse(user_id, enrollment.course_id);
             if (!certExists) {
                 await Certificate.issue(user_id, enrollment.course_id);
+                try {
+                    await sendCertificateEmail(user_id, enrollment.course_id, downloadBaseUrl);
+                } catch (emailError) {
+                    console.error(`Failed to send certificate email for course ${enrollment.course_id}:`, emailError);
+                }
             }
         }
     }

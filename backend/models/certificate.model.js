@@ -29,7 +29,7 @@ class Certificate {
                 .request()
                 .input("user_id", sql.Int, userId)
                 .input("course_id", sql.Int, courseId).query(`
-                    SELECT c.*, u.first_name, u.last_name, co.title as course_name, inst.first_name as inst_first, inst.last_name as inst_last
+                    SELECT c.*, u.first_name, u.last_name, u.email, co.title as course_name, inst.first_name as inst_first, inst.last_name as inst_last
                     FROM certificates c
                     JOIN users u ON c.user_id = u.user_id
                     JOIN courses co ON c.course_id = co.course_id

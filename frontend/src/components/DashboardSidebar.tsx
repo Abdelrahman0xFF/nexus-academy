@@ -55,8 +55,19 @@ const adminLinks = [
   { label: "Settings", path: "/admin/settings", icon: Settings },
 ];
 
-const DashboardSidebar = ({ type }: DashboardSidebarProps) => {
-  const [collapsed, setCollapsed] = useState(false);
+export const SidebarContent = ({ 
+  type, 
+  collapsed = false, 
+  onToggleCollapse,
+  isMobile = false,
+  onClose
+}: { 
+  type: "student" | "instructor" | "admin";
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
+  isMobile?: boolean;
+  onClose?: () => void;
+}) => {
   const { user, logout, isLoggingOut } = useAuth();
   const location = useLocation();
 
@@ -65,15 +76,11 @@ const DashboardSidebar = ({ type }: DashboardSidebarProps) => {
   if (type === "admin") links = adminLinks;
 
   return (
-    <aside
-      className={`hidden lg:flex flex-col bg-card border-r border-border transition-all duration-300 h-screen sticky top-0 overflow-hidden ${
-        collapsed ? "w-20" : "w-64"
-      }`}
-    >
+    <div className="flex flex-col h-full bg-card">
       {/* Logo */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-border">
-        {!collapsed && (
-          <Link to="/" className="flex items-center gap-2">
+        {(!collapsed || isMobile) && (
+          <Link to="/" className="flex items-center gap-2" onClick={onClose}>
             <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
               <GraduationCap size={16} className="text-primary-foreground" />
             </div>
@@ -82,12 +89,14 @@ const DashboardSidebar = ({ type }: DashboardSidebarProps) => {
             </span>
           </Link>
         )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors"
-        >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
+        {!isMobile && (
+          <button
+            onClick={onToggleCollapse}
+            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors"
+          >
+            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
+        )}
       </div>
 
       {/* Links */}
@@ -98,15 +107,16 @@ const DashboardSidebar = ({ type }: DashboardSidebarProps) => {
             <Link
               key={link.path}
               to={link.path}
+              onClick={onClose}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-button text-small font-medium transition-all ${
                 isActive
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              } ${collapsed ? "justify-center" : ""}`}
-              title={collapsed ? link.label : undefined}
+              } ${(collapsed && !isMobile) ? "justify-center" : ""}`}
+              title={(collapsed && !isMobile) ? link.label : undefined}
             >
               <link.icon size={20} />
-              {!collapsed && <span>{link.label}</span>}
+              {(!collapsed || isMobile) && <span>{link.label}</span>}
             </Link>
           );
         })}
@@ -114,7 +124,7 @@ const DashboardSidebar = ({ type }: DashboardSidebarProps) => {
 
       {/* User Info & Logout */}
       <div className="p-3 border-t border-border space-y-1">
-        {user && !collapsed && (
+        {user && (!collapsed || isMobile) && (
           <div className="px-3 py-2 flex items-center gap-3 mb-2">
             <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-white shadow-sm overflow-hidden shrink-0">
               {user.avatar_url ? (
@@ -133,19 +143,35 @@ const DashboardSidebar = ({ type }: DashboardSidebarProps) => {
         <button
           onClick={() => logout()}
           disabled={isLoggingOut}
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-button text-small font-medium text-[#F24848] hover:text-destructive hover:bg-destructive/10 transition-colors w-full disabled:opacity-50 ${
-            collapsed ? "justify-center" : ""
-          }`}
-          title={collapsed ? "Log Out" : undefined}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-button text-small font-medium text-[#F24848] hover:text-destructive hover:bg-destructive/10 transition-colors w-full disabled:opacity-50 ${(collapsed && !isMobile) ? "justify-center" : ""}`}
+          title={(collapsed && !isMobile) ? "Log Out" : undefined}
         >
           {isLoggingOut ? (
             <Loader2 size={20} className="animate-spin" />
           ) : (
             <LogOut size={20} />
           )}
-          {!collapsed && <span>{isLoggingOut ? " Logging Out..." : " Log Out"}</span>}
+          {(!collapsed || isMobile) && <span>{isLoggingOut ? " Logging Out..." : " Log Out"}</span>}
         </button>
       </div>
+    </div>
+  );
+};
+
+const DashboardSidebar = ({ type }: DashboardSidebarProps) => {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <aside
+      className={`hidden lg:flex flex-col border-r border-border transition-all duration-300 h-screen sticky top-0 overflow-hidden ${
+        collapsed ? "w-20" : "w-64"
+      }`}
+    >
+      <SidebarContent 
+        type={type} 
+        collapsed={collapsed} 
+        onToggleCollapse={() => setCollapsed(!collapsed)} 
+      />
     </aside>
   );
 };

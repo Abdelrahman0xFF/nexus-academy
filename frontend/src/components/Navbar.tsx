@@ -21,7 +21,8 @@ const Navbar = () => {
 
     const navLinks = [
         { label: "Explore", path: "/courses" },
-        ...(user?.role === "instructor" || user?.role === "admin" ? [{ label: "Teach", path: "/instructor" }] : []),
+        ...(user?.role === "instructor"  ? [{ label: "Teach", path: "/instructor" }] : []) ,
+        ...(user?.role === "admin" ? [{ label: "Manage", path: "/admin" }] : [])
     ];
 
     const getDashboardPath = () => {

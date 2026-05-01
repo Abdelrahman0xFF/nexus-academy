@@ -2,11 +2,13 @@ import Lesson from "../models/lesson.model.js";
 import Section from "../models/section.model.js";
 import Course from "../models/course.model.js";
 import Enrollment from "../models/enrollment.model.js";
+import Certificate from "../models/certificate.model.js";
 import { uploadToDrive, deleteFromDrive } from "../services/drive.service.js";
 import { getVideoDuration } from "../utils/video.js";
 import { successResponse, errorResponse } from "../utils/response.js";
 import fs from "fs";
 import asyncHandler from "../utils/asyncHandler.js";
+import { sendCertificateEmail } from "../services/certificate.service.js";
 
 const createLesson = asyncHandler(async (req, res, next) => {
     const { course_id, section_order, lesson_order } = req.body;
@@ -212,6 +214,7 @@ const deleteLesson = asyncHandler(async (req, res, next) => {
 const completeLesson = asyncHandler(async (req, res, next) => {
     const { course_id, section_order, lesson_order } = req.params;
     const user_id = req.user.user_id;
+    const downloadBaseUrl = `${req.protocol}://${req.get("host")}`;
 
     const lesson = await Lesson.findOne(
         course_id,
@@ -226,6 +229,20 @@ const completeLesson = asyncHandler(async (req, res, next) => {
         section_order,
         lesson_order,
     );
+
+    const progress = await Enrollment.getProgress(user_id, course_id);
+    if (progress >= 95) {
+        const certExists = await Certificate.getByStudentAndCourse(user_id, course_id);
+        if (!certExists) {
+            await Certificate.issue(user_id, course_id);
+            try {
+                await sendCertificateEmail(user_id, course_id, downloadBaseUrl);
+            } catch (emailError) {
+                console.error(`Failed to send certificate email for course ${course_id}:`, emailError);
+            }
+        }
+    }
+
     return successResponse(res, null, "Lesson marked as completed");
 });
 
