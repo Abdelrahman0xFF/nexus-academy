@@ -10,16 +10,12 @@ import {
     PlayCircle,
     CheckCircle,
     ChevronDown,
-    CreditCard,
-    ShieldCheck,
-    Lock,
     Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MainLayout from "@/layouts/MainLayout";
 import RatingStars from "@/components/RatingStars";
 import { getMediaUrl } from "@/lib/utils";
-import { api, ApiResponse } from "@/lib/api-client";
 import {
     Accordion,
     AccordionContent,
@@ -105,7 +101,7 @@ const CourseDetails = () => {
             });
             queryClient.invalidateQueries({ queryKey: ["my-enrollments"] });
             setIsDialogOpen(false);
-            navigate(`/payment-success?session_id=free`);
+            navigate(`/payment-success?session_id=free&course_id=${courseId}`);
         },
         onError: (error: any) => {
             toast.error(error.response?.data?.message || "Enrollment failed");

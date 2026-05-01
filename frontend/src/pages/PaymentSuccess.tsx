@@ -10,6 +10,7 @@ const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const course_id = searchParams.get("course_id");
   const sessionId = searchParams.get("session_id");
 
   useEffect(() => {
@@ -32,10 +33,10 @@ const PaymentSuccess = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
             <Button 
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate(`/learn/${course_id}`)}
               className="gradient-primary border-0 text-primary-foreground font-bold rounded-button px-8"
             >
-              Go to Dashboard
+              Go to the course
             </Button>
             <Button 
               variant="outline" 

@@ -100,7 +100,7 @@ const Landing = () => {
                                     <Button
                                         size="lg"
                                         variant="outline"
-                                        className="rounded-button px-8 transition-all hover:bg-muted hover:scale-105 active:scale-95"
+                                        className="rounded-button px-8 transition-all hover:scale-105 active:scale-95"
                                     >
                                         Start Free Trial
                                     </Button>
