@@ -1,0 +1,102 @@
+import { api, ApiResponse } from "./api-client";
+export interface User {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: "user" | "instructor" | "admin";
+  avatar_url?: string;
+  title?: string;
+  bio?: string;
+  is_verified: boolean;
+  created_at: string;
+}
+
+export interface SignupForm {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirm: string;
+}
+
+export interface LoginForm {
+  email: string;
+  password: string;
+}
+
+export interface InstructorSettingsForm {
+  firstName: string;
+  lastName: string;
+  email: string;
+  bio: string;
+  title: string;
+  website: string;
+  avatar: File | null;
+  avatarPreview: string;
+}
+
+export interface AuthCredentials {
+  email: string;
+  password?: string;
+}
+
+export interface ChangePasswordData {
+  old_password: string;
+  new_password: string;
+  confirm_password: string;
+}
+
+export const authApi = {
+  login: async (credentials: AuthCredentials): Promise<ApiResponse<User>> => {
+    return api.post<AuthCredentials, ApiResponse<User>>("/auth/login", credentials);
+  },
+
+  register: async (formData: FormData): Promise<ApiResponse<null>> => {
+    return api.post<FormData, ApiResponse<null>>("/auth/register", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+
+  verifyOtp: async (data: { email: string; otp: string }): Promise<ApiResponse<null>> => {
+    return api.post<{ email: string; otp: string }, ApiResponse<null>>("/auth/verify-otp", data);
+  },
+
+  resendOtp: async (email: string): Promise<ApiResponse<null>> => {
+    return api.post<{ email: string }, ApiResponse<null>>("/auth/resend-otp", { email });
+  },
+  
+  me: async (): Promise<ApiResponse<User>> => {
+    return api.get<never, ApiResponse<User>>("/auth/me");
+  },
+
+  updateProfile: async (userId: number, formData: FormData): Promise<ApiResponse<null>> => {
+    return api.put<FormData, ApiResponse<null>>(`/users/${userId}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+
+  changePassword: async (data: ChangePasswordData): Promise<ApiResponse<null>> => {
+    return api.put<ChangePasswordData, ApiResponse<null>>("/auth/change-password", data);
+  },
+
+  logout: async (): Promise<ApiResponse<null>> => {
+    return api.post<never, ApiResponse<null>>("/auth/logout");
+  },
+
+  forgotPassword: async (email: string): Promise<ApiResponse<null>> => {
+    return api.post<{ email: string }, ApiResponse<null>>("/auth/forgot-password", { email });
+  },
+
+  resetPassword: async (data: any): Promise<ApiResponse<null>> => {
+    return api.post<any, ApiResponse<null>>("/auth/reset-password", data);
+  },
+
+  getGoogleAuthUrl: () => {
+    return `${api.defaults.baseURL}/auth/google`;
+  }
+};
