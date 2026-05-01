@@ -24,14 +24,19 @@ class User {
                 .input("first_name", sql.NVarChar, newUser.first_name)
                 .input("last_name", sql.NVarChar, newUser.last_name)
                 .input("email", sql.NVarChar, newUser.email)
-                .input("hashed_password", sql.VarChar, newUser.hashed_password || null)
+                .input(
+                    "hashed_password",
+                    sql.VarChar,
+                    newUser.hashed_password || null,
+                )
                 .input("avatar_url", sql.VarChar, newUser.avatar_url)
                 .input("title", sql.NVarChar, newUser.title)
                 .input("bio", sql.NVarChar, newUser.bio)
                 .input("otp", sql.VarChar, newUser.otp)
                 .input("otp_expires", sql.BigInt, newUser.otp_expires)
                 .input("google_id", sql.VarChar, newUser.google_id)
-                .input("is_verified", sql.Bit, newUser.is_verified ? 1 : 0).query(`
+                .input("is_verified", sql.Bit, newUser.is_verified ? 1 : 0)
+                .query(`
                     INSERT INTO users (
                         first_name, last_name, email, hashed_password,
                         avatar_url, title, bio, otp, otp_expires, google_id, is_verified
@@ -69,6 +74,35 @@ class User {
         }
     }
 
+    static async findBestInstructors(limit) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request().input("limit", sql.Int, limit)
+                .query(`
+            SELECT TOP (@limit) 
+                u.user_id, 
+                u.first_name, 
+                u.last_name, 
+                u.avatar_url, 
+                u.title, 
+                u.bio,
+                AVG(CAST(r.rating AS FLOAT)) AS average_rating, 
+                COUNT(DISTINCT c.course_id) AS course_count, 
+                COUNT(r.course_id) AS review_count
+            FROM users u
+            JOIN courses c ON u.user_id = c.instructor_id
+            LEFT JOIN reviews r ON c.course_id = r.course_id -- Changed to LEFT JOIN here
+            WHERE u.role = 'instructor'
+            GROUP BY u.user_id, u.first_name, u.last_name, u.avatar_url, u.title, u.bio
+            ORDER BY average_rating DESC, review_count DESC;
+        `);
+            return result.recordset;
+        } catch (err) {
+            console.error("Error finding best instructors: ", err);
+            throw err;
+        }
+    }
+
     static async findByEmail(email) {
         try {
             const pool = await poolPromise;
@@ -97,7 +131,13 @@ class User {
         }
     }
 
-    static async find(page, limit, sortBy = "created_at", order = "ASC", filters = {}) {
+    static async find(
+        page,
+        limit,
+        sortBy = "created_at",
+        order = "ASC",
+        filters = {},
+    ) {
         try {
             const offset = (page - 1) * limit;
             const pool = await poolPromise;
@@ -122,7 +162,8 @@ class User {
             let filterQuery = "WHERE 1=1";
             if (search) {
                 request.input("search", sql.NVarChar, `%${search}%`);
-                filterQuery += " AND (first_name LIKE @search OR last_name LIKE @search OR email LIKE @search)";
+                filterQuery +=
+                    " AND (first_name LIKE @search OR last_name LIKE @search OR email LIKE @search)";
             }
 
             if (role) {
@@ -147,7 +188,7 @@ class User {
 
             return {
                 users: result.recordsets[0],
-                total: result.recordsets[1][0].total
+                total: result.recordsets[1][0].total,
             };
         } catch (err) {
             console.error("Error finding users: ", err);

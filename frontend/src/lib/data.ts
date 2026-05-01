@@ -23,13 +23,12 @@ export interface Course {
 }
 
 export interface Instructor {
-  id: string;
-  name: string;
-  avatar: string;
-  title: string;
-  courses: number;
-  students: number;
-  rating: number;
+  avatar_url:string;
+  first_name:string;
+  last_name:string;
+  title:string;
+  course_count:number;
+  average_rating:number;
 }
 
 export interface Category {
@@ -176,13 +175,6 @@ export const courses: Course[] = [
     duration: "45h 30m",
     lessons: 340,
   },
-];
-
-export const instructors: Instructor[] = [
-  { id: "1", name: "Sarah Johnson", avatar: "", title: "Senior Full-Stack Developer", courses: 12, students: 45000, rating: 4.8 },
-  { id: "2", name: "Dr. Michael Chen", avatar: "", title: "AI Research Scientist", courses: 8, students: 38000, rating: 4.9 },
-  { id: "3", name: "Emma Williams", avatar: "", title: "Lead UX Designer at Google", courses: 6, students: 28000, rating: 4.7 },
-  { id: "4", name: "Alex Rodriguez", avatar: "", title: "Staff Engineer at Meta", courses: 5, students: 22000, rating: 4.9 },
 ];
 
 export const categories: Category[] = [

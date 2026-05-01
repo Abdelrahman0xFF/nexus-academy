@@ -16,14 +16,16 @@ import InstructorCard from "@/components/InstructorCard";
 import CategoryCard from "@/components/CategoryCard";
 import RatingStars from "@/components/RatingStars";
 import ScrollReveal from "@/components/ScrollReveal";
-import { instructors, testimonials } from "@/lib/data";
+import { testimonials } from "@/lib/data";
 import { categoryApi } from "@/lib/categories-api";
 import { coursesApi, type Course } from "@/lib/courses-api";
 import heroImage from "@/assets/landing-img.svg";
 import Marquee from "@/components/Marquee";
+import { usersApi } from "@/lib/users-api";
 
 const Landing = () => {
     const [categories, setCategories] = useState<any[]>([]);
+    const [instructors, setInstructors] = useState<any[]>([]);
     const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -31,16 +33,18 @@ const Landing = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const [categoriesData, coursesData] = await Promise.all([
+                const [categoriesData, coursesData, instructorsData] = await Promise.all([
                     categoryApi.getAll(),
                     coursesApi.getAll({
                         limit: 4,
                         sortBy: "Rating",
                         order: "DESC",
                     }),
+                    usersApi.getBestInstructors(),
                 ]);
                 setCategories(categoriesData);
                 setFeaturedCourses(coursesData.courses);
+                setInstructors(instructorsData);
             } catch (error) {
                 console.error("Failed to fetch landing data:", error);
             } finally {

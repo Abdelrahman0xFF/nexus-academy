@@ -32,6 +32,11 @@ const getUserById = asyncHandler(async (req, res) => {
     }
 });
 
+const getBestInstructors = asyncHandler(async (req, res) => {
+    const instructors = await User.findBestInstructors(4);
+    return successResponse(res, { instructors });
+});
+
 const getAllUsers = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, sortBy = "Time", order = "ASC", search = null, role = null } = req.query;
 
@@ -164,4 +169,4 @@ const deleteUser = asyncHandler(async (req, res) => {
     }
 });
 
-export { getUserById, getAllUsers, updateUser, deleteUser };
+export { getUserById, getAllUsers, updateUser, deleteUser, getBestInstructors };

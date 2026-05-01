@@ -1,6 +1,7 @@
 import {
     getUserById,
     getAllUsers,
+    getBestInstructors,
     updateUser,
     deleteUser,
 } from "../controllers/user.controller.js";
@@ -16,6 +17,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get("/", authorize("admin"), getAllUsers);
+router.get("/best-instructors", getBestInstructors);
 router.get("/:user_id", getUserById);
 router.put(
     "/:user_id",

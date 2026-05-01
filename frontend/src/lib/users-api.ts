@@ -1,3 +1,4 @@
+import { get } from "http";
 import { api, ApiResponse } from "./api-client";
 
 export interface User {
@@ -15,11 +16,25 @@ export interface UsersResponse {
   users: User[];
   total: number;
 }
+export interface BestInstructor {
+  user_id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  avatar_url?: string;
+  bio?: string;
+  average_rating: number;
+}
 
 export const usersApi = {
   getUsers: async (params?: { page?: number; limit?: number; search?: string; role?: string }): Promise<UsersResponse> => {
     const response = await api.get<any, ApiResponse<UsersResponse>>("/users", { params });
     return response.data;
+  },
+
+  getBestInstructors: async (): Promise<BestInstructor[]> => {
+    const response = await api.get<any, ApiResponse<{ instructors: BestInstructor[] }>>("/users/best-instructors");
+    return response.data.instructors;
   },
 
   getUserById: async (id: number): Promise<User> => {
