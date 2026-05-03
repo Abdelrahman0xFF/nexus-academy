@@ -155,7 +155,7 @@ const StudentDashboard = () => {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {isCoursesLoading ? (
              Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-64 rounded-card bg-muted animate-pulse" />
+              <div key={i} className="h-64 bg-muted animate-pulse" />
             ))
           ) : recommendedCourses.length > 0 ? (
             recommendedCourses.map((c) => (

@@ -21,7 +21,7 @@ const CourseCard = ({ course, showProgress = false, progress }: CourseCardProps)
   };
 
   return (
-    <Link to={`/courses/${course.course_id}`} className="block group">
+    <Link to={`/courses/${course.course_id}`} className="block rounded-card group">
       <div className="bg-card rounded-card card-shadow hover-lift overflow-hidden h-full flex flex-col">
         {/* Image */}
         <div className="relative h-44 overflow-hidden bg-muted">

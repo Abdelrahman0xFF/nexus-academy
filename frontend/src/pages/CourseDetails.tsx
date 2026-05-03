@@ -5,7 +5,6 @@ import {
     Clock,
     BookOpen,
     Users,
-    Globe,
     Award,
     PlayCircle,
     CheckCircle,
@@ -76,7 +75,11 @@ const CourseDetails = () => {
     const { data: userReviewRes } = useQuery({
         queryKey: ["user-review", courseId],
         queryFn: () => reviewApi.getUserReview(courseId),
-        enabled: !!user && !!courseId && !!course?.is_enrolled,
+        enabled:
+            !!user &&
+            user.role === "user" &&
+            !!courseId &&
+            !!course?.is_enrolled,
         retry: false,
     });
 
@@ -126,6 +129,33 @@ const CourseDetails = () => {
         },
         onSettled: () => {
             setIsEnrolling(false);
+        },
+    });
+
+    const reviewMutation = useMutation({
+        mutationFn: (data: { rating: number; comment: string }) =>
+            isEditingReview
+                ? reviewApi.update(courseId, data)
+                : reviewApi.create(courseId, data),
+        onSuccess: () => {
+            toast.success(
+                isEditingReview
+                    ? "Review updated successfully!"
+                    : "Thank you! Your review has been submitted.",
+            );
+            setShowReviewForm(false);
+            queryClient.invalidateQueries({
+                queryKey: ["course-reviews", courseId],
+            });
+            queryClient.invalidateQueries({
+                queryKey: ["user-review", courseId],
+            });
+            queryClient.invalidateQueries({ queryKey: ["course", courseId] });
+        },
+        onError: (error: any) => {
+            toast.error(
+                error.response?.data?.message || "Failed to submit review",
+            );
         },
     });
 
@@ -193,113 +223,129 @@ const CourseDetails = () => {
         <MainLayout>
             {/* Hero Section */}
             <section className="relative gradient-primary overflow-hidden pt-10 pb-16 lg:pt-16 lg:pb-40 border-b border-border/50 h-[calc(100dvh-60px)]">
-    <div className="container relative z-10 mx-auto px-4 lg:px-8 h-full flex items-center">
-        <div className="grid lg:grid-cols-3 gap-12 w-full">
-            <div className="lg:col-span-2 space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                {/* Badges */}
-                <div className="flex flex-wrap items-center gap-3">
-                    <span className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-full bg-white/20 text-white border border-white/30 shadow-sm">
-                        {course.category_name}
-                    </span>
-                    <span className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-full bg-white/10 text-white/80 border border-white/20 shadow-sm">
-                        {course.level}
-                    </span>
-                    {course.is_enrolled && (
-                        <span className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 shadow-sm flex items-center gap-1.5">
-                            <CheckCircle size={12} /> Enrolled
-                        </span>
-                    )}
-                </div>
-
-                {/* Title and Description */}
-                <div className="space-y-6">
-                    <h1 className="text-4xl lg:text-5xl font-extrabold text-white leading-[1.15] tracking-tight">
-                        {course.title}
-                    </h1>
-                    <p className="text-lg lg:text-xl text-white/70 leading-relaxed max-w-3xl">
-                        {course.description.split("\n")[0]}
-                    </p>
-                </div>
-
-                {/* Metadata & Instructor */}
-                <div className="flex flex-wrap items-center gap-6 lg:gap-10 pt-4">
-                    <div className="flex items-center gap-4 group cursor-pointer bg-white/10 hover:bg-white/20 px-4 py-2.5 rounded-2xl border border-white/20 shadow-sm transition-colors">
-                        <div className="w-12 h-12 rounded-full p-0.5 bg-white/30 overflow-hidden shadow-md group-hover:scale-105 transition-transform duration-300">
-                            <div className="w-full h-full rounded-full bg-white/20 overflow-hidden flex items-center justify-center">
-                                {course.instructor_avatar ? (
-                                    <img
-                                        src={getMediaUrl(course.instructor_avatar)}
-                                        alt={course.instructor_name}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <span className="text-base font-black text-white">
-                                        {course.instructor_name
-                                            ?.split(" ")
-                                            .map((n) => n[0])
-                                            .join("")}
+                <div className="container relative z-10 mx-auto px-4 lg:px-8 h-full flex items-center">
+                    <div className="grid lg:grid-cols-3 gap-12 w-full">
+                        <div className="lg:col-span-2 space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                            {/* Badges */}
+                            <div className="flex flex-wrap items-center gap-3">
+                                <span className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-full bg-white/20 text-white border border-white/30 shadow-sm">
+                                    {course.category_name}
+                                </span>
+                                <span className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-full bg-white/10 text-white/80 border border-white/20 shadow-sm">
+                                    {course.level}
+                                </span>
+                                {course.is_enrolled && (
+                                    <span className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 shadow-sm flex items-center gap-1.5">
+                                        <CheckCircle size={12} /> Enrolled
                                     </span>
                                 )}
                             </div>
-                        </div>
-                        <div>
-                            <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-0.5">
-                                Instructor
+
+                            {/* Title and Description */}
+                            <div className="space-y-6">
+                                <h1 className="text-4xl lg:text-5xl font-extrabold text-white leading-[1.15] tracking-tight">
+                                    {course.title}
+                                </h1>
+                                <p className="text-lg lg:text-xl text-white/70 leading-relaxed max-w-3xl">
+                                    {course.description.split("\n")[0]}
+                                </p>
                             </div>
-                            <div className="text-sm font-bold text-white group-hover:text-white/80 transition-colors">
-                                {course.instructor_name}
+
+                            {/* Metadata & Instructor */}
+                            <div className="flex flex-wrap items-center gap-6 lg:gap-10 pt-4">
+                                <div className="flex items-center gap-4 group cursor-pointer bg-white/10 hover:bg-white/20 px-4 py-2.5 rounded-2xl border border-white/20 shadow-sm transition-colors">
+                                    <div className="w-12 h-12 rounded-full p-0.5 bg-white/30 overflow-hidden shadow-md group-hover:scale-105 transition-transform duration-300">
+                                        <div className="w-full h-full rounded-full bg-white/20 overflow-hidden flex items-center justify-center">
+                                            {course.instructor_avatar ? (
+                                                <img
+                                                    src={getMediaUrl(
+                                                        course.instructor_avatar,
+                                                    )}
+                                                    alt={course.instructor_name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-base font-black text-white">
+                                                    {course.instructor_name
+                                                        ?.split(" ")
+                                                        .map((n) => n[0])
+                                                        .join("")}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-0.5">
+                                            Instructor
+                                        </div>
+                                        <div className="text-sm font-bold text-white group-hover:text-white/80 transition-colors">
+                                            {course.instructor_name}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col gap-1.5">
+                                    <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
+                                        Course Rating
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-lg font-bold text-white">
+                                            {course.rating?.toFixed(1) || "0.0"}
+                                        </span>
+                                        <RatingStars
+                                            rating={course.rating}
+                                            showValue={false}
+                                            size={16}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="h-10 w-px bg-white/20 hidden sm:block" />
+
+                                <div className="flex flex-col gap-1.5">
+                                    <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
+                                        Active Students
+                                    </div>
+                                    <div className="flex items-center gap-2 text-white font-bold text-lg">
+                                        <Users
+                                            size={18}
+                                            className="text-white/70"
+                                        />
+                                        {(
+                                            course.students_count || 0
+                                        ).toLocaleString()}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <div className="flex flex-col gap-1.5">
-                        <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
-                            Course Rating
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-lg font-bold text-white">
-                                {course.rating?.toFixed(1) || "0.0"}
-                            </span>
-                            <RatingStars
-                                rating={course.rating}
-                                showValue={false}
-                                size={16}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="h-10 w-px bg-white/20 hidden sm:block" />
-
-                    <div className="flex flex-col gap-1.5">
-                        <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
-                            Active Students
-                        </div>
-                        <div className="flex items-center gap-2 text-white font-bold text-lg">
-                            <Users size={18} className="text-white/70" />
-                            {(course.students_count || 0).toLocaleString()}
+                            {/* Quick Stats */}
+                            <div className="flex flex-wrap gap-x-8 gap-y-4 pt-8 border-t border-white/20 text-[11px] font-bold uppercase tracking-wider text-white/60">
+                                <span className="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
+                                    <Clock
+                                        size={16}
+                                        className="text-white/50 group-hover:scale-110 group-hover:text-white transition-all"
+                                    />
+                                    {formatDuration(course.duration)}
+                                </span>
+                                <span className="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
+                                    <BookOpen
+                                        size={16}
+                                        className="text-white/50 group-hover:scale-110 group-hover:text-white transition-all"
+                                    />
+                                    {totalLessons} lessons
+                                </span>
+                                <span className="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
+                                    <Award
+                                        size={16}
+                                        className="text-white/50 group-hover:scale-110 group-hover:text-white transition-all"
+                                    />
+                                    Certificate
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                {/* Quick Stats */}
-                <div className="flex flex-wrap gap-x-8 gap-y-4 pt-8 border-t border-white/20 text-[11px] font-bold uppercase tracking-wider text-white/60">
-                    <span className="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
-                        <Clock size={16} className="text-white/50 group-hover:scale-110 group-hover:text-white transition-all" />
-                        {formatDuration(course.duration)}
-                    </span>
-                    <span className="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
-                        <BookOpen size={16} className="text-white/50 group-hover:scale-110 group-hover:text-white transition-all" />
-                        {totalLessons} lessons
-                    </span>
-                    <span className="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
-                        <Award size={16} className="text-white/50 group-hover:scale-110 group-hover:text-white transition-all" />
-                        Certificate
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+            </section>
 
             <div className="container relative z-20 mt-20 mx-auto px-4 lg:px-8 pb-20">
                 <div className="grid lg:grid-cols-3 gap-10">
@@ -436,21 +482,21 @@ const CourseDetails = () => {
                                     Student Reviews
                                 </h2>
                                 {(course.is_enrolled && (
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="rounded-button"
-                                        onClick={() =>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="rounded-button"
+                                            onClick={() =>
                                             setShowReviewForm(!showReviewForm)
-                                        }
-                                    >
-                                        {showReviewForm
-                                            ? "Cancel"
-                                            : isEditingReview
-                                              ? "Edit your Review"
-                                              : "Write a Review"}
-                                    </Button>
-                                )) || (
+                                            }
+                                        >
+                                            {showReviewForm
+                                                ? "Cancel"
+                                                : isEditingReview
+                                                  ? "Edit your Review"
+                                                  : "Write a Review"}
+                                        </Button>
+                                    )) || (
                                     <span className="text-small text-muted-foreground">
                                         {course.review_count || 0} reviews
                                     </span>
@@ -664,7 +710,9 @@ const CourseDetails = () => {
                                                 <div className="flex justify-between text-small">
                                                     <span>Course Price</span>
                                                     <span className="font-bold">
-                                                        ${course.price ?? course.original_price}
+                                                        $
+                                                        {course.price ??
+                                                            course.original_price}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between text-small text-muted-foreground">
@@ -674,7 +722,9 @@ const CourseDetails = () => {
                                                 <div className="border-t border-border pt-2 flex justify-between font-bold">
                                                     <span>Total</span>
                                                     <span className="text-primary">
-                                                        ${course.price ?? course.original_price}
+                                                        $
+                                                        {course.price ??
+                                                            course.original_price}
                                                     </span>
                                                 </div>
                                             </div>
@@ -687,9 +737,9 @@ const CourseDetails = () => {
                                             >
                                                 {isEnrolling
                                                     ? "Processing..."
-                                                    : course.price === 0 
-                                                        ? "Enroll for Free" 
-                                                        : `Pay $${course.price ?? course.original_price} & Enroll`}
+                                                    : course.price === 0
+                                                      ? "Enroll for Free"
+                                                      : `Pay $${course.price ?? course.original_price} & Enroll`}
                                             </Button>
                                         </DialogFooter>
                                     </DialogContent>

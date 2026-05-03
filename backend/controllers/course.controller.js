@@ -298,7 +298,7 @@ const getCourseContent = asyncHandler(async (req, res, next) => {
     const isEnrolled =
         userId &&
         (role === "admin" ||
-            course.instructor_id === userId ||
+            Number(course.instructor_id) === Number(userId) ||
             (await Enrollment.isEnrolled(userId, course_id)));
 
     const sections = await Section.findByCourseId(course_id);
@@ -319,7 +319,7 @@ const getCourseContent = asyncHandler(async (req, res, next) => {
             ...sectionData,
             lessons: lessons
                 .filter(
-                    (lesson) => lesson.section_order === section.section_order,
+                    (lesson) => Number(lesson.section_order) === Number(section.section_order),
                 )
                 .map((lesson) => {
                     const {

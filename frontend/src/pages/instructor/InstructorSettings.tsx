@@ -83,8 +83,12 @@ const InstructorSettings = () => {
       const profileData = new FormData();
       profileData.append("first_name", formData.firstName);
       profileData.append("last_name", formData.lastName);
-      profileData.append("bio", formData.bio);
-      profileData.append("title", formData.title);
+      if(formData.bio !== undefined && formData.bio !== "") {
+        profileData.append("bio", formData.bio);
+      }
+      if(formData.title !== undefined && formData.title !== "") {
+        profileData.append("title", formData.title);
+      }
       if (formData.avatar) {
         profileData.append("avatar", formData.avatar);
       }

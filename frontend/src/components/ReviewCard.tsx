@@ -1,7 +1,5 @@
-import { Users, Clock, BookOpen, Quote } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Quote } from "lucide-react";
 import RatingStars from "./RatingStars";
-import { Course } from "@/lib/courses-api";
 import { getMediaUrl } from "@/lib/utils";
 
 interface ReviewCardProps {
