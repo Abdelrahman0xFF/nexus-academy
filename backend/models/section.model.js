@@ -56,32 +56,66 @@ class Section {
     }
 
     static async update(course_id, section_order, updatedSection) {
+        const pool = await poolPromise;
+        const transaction = new sql.Transaction(pool);
         try {
-            const pool = await poolPromise;
-            const request = pool.request();
+            await transaction.begin();
+            const request = new sql.Request(transaction);
             request.input("course_id", sql.Int, course_id);
             request.input("old_section_order", sql.Int, section_order);
 
-            let query = "UPDATE sections SET ";
+            let sqlBatch = "";
+            if (updatedSection.section_order) {
+                request.input("new_section_order", sql.Int, updatedSection.section_order);
+                
+                sqlBatch += `
+                    SELECT * INTO #temp_user_lessons 
+                    FROM user_lessons 
+                    WHERE course_id = @course_id AND section_order = @old_section_order;
+
+                    DELETE FROM user_lessons 
+                    WHERE course_id = @course_id AND section_order = @old_section_order;
+
+                    UPDATE lessons 
+                    SET section_order = @new_section_order 
+                    WHERE course_id = @course_id AND section_order = @old_section_order;
+                `;
+            }
+
+            let updateQuery = "UPDATE sections SET ";
             const updates = [];
             if (updatedSection.title) {
                 request.input("title", sql.NVarChar, updatedSection.title);
                 updates.push("title = @title");
             }
-            
             if (updatedSection.section_order) {
-                request.input("new_section_order", sql.Int, updatedSection.section_order);
                 updates.push("section_order = @new_section_order");
             }
             
-            if (updates.length === 0) return null;
+            if (updates.length === 0 && !updatedSection.section_order) {
+                await transaction.rollback();
+                return null;
+            }
 
-            query += updates.join(", ");
-            query += " WHERE course_id = @course_id AND section_order = @old_section_order";
+            updateQuery += updates.join(", ");
+            updateQuery += " WHERE course_id = @course_id AND section_order = @old_section_order; ";
+            sqlBatch += updateQuery;
 
-            const result = await request.query(query);
-            return result.rowsAffected[0] > 0;
+            if (updatedSection.section_order) {
+                sqlBatch += `
+                    INSERT INTO user_lessons (user_id, course_id, section_order, lesson_order)
+                    SELECT user_id, course_id, @new_section_order, lesson_order 
+                    FROM #temp_user_lessons;
+
+                    DROP TABLE #temp_user_lessons;
+                `;
+            }
+
+            const result = await request.query(sqlBatch);
+            await transaction.commit();
+            return true;
         } catch (err) {
+            await transaction.rollback();
             console.error("Error updating section: ", err);
             throw err;
         }

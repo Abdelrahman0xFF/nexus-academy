@@ -64,6 +64,7 @@ export interface LessonForm {
   isNew?: boolean;
   video_url?: string;
   original_lesson_order?: number;
+  original_section_order?: number;
 }
 
 export interface SectionForm {
@@ -151,8 +152,8 @@ export const sectionsApi = {
     return response.data;
   },
 
-  update: async (courseId: number, sectionOrder: number, title: string): Promise<void> => {
-    await api.put<any, ApiResponse<null>>(`/sections/${courseId}/${sectionOrder}`, { title });
+  update: async (courseId: number, sectionOrder: number, data: { section_order?: number; title?: string }): Promise<void> => {
+    await api.put<any, ApiResponse<null>>(`/sections/${courseId}/${sectionOrder}`, data);
   },
 
   delete: async (courseId: number, sectionOrder: number): Promise<void> => {

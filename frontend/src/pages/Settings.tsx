@@ -126,10 +126,10 @@ const Settings = () => {
     const profileFormData = new FormData();
     profileFormData.append("first_name", formData.firstName);
     profileFormData.append("last_name", formData.lastName);
-    if(formData.bio !== undefined) {
+    if(formData.bio !== undefined && formData.bio !== "") {
       profileFormData.append("bio", formData.bio);
     }
-    if(formData.title !== undefined) {
+    if(formData.title !== undefined && formData.title !== "") {
       profileFormData.append("title", formData.title);
     }
     if (avatarFile) {

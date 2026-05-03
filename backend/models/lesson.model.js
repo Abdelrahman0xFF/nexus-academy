@@ -94,7 +94,26 @@ class Lesson {
             request.input("old_section_order", sql.Int, section_order);
             request.input("old_lesson_order", sql.Int, lesson_order);
 
-            let query = "UPDATE lessons SET ";
+            const new_section_order = updatedLesson.section_order !== undefined ? updatedLesson.section_order : section_order;
+            const new_lesson_order = updatedLesson.lesson_order !== undefined ? updatedLesson.lesson_order : lesson_order;
+            const isOrderChanging = new_section_order !== section_order || new_lesson_order !== lesson_order;
+
+            let sqlBatch = "";
+            if (isOrderChanging) {
+                request.input("new_section_order", sql.Int, new_section_order);
+                request.input("new_lesson_order", sql.Int, new_lesson_order);
+
+                sqlBatch += `
+                    SELECT * INTO #temp_user_lessons 
+                    FROM user_lessons 
+                    WHERE course_id = @course_id AND section_order = @old_section_order AND lesson_order = @old_lesson_order;
+
+                    DELETE FROM user_lessons 
+                    WHERE course_id = @course_id AND section_order = @old_section_order AND lesson_order = @old_lesson_order;
+                `;
+            }
+
+            let updateQuery = "UPDATE lessons SET ";
             const updates = [];
             
             if (updatedLesson.title !== undefined) {
@@ -114,34 +133,33 @@ class Lesson {
                 updates.push("duration = @duration");
             }
 
-            const new_section_order = updatedLesson.section_order !== undefined ? updatedLesson.section_order : section_order;
-            const new_lesson_order = updatedLesson.lesson_order !== undefined ? updatedLesson.lesson_order : lesson_order;
-
-            if (new_section_order !== section_order || new_lesson_order !== lesson_order) {
-                request.input("new_section_order", sql.Int, new_section_order);
-                request.input("new_lesson_order", sql.Int, new_lesson_order);
+            if (isOrderChanging) {
                 updates.push("section_order = @new_section_order");
                 updates.push("lesson_order = @new_lesson_order");
-
-                await request.query(`
-                    UPDATE user_lessons 
-                    SET section_order = @new_section_order, lesson_order = @new_lesson_order 
-                    WHERE course_id = @course_id AND section_order = @old_section_order AND lesson_order = @old_lesson_order
-                `);
             }
 
-            if (updates.length === 0) {
+            if (updates.length === 0 && !isOrderChanging) {
                 await transaction.rollback();
                 return null;
             }
 
-            query += updates.join(", ");
-            query +=
-                " WHERE course_id = @course_id AND section_order = @old_section_order AND lesson_order = @old_lesson_order";
+            updateQuery += updates.join(", ");
+            updateQuery += " WHERE course_id = @course_id AND section_order = @old_section_order AND lesson_order = @old_lesson_order; ";
+            sqlBatch += updateQuery;
 
-            const result = await request.query(query);
+            if (isOrderChanging) {
+                sqlBatch += `
+                    INSERT INTO user_lessons (user_id, course_id, section_order, lesson_order)
+                    SELECT user_id, course_id, @new_section_order, @new_lesson_order 
+                    FROM #temp_user_lessons;
+
+                    DROP TABLE #temp_user_lessons;
+                `;
+            }
+
+            const result = await request.query(sqlBatch);
             await transaction.commit();
-            return result.rowsAffected[result.rowsAffected.length - 1] > 0;
+            return true;
         } catch (err) {
             await transaction.rollback();
             console.error("Error updating lesson: ", err);
