@@ -128,10 +128,11 @@ class Lesson {
                 .input("course_id", sql.Int, course_id)
                 .input("section_order", sql.Int, section_order)
                 .input("lesson_order", sql.Int, lesson_order)
-                .query(
-                    "DELETE FROM lessons WHERE course_id = @course_id AND section_order = @section_order AND lesson_order = @lesson_order",
-                );
-            return result.rowsAffected[0] > 0;
+                .query(`
+                    DELETE FROM user_lessons WHERE course_id = @course_id AND section_order = @section_order AND lesson_order = @lesson_order;
+                    DELETE FROM lessons WHERE course_id = @course_id AND section_order = @section_order AND lesson_order = @lesson_order;
+                `);
+            return result.rowsAffected[result.rowsAffected.length - 1] > 0;
         } catch (err) {
             console.error("Error deleting lesson: ", err);
             throw err;

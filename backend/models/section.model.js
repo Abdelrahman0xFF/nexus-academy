@@ -83,10 +83,13 @@ class Section {
     }
 
     static async delete(course_id, section_order) {
+        const pool = await poolPromise;
+        const transaction = new sql.Transaction(pool);
         try {
-            const pool = await poolPromise;
-            const result = await pool
-                .request()
+            await transaction.begin();
+            const request = new sql.Request(transaction);
+            
+            await request
                 .input("course_id", sql.Int, course_id)
                 .input("section_order", sql.Int, section_order)
                 .query(`
@@ -94,8 +97,11 @@ class Section {
                     DELETE FROM lessons WHERE course_id = @course_id AND section_order = @section_order;
                     DELETE FROM sections WHERE course_id = @course_id AND section_order = @section_order;
                 `);
-            return result.rowsAffected[result.rowsAffected.length - 1] > 0;
+            
+            await transaction.commit();
+            return true;
         } catch (err) {
+            await transaction.rollback();
             console.error("Error deleting section: ", err);
             throw err;
         }

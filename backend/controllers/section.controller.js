@@ -15,8 +15,9 @@ const createSection = asyncHandler(async (req, res, next) => {
 
     if (
         req.user.role !== "admin" &&
-        course.instructor_id !== req.user.user_id
+        Number(course.instructor_id) !== Number(req.user.user_id)
     ) {
+        console.log(course.instructor_id, req.user.user_id);
         return errorResponse(
             res,
             "Forbidden: You are not authorized to add sections to this course",
@@ -68,7 +69,7 @@ const updateSection = asyncHandler(async (req, res, next) => {
 
     if (
         req.user.role !== "admin" &&
-        course.instructor_id !== req.user.user_id
+        Number(course.instructor_id) !== Number(req.user.user_id)
     ) {
         return errorResponse(
             res,
@@ -95,7 +96,7 @@ const deleteSection = asyncHandler(async (req, res, next) => {
 
     if (
         req.user.role !== "admin" &&
-        course.instructor_id !== req.user.user_id
+        Number(course.instructor_id) !== Number(req.user.user_id)
     ) {
         return errorResponse(
             res,

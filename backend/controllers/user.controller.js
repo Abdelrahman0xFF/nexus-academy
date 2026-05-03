@@ -133,36 +133,32 @@ const deleteUser = asyncHandler(async (req, res) => {
         return errorResponse(res, "User not found", 404);
     }
 
-    // If instructor, cleanup their courses from Drive
+    const filesToDelete = [];
+    if (user.avatar_url) filesToDelete.push(user.avatar_url);
+
     if (user.role === "instructor") {
-        const courses = await Course.findByInstructorId(user_id, user_id, true);
+        const courses = (await Course.findByInstructorId(user_id)).courses;
         for (const course of courses) {
             if (course.thumbnail_url) {
-                await deleteFromDrive(course.thumbnail_url).catch((err) =>
-                    console.error("Failed to delete course thumbnail:", err),
-                );
+                filesToDelete.push(course.thumbnail_url);
             }
             const lessons = await Lesson.findByCourseId(course.course_id);
             for (const lesson of lessons) {
                 if (lesson.video_url) {
-                    await deleteFromDrive(lesson.video_url).catch((err) =>
-                        console.error("Failed to delete lesson video:", err),
-                    );
+                    filesToDelete.push(lesson.video_url);
                 }
             }
         }
     }
 
-    const result = await User.delete(user_id);
+    for (const fileUrl of filesToDelete) {
+        await deleteFromDrive(fileUrl).catch((err) =>
+            console.error(`Failed to delete file ${fileUrl} from drive:`, err),
+        );
+    }
 
+    const result = await User.delete(user_id);
     if (result) {
-        if (user.avatar_url) {
-            try {
-                await deleteFromDrive(user.avatar_url);
-            } catch (err) {
-                console.error("Failed to delete user avatar from drive:", err);
-            }
-        }
         return successResponse(res, null, "User deleted successfully");
     } else {
         return errorResponse(res, "User not found", 404);

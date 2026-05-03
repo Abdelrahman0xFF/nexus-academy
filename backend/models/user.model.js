@@ -247,11 +247,15 @@ class User {
     }
 
     static async delete(user_id) {
+        const pool = await poolPromise;
+        const transaction = new sql.Transaction(pool);
         try {
-            const pool = await poolPromise;
-            const result = await pool
-                .request()
-                .input("user_id", sql.Int, user_id).query(`
+            await transaction.begin();
+            const request = new sql.Request(transaction);
+            
+            await request
+                .input("user_id", sql.Int, user_id)
+                .query(`
                     DELETE FROM reviews WHERE user_id = @user_id;
                     
                     DELETE FROM reviews WHERE course_id IN (SELECT course_id FROM courses WHERE instructor_id = @user_id);
@@ -267,8 +271,11 @@ class User {
                     DELETE FROM enrollments WHERE user_id = @user_id;
                     DELETE FROM users WHERE user_id = @user_id;
                 `);
-            return result.rowsAffected[result.rowsAffected.length - 1] > 0;
+            
+            await transaction.commit();
+            return true;
         } catch (err) {
+            await transaction.rollback();
             console.error("Error deleting user: ", err);
             throw err;
         }

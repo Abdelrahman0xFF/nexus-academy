@@ -41,6 +41,20 @@ const updateCategory = asyncHandler(async (req, res, next) => {
 
 const deleteCategory = asyncHandler(async (req, res, next) => {
     const { category_id } = req.params;
+
+    const category = await Category.findById(category_id);
+    if (!category) {
+        return errorResponse(res, "Category not found", 404);
+    }
+
+    if (category.course_count > 0) {
+        return errorResponse(
+            res,
+            "Cannot delete category that has courses. Please move or delete the courses first.",
+            400,
+        );
+    }
+
     const result = await Category.delete(category_id);
     if (result) {
         return successResponse(res, null, "Category deleted successfully");

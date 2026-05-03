@@ -44,7 +44,11 @@ class Course {
                 )
                 .input("level", sql.NVarChar, level)
                 .input("thumbnail_url", sql.NVarChar, thumbnail_url)
-                .input("is_available", sql.Bit, is_available === "false" ? 0 : 1).query(`
+                .input(
+                    "is_available",
+                    sql.Bit,
+                    is_available === "false" ? 0 : 1,
+                ).query(`
                     INSERT INTO courses (category_id, instructor_id, title, description, original_price, price, level, thumbnail_url, is_available)
                     OUTPUT INSERTED.*
                     VALUES (@category_id, @instructor_id, @title, @description, @original_price, @price, @level, @thumbnail_url, @is_available)
@@ -112,18 +116,20 @@ class Course {
             const offset = (page - 1) * limit;
             const pool = await poolPromise;
             const request = pool.request();
-            
+
             request.input("instructor_id", sql.Int, instructor_id);
             request.input("userId", sql.Int, userId);
             request.input("isAdmin", sql.Bit, isAdmin ? 1 : 0);
             request.input("limit", sql.Int, limit);
             request.input("offset", sql.Int, offset);
 
-            let filterQuery = "WHERE c.instructor_id = @instructor_id AND (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)";
-            
+            let filterQuery =
+                "WHERE c.instructor_id = @instructor_id AND (c.is_available = 1 OR @isAdmin = 1 OR c.instructor_id = @userId)";
+
             if (filters.search) {
                 request.input("search", sql.NVarChar, `%${filters.search}%`);
-                filterQuery += " AND (c.title LIKE @search OR c.description LIKE @search)";
+                filterQuery +=
+                    " AND (c.title LIKE @search OR c.description LIKE @search)";
             }
 
             if (filters.category_id) {
@@ -131,8 +137,15 @@ class Course {
                 filterQuery += " AND c.category_id = @category_id";
             }
 
-            if (filters.is_available !== undefined && filters.is_available !== null) {
-                request.input("is_available_filter", sql.Bit, filters.is_available);
+            if (
+                filters.is_available !== undefined &&
+                filters.is_available !== null
+            ) {
+                request.input(
+                    "is_available_filter",
+                    sql.Bit,
+                    filters.is_available,
+                );
                 filterQuery += " AND c.is_available = @is_available_filter";
             }
 
@@ -175,7 +188,7 @@ class Course {
 
             return {
                 courses: result.recordsets[0],
-                total: result.recordsets[1][0].total
+                total: result.recordsets[1][0].total,
             };
         } catch (err) {
             console.error("Error finding courses by instructor ID: ", err);
@@ -221,8 +234,15 @@ class Course {
                 filterQuery += " AND c.level = @level";
             }
 
-            if (filters.is_available !== undefined && filters.is_available !== null) {
-                request.input("is_available_filter", sql.Bit, filters.is_available);
+            if (
+                filters.is_available !== undefined &&
+                filters.is_available !== null
+            ) {
+                request.input(
+                    "is_available_filter",
+                    sql.Bit,
+                    filters.is_available,
+                );
                 filterQuery += " AND c.is_available = @is_available_filter";
             }
 
@@ -230,7 +250,10 @@ class Course {
                 ? order.toUpperCase()
                 : "ASC";
 
-            const sortColumn = sortBy === "price" ? "ISNULL(c.price, c.original_price)" : sortBy;
+            const sortColumn =
+                sortBy === "price"
+                    ? "ISNULL(c.price, c.original_price)"
+                    : sortBy;
 
             const query = `
                 SELECT c.*, 
@@ -307,20 +330,26 @@ class Course {
     }
 
     static async delete(course_id) {
+        const pool = await poolPromise;
+        const transaction = new sql.Transaction(pool);
         try {
-            const pool = await poolPromise;
-            const result = await pool
-                .request()
-                .input("course_id", sql.Int, course_id).query(`
+            await transaction.begin();
+            const request = new sql.Request(transaction);
+
+            await request.input("course_id", sql.Int, course_id).query(`
                     DELETE FROM reviews WHERE course_id = @course_id;
                     DELETE FROM user_lessons WHERE course_id = @course_id;
+                    DELETE FROM certificates WHERE course_id = @course_id;
                     DELETE FROM enrollments WHERE course_id = @course_id;
                     DELETE FROM lessons WHERE course_id = @course_id;
                     DELETE FROM sections WHERE course_id = @course_id;
                     DELETE FROM courses WHERE course_id = @course_id;
                 `);
-            return result.rowsAffected[0] > 0;
+
+            await transaction.commit();
+            return true;
         } catch (err) {
+            await transaction.rollback();
             console.error("Error deleting course: ", err);
             throw err;
         }

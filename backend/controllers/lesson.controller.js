@@ -21,7 +21,7 @@ const createLesson = asyncHandler(async (req, res, next) => {
     const course = await Course.findById(course_id, userId, isAdmin);
     if (
         req.user.role !== "admin" &&
-        course.instructor_id !== req.user.user_id
+        Number(course.instructor_id) !== Number(req.user.user_id)
     ) {
         return errorResponse(
             res,
@@ -100,7 +100,7 @@ const updateLesson = asyncHandler(async (req, res, next) => {
 
     if (
         req.user.role !== "admin" &&
-        course.instructor_id !== req.user.user_id
+        Number(course.instructor_id) !== Number(req.user.user_id)
     ) {
         return errorResponse(
             res,
@@ -173,7 +173,7 @@ const deleteLesson = asyncHandler(async (req, res, next) => {
 
     if (
         req.user.role !== "admin" &&
-        course.instructor_id !== req.user.user_id
+        Number(course.instructor_id) !== Number(req.user.user_id)
     ) {
         return errorResponse(
             res,
@@ -189,22 +189,23 @@ const deleteLesson = asyncHandler(async (req, res, next) => {
     );
     if (!lesson) return errorResponse(res, "Lesson not found", 404);
 
+    if (lesson.video_url) {
+        try {
+            await deleteFromDrive(lesson.video_url);
+        } catch (err) {
+            console.error(
+                "Failed to delete lesson video from drive:",
+                err,
+            );
+        }
+    }
+
     const result = await Lesson.delete(
         course_id,
         section_order,
         lesson_order,
     );
     if (result) {
-        if (lesson.video_url) {
-            try {
-                await deleteFromDrive(lesson.video_url);
-            } catch (err) {
-                console.error(
-                    "Failed to delete lesson video from drive:",
-                    err,
-                );
-            }
-        }
         return successResponse(res, null, "Lesson deleted successfully");
     } else {
         return errorResponse(res, "Lesson not found", 404);

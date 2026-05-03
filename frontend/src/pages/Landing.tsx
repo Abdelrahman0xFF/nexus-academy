@@ -208,8 +208,8 @@ const Landing = () => {
             {/* Featured Courses */}
             <section className="container mx-auto px-4 lg:px-8 py-16">
                 <ScrollReveal animation="slide-up">
-                    <div className="flex items-end justify-between mb-10">
-                        <div>
+                    <div className="mb-10">
+                        <div className="text-center">
                             <h2 className="text-h2 text-foreground">
                                 Featured Courses
                             </h2>
@@ -217,16 +217,6 @@ const Landing = () => {
                                 Learn from the best instructors in the industry
                             </p>
                         </div>
-                        <Link
-                            to="/courses"
-                            className="hidden sm:flex items-center gap-1 text-primary font-medium text-small hover:underline group"
-                        >
-                            View All{" "}
-                            <ArrowRight
-                                size={16}
-                                className="group-hover:translate-x-1 transition-transform"
-                            />
-                        </Link>
                     </div>
                 </ScrollReveal>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -244,17 +244,24 @@ class Enrollment {
     }
 
     static async delete(user_id, course_id) {
+        const pool = await poolPromise;
+        const transaction = new sql.Transaction(pool);
         try {
-            const pool = await poolPromise;
-            await pool
-                .request()
+            await transaction.begin();
+            const request = new sql.Request(transaction);
+            
+            await request
                 .input("user_id", sql.Int, user_id)
-                .input("course_id", sql.Int, course_id).query(`
+                .input("course_id", sql.Int, course_id)
+                .query(`
                     DELETE FROM user_lessons WHERE user_id = @user_id AND course_id = @course_id;
                     DELETE FROM enrollments WHERE user_id = @user_id AND course_id = @course_id;
                 `);
+            
+            await transaction.commit();
             return true;
         } catch (err) {
+            await transaction.rollback();
             console.error("Error deleting enrollment: ", err);
             throw err;
         }

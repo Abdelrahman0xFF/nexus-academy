@@ -56,7 +56,10 @@ const getCourseById = asyncHandler(async (req, res, next) => {
     if (course) {
         let is_enrolled = false;
         if (userId) {
-            is_enrolled = isAdmin || course.instructor_id === userId || await Enrollment.isEnrolled(userId, course_id);
+            is_enrolled =
+                isAdmin ||
+                course.instructor_id === userId ||
+                (await Enrollment.isEnrolled(userId, course_id));
         }
         return successResponse(res, { ...course, is_enrolled });
     } else {
@@ -93,11 +96,14 @@ const getAllCourses = asyncHandler(async (req, res, next) => {
         Number(limit),
         userId,
         isAdmin,
-        { 
-            search, 
-            category_id, 
-            level, 
-            is_available: is_available === undefined ? undefined : is_available === "true" 
+        {
+            search,
+            category_id,
+            level,
+            is_available:
+                is_available === undefined
+                    ? undefined
+                    : is_available === "true",
         },
         sortColumn,
         order,
@@ -108,7 +114,13 @@ const getAllCourses = asyncHandler(async (req, res, next) => {
 const getMyCourses = asyncHandler(async (req, res, next) => {
     const userId = req.user.user_id;
     const isAdmin = req.user.role === "admin";
-    const { page = 1, limit = 10, search, category_id, is_available } = req.query;
+    const {
+        page = 1,
+        limit = 10,
+        search,
+        category_id,
+        is_available,
+    } = req.query;
 
     const { courses, total } = await Course.findByInstructorId(
         userId,
@@ -116,10 +128,13 @@ const getMyCourses = asyncHandler(async (req, res, next) => {
         isAdmin,
         Number(page),
         Number(limit),
-        { 
-            search, 
+        {
+            search,
             category_id: category_id ? Number(category_id) : null,
-            is_available: is_available === undefined ? undefined : is_available === "true"
+            is_available:
+                is_available === undefined
+                    ? undefined
+                    : is_available === "true",
         },
     );
     return successResponse(res, { courses, total });
@@ -129,7 +144,13 @@ const getCoursesByInstructorId = asyncHandler(async (req, res, next) => {
     const { instructor_id } = req.params;
     const userId = req.user?.user_id || null;
     const isAdmin = req.user?.role === "admin";
-    const { page = 1, limit = 10, search, category_id, is_available } = req.query;
+    const {
+        page = 1,
+        limit = 10,
+        search,
+        category_id,
+        is_available,
+    } = req.query;
 
     const { courses, total } = await Course.findByInstructorId(
         Number(instructor_id),
@@ -137,10 +158,13 @@ const getCoursesByInstructorId = asyncHandler(async (req, res, next) => {
         isAdmin,
         Number(page),
         Number(limit),
-        { 
-            search, 
+        {
+            search,
             category_id: category_id ? Number(category_id) : null,
-            is_available: is_available === undefined ? undefined : is_available === "true"
+            is_available:
+                is_available === undefined
+                    ? undefined
+                    : is_available === "true",
         },
     );
 
@@ -166,7 +190,7 @@ const updateCourse = asyncHandler(async (req, res, next) => {
 
         if (
             req.user.role !== "admin" &&
-            existingCourse.instructor_id !== req.user.user_id
+            Number(existingCourse.instructor_id) !== Number(req.user.user_id)
         ) {
             return errorResponse(
                 res,
@@ -246,7 +270,7 @@ const deleteCourse = asyncHandler(async (req, res, next) => {
 
     if (
         req.user.role !== "admin" &&
-        course.instructor_id !== req.user.user_id
+        Number(course.instructor_id) !== Number(req.user.user_id)
     ) {
         return errorResponse(
             res,
@@ -257,28 +281,25 @@ const deleteCourse = asyncHandler(async (req, res, next) => {
 
     const lessons = await Lesson.findByCourseId(course_id);
 
-    const result = await Course.delete(course_id);
-    if (result) {
-        if (course.thumbnail_url) {
-            await deleteFromDrive(course.thumbnail_url).catch((err) =>
+    if (course.thumbnail_url) {
+        await deleteFromDrive(course.thumbnail_url).catch((err) =>
+            console.error("Failed to delete course thumbnail from drive:", err),
+        );
+    }
+
+    for (const lesson of lessons) {
+        if (lesson.video_url) {
+            await deleteFromDrive(lesson.video_url).catch((err) =>
                 console.error(
-                    "Failed to delete course thumbnail from drive:",
+                    `Failed to delete video for lesson ${lesson.lesson_order} of course ${course_id} from drive:`,
                     err,
                 ),
             );
         }
+    }
 
-        for (const lesson of lessons) {
-            if (lesson.video_url) {
-                await deleteFromDrive(lesson.video_url).catch((err) =>
-                    console.error(
-                        `Failed to delete video for lesson ${lesson.lesson_order} of course ${course_id} from drive:`,
-                        err,
-                    ),
-                );
-            }
-        }
-
+    const result = await Course.delete(course_id);
+    if (result) {
         return successResponse(res, null, "Course deleted successfully");
     } else {
         return errorResponse(res, "Course not found", 404);
@@ -319,7 +340,9 @@ const getCourseContent = asyncHandler(async (req, res, next) => {
             ...sectionData,
             lessons: lessons
                 .filter(
-                    (lesson) => Number(lesson.section_order) === Number(section.section_order),
+                    (lesson) =>
+                        Number(lesson.section_order) ===
+                        Number(section.section_order),
                 )
                 .map((lesson) => {
                     const {
