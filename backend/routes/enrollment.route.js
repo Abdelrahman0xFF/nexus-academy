@@ -15,11 +15,32 @@ import { enrollmentSchema } from "../validators/enrollment.validator.js";
 const router = express.Router();
 
 router.get("/", authenticate, authorize("admin"), getAllEnrollments);
-router.post("/", authenticate, validateRequest(enrollmentSchema), enroll);
-router.get("/my", authenticate, getMyEnrollments);
-router.get("/instructor/students", authenticate, authorize("instructor"), getInstructorStudents);
-router.get("/instructor", authenticate, authorize("instructor"), getInstructorEnrollments);
-router.get("/progress/:course_id", authenticate, getProgress);
+router.post(
+    "/",
+    authenticate,
+    authorize("user"),
+    validateRequest(enrollmentSchema),
+    enroll,
+);
+router.get("/my", authenticate, authorize("user"), getMyEnrollments);
+router.get(
+    "/instructor/students",
+    authenticate,
+    authorize("instructor"),
+    getInstructorStudents,
+);
+router.get(
+    "/instructor",
+    authenticate,
+    authorize("instructor"),
+    getInstructorEnrollments,
+);
+router.get(
+    "/progress/:course_id",
+    authenticate,
+    authorize("user"),
+    getProgress,
+);
 router.delete("/", authenticate, authorize("admin", "instructor"), unenroll);
 
 export default router;

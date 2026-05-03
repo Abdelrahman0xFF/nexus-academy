@@ -61,7 +61,7 @@ const LessonPlayer = () => {
     const { data: userReviewRes } = useQuery({
         queryKey: ["user-review", courseId],
         queryFn: () => api.get<any, ApiResponse<Review>>(`/reviews/${courseId}/me`),
-        enabled: !!courseId,
+        enabled: !!courseId && user?.role === "user",
     });
 
     const userReview = userReviewRes?.data;
@@ -104,6 +104,29 @@ const LessonPlayer = () => {
         }
     });
 
+    const hasCompletedRef = useRef(false);
+
+    useEffect(() => {
+        hasCompletedRef.current = false;
+    }, [currentLesson?.lesson_order]);
+
+    const triggerComplete = () => {
+        if (
+            user?.role !== "user" ||
+            currentLesson?.is_completed ||
+            hasCompletedRef.current || 
+            completeMutation.isPending ||
+            !currentSection ||
+            !currentLesson
+        ) return;
+
+        hasCompletedRef.current = true;
+        completeMutation.mutate({
+            sectionOrder: currentSection.section_order,
+            lessonOrder: currentLesson.lesson_order,
+        });
+    };
+
     const handleNextLesson = () => {
         if (!content) return;
         if (currentLessonIdx < currentSection!.lessons.length - 1) {
@@ -127,25 +150,13 @@ const LessonPlayer = () => {
     };
 
     const handleVideoEnded = () => {
-        if (!currentLesson?.is_completed) {
-            completeMutation.mutate({ 
-                sectionOrder: currentSection!.section_order, 
-                lessonOrder: currentLesson!.lesson_order 
-            });
-        }
+        triggerComplete();
         setTimeout(() => handleNextLesson(), 1500);
     };
 
     const handleProgressUpdate = (progress: number) => {
-        if (
-            progress >= 0.95 &&
-            !currentLesson?.is_completed &&
-            !completeMutation.isPending
-        ) {
-            completeMutation.mutate({ 
-                sectionOrder: currentSection!.section_order, 
-                lessonOrder: currentLesson!.lesson_order 
-            });
+        if (progress >= 0.95) {
+            triggerComplete();
         }
     };
 

@@ -49,6 +49,7 @@ router.delete(
 router.post(
     "/:course_id/:section_order/:lesson_order/complete",
     authenticate,
+    authorize("user"),
     verifyEnrollment,
     completeLesson
 );

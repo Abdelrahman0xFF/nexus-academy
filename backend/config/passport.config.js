@@ -57,7 +57,7 @@ passport.use(
                     google_id: profile.id,
                     avatar_url: avatarUrl,
                     is_verified: true,
-                    role: "student",
+                    role: "user",
                 });
 
                 return done(null, newUser);

@@ -482,21 +482,21 @@ const CourseDetails = () => {
                                     Student Reviews
                                 </h2>
                                 {(course.is_enrolled && (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="rounded-button"
-                                            onClick={() =>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="rounded-button"
+                                        onClick={() =>
                                             setShowReviewForm(!showReviewForm)
-                                            }
-                                        >
-                                            {showReviewForm
-                                                ? "Cancel"
-                                                : isEditingReview
-                                                  ? "Edit your Review"
-                                                  : "Write a Review"}
-                                        </Button>
-                                    )) || (
+                                        }
+                                    >
+                                        {showReviewForm
+                                            ? "Cancel"
+                                            : isEditingReview
+                                              ? "Edit your Review"
+                                              : "Write a Review"}
+                                    </Button>
+                                )) || (
                                     <span className="text-small text-muted-foreground">
                                         {course.review_count || 0} reviews
                                     </span>
@@ -676,7 +676,9 @@ const CourseDetails = () => {
                                     )}
                             </div>
 
-                            {course.is_enrolled ? (
+                            {course.is_enrolled ||
+                            user.role === "instructor" ||
+                            user.role === "admin" ? (
                                 <Button
                                     onClick={() =>
                                         navigate(`/learn/${courseId}`)
