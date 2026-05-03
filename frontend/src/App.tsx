@@ -10,7 +10,6 @@ import StudentDashboard from "./pages/student/StudentOverview";
 import StudentCourses from "./pages/student/StudentCourses";
 import StudentProgress from "./pages/student/StudentProgress";
 import StudentCertificates from "./pages/student/StudentCertificates";
-import StudentSettings from "./pages/student/StudentSettings";
 import LessonPlayer from "./pages/student/LessonPlayer";
 import InstructorDashboard from "./pages/instructor/InstructorOverview";
 import InstructorCourses from "./pages/instructor/InstructorCourses";
@@ -20,15 +19,14 @@ import InstructorAnalytics from "./pages/instructor/InstructorAnalytics";
 import InstructorReviews from "./pages/instructor/InstructorReviews";
 import InstructorStudents from "./pages/instructor/InstructorStudents";
 import InstructorRevenue from "./pages/instructor/InstructorRevenue";
-import InstructorSettings from "./pages/instructor/InstructorSettings";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminPayments from "./pages/admin/AdminPayments";
-import AdminSettings from "./pages/admin/AdminSettings";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminEnrollments from "./pages/admin/AdminEnrollments";
+import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -148,7 +146,7 @@ const App = () => (
                             <ProtectedRoute
                                 allowedRoles={["user"]}
                             >
-                                <StudentSettings />
+                                <Settings />
                             </ProtectedRoute>
                         }
                     />
@@ -249,7 +247,7 @@ const App = () => (
                             <ProtectedRoute
                                 allowedRoles={["instructor"]}
                             >
-                                <InstructorSettings />
+                                <Settings />
                             </ProtectedRoute>
                         }
                     />
@@ -306,7 +304,7 @@ const App = () => (
                         path="/admin/settings"
                         element={
                             <ProtectedRoute allowedRoles={["admin"]}>
-                                <AdminSettings />
+                                <Settings />
                             </ProtectedRoute>
                         }
                     />

@@ -17,8 +17,8 @@ import { authApi } from "@/lib/auth-api";
 import { useToast } from "@/hooks/use-toast";
 import { getMediaUrl } from "@/lib/utils";
 
-const StudentSettings = () => {
-  const { user, isLoading: isAuthLoading } = useAuth();
+const Settings = () => {
+  const { user, isLoading: isAuthLoading, refreshUser } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -57,15 +57,16 @@ const StudentSettings = () => {
 
   const updateProfileMutation = useMutation({
     mutationFn: (data: FormData) => authApi.updateProfile(user!.id, data),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await refreshUser();
       queryClient.invalidateQueries({ queryKey: ["auth-user"] });
       toast({
         title: "Profile updated",
         description: "Your profile information has been successfully updated.",
       });
     },
-    onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : "Something went wrong while updating your profile.";
+    onError: (error: any) => {
+      const message = error.response?.data?.message || error.message || "Something went wrong while updating your profile.";
       toast({
         title: "Update failed",
         description: message,
@@ -83,8 +84,8 @@ const StudentSettings = () => {
         description: "Your password has been successfully changed.",
       });
     },
-    onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : "Something went wrong while updating your profile.";
+    onError: (error: any) => {
+      const message = error.response?.data?.message || error.message || "Something went wrong while changing your password.";
       toast({
         title: "Update failed",
         description: message,
@@ -119,16 +120,16 @@ const StudentSettings = () => {
   };
 
   const isPasswordValid = Object.values(passwordCriteria).every(Boolean);
-  const canSavePassword = passwords.new === "" ? false : isPasswordValid;
+  const canSavePassword = passwords.new === "" ? true : isPasswordValid;
 
   const handleSave = async () => {
     const profileFormData = new FormData();
     profileFormData.append("first_name", formData.firstName);
     profileFormData.append("last_name", formData.lastName);
-    if(formData.bio !== undefined && formData.bio !== "") {
+    if(formData.bio !== undefined) {
       profileFormData.append("bio", formData.bio);
     }
-    if(formData.title !== undefined && formData.title !== "") {
+    if(formData.title !== undefined) {
       profileFormData.append("title", formData.title);
     }
     if (avatarFile) {
@@ -146,9 +147,10 @@ const StudentSettings = () => {
     }
   };
 
-  if (isAuthLoading) {
+  if (isAuthLoading || !user) {
+    const layoutType = user?.role === "user" ? "student" : (user?.role || "student") as "student" | "instructor" | "admin";
     return (
-      <DashboardLayout type="student">
+      <DashboardLayout type={layoutType}>
         <div className="flex items-center justify-center h-[60vh]">
           <Loader2 className="animate-spin text-primary" size={40} />
         </div>
@@ -156,8 +158,11 @@ const StudentSettings = () => {
     );
   }
 
+  const layoutType = user.role === "user" ? "student" : user.role as "student" | "instructor" | "admin";
+  const titleLabel = user.role === "admin" ? "Administrative Title" : user.role === "instructor" ? "Professional Title" : "Professional Title";
+
   return (
-    <DashboardLayout type="student">
+    <DashboardLayout type={layoutType}>
       <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
         <h1 className="text-h1 text-foreground">Settings</h1>
         <p className="text-body text-muted-foreground mt-1">
@@ -238,7 +243,7 @@ const StudentSettings = () => {
                   <div className="w-full">
                     <label className="text-small font-medium text-foreground block mb-1.5 flex items-center gap-2">
                       <Briefcase size={14} className="text-primary" />{" "}
-                      Professional Title
+                      {titleLabel}
                     </label>
                     <input
                       type="text"
@@ -412,4 +417,4 @@ const StudentSettings = () => {
   );
 };
 
-export default StudentSettings;
+export default Settings;
