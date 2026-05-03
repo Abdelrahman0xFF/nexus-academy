@@ -35,17 +35,21 @@ const Landing = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const [categoriesData, coursesData, instructorsData, bestReviewsData] =
-                    await Promise.all([
-                        categoryApi.getAll(),
-                        coursesApi.getAll({
-                            limit: 4,
-                            sortBy: "Rating",
-                            order: "DESC",
-                        }),
-                        usersApi.getBestInstructors(),
-                        reviewApi.getBestReviews(),
-                    ]);
+                const [
+                    categoriesData,
+                    coursesData,
+                    instructorsData,
+                    bestReviewsData,
+                ] = await Promise.all([
+                    categoryApi.getAll(),
+                    coursesApi.getAll({
+                        limit: 4,
+                        sortBy: "Rating",
+                        order: "DESC",
+                    }),
+                    usersApi.getBestInstructors(),
+                    reviewApi.getBestReviews(),
+                ]);
                 setCategories(categoriesData);
                 setFeaturedCourses(coursesData.courses);
                 setInstructors(instructorsData);
@@ -265,18 +269,24 @@ const Landing = () => {
                         </div>
                     </ScrollReveal>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {categories.slice(0, 4).map((c, index) => (
-                            <ScrollReveal
-                                key={c.category_id}
-                                animation="zoom-in"
-                                delay={index * 100}
-                            >
-                                <CategoryCard
-                                    category={c}
-                                    to={`/courses?category_id=${c.category_id}`}
-                                />
-                            </ScrollReveal>
-                        ))}
+                        {categories.length > 0 ? (
+                            categories.slice(0, 4).map((c, index) => (
+                                <ScrollReveal
+                                    key={c.category_id}
+                                    animation="zoom-in"
+                                    delay={index * 100}
+                                >
+                                    <CategoryCard
+                                        category={c}
+                                        to={`/courses?category_id=${c.category_id}`}
+                                    />
+                                </ScrollReveal>
+                            ))
+                        ) : (
+                            <div className="col-span-full text-center py-10 text-muted-foreground">
+                                No categories found.
+                            </div>
+                        )}
                     </div>
                 </div>
             </section>
@@ -294,15 +304,21 @@ const Landing = () => {
                     </div>
                 </ScrollReveal>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {instructors.map((i, index) => (
-                        <ScrollReveal
-                            key={i.id}
-                            animation="slide-up"
-                            delay={index * 100}
-                        >
-                            <InstructorCard instructor={i} />
-                        </ScrollReveal>
-                    ))}
+                    {instructors.length > 0 ? (
+                        instructors.map((i, index) => (
+                            <ScrollReveal
+                                key={i.id}
+                                animation="slide-up"
+                                delay={index * 100}
+                            >
+                                <InstructorCard instructor={i} />
+                            </ScrollReveal>
+                        ))
+                    ) : (
+                        <div className="col-span-full text-center py-10 text-muted-foreground">
+                            No instructors found.
+                        </div>
+                    )}
                 </div>
             </section>
 
@@ -320,15 +336,21 @@ const Landing = () => {
                         </div>
                     </ScrollReveal>
                     <div className="grid md:grid-cols-3 gap-6">
-                        {bestReviews.map((r, index) => (
-                            <ScrollReveal
-                                key={r.user_id + '-' + r.course_id}
-                                animation="slide-up"
-                                delay={index * 100}
-                            >
-                             <ReviewCard {...r} />
-                            </ScrollReveal>
-                        ))}
+                        {bestReviews.length > 0 ? (
+                            bestReviews.map((r, index) => (
+                                <ScrollReveal
+                                    key={r.user_id + "-" + r.course_id}
+                                    animation="slide-up"
+                                    delay={index * 100}
+                                >
+                                    <ReviewCard {...r} />
+                                </ScrollReveal>
+                            ))
+                        ) : (
+                            <div className="col-span-full text-center py-10 text-muted-foreground">
+                                No reviews found.
+                            </div>
+                        )}
                     </div>
                 </div>
             </section>

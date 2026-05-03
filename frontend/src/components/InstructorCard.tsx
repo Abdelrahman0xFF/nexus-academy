@@ -1,4 +1,4 @@
-import { Users, BookOpen, Star } from "lucide-react";
+import { BookOpen, Star } from "lucide-react";
 import { getMediaUrl } from "@/lib/utils";
 import type { Instructor } from "@/lib/data";
 
@@ -20,10 +20,14 @@ const InstructorCard = ({ instructor }: { instructor: Instructor }) => {
       <p className="text-small text-muted-foreground mt-1 mb-4">{instructor.title}</p>
       <div className="flex items-center justify-center gap-4 text-small text-muted-foreground">
         <span className="flex items-center gap-1">
-          <Star size={14} className="fill-amber-400 text-amber-400" /> {instructor.average_rating.toFixed(1)}
+          {instructor.average_rating ? (
+            <>
+              <Star size={14} className="fill-amber-400 text-amber-400" /> {instructor.average_rating.toFixed(1)}
+            </>
+          ) : null}
         </span>
         <span className="flex items-center gap-1">
-          <BookOpen size={14} /> {instructor.course_count}
+          <BookOpen size={14} /> {instructor.course_count || 0}
         </span>
       </div>
     </div>
