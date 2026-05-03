@@ -34,8 +34,11 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
 
   const [sections, setSections] = useState<SectionForm[]>([
-    { title: "Introduction", lessons: [{ title: "Welcome", description: "", video: null }] }
+    { title: "Introduction", lessons: [{ title: "Welcome", description: "", video: null, isNew: true }], isNew: true }
   ]);
+
+  const [deletedSections, setDeletedSections] = useState<{ course_id: number, section_order: number }[]>([]);
+  const [deletedLessons, setDeletedLessons] = useState<{ course_id: number, section_order: number, lesson_order: number }[]>([]);
 
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
@@ -55,6 +58,24 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
       setOriginalPrice(courseData.original_price);
       setIsAvailable(courseData.is_available);
       setThumbnailPreview(courseData.thumbnail_url);
+
+      const content = await coursesApi.getCourseContent(Number(courseId));
+      if (content && content.sections) {
+        setSections(content.sections.map(s => ({
+          title: s.title,
+          original_section_order: s.section_order,
+          isNew: false,
+          lessons: s.lessons.map(l => ({
+            title: l.title,
+            description: l.description || "",
+            video: null,
+            video_url: l.video_url,
+            isNew: false,
+            original_lesson_order: l.lesson_order
+          }))
+        })));
+      }
+
       return courseData;
     },
     enabled: isEditMode && !!courseId,
@@ -75,20 +96,32 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
   };
 
   const addSection = () => {
-    setSections([...sections, { title: "", lessons: [{ title: "", description: "", video: null }] }]);
+    setSections([...sections, { title: "", lessons: [{ title: "", description: "", video: null, isNew: true }], isNew: true }]);
   };
 
   const addLesson = (sectionIndex: number) => {
     const updated = [...sections];
-    updated[sectionIndex].lessons.push({ title: "", description: "", video: null });
+    updated[sectionIndex].lessons.push({ title: "", description: "", video: null, isNew: true });
     setSections(updated);
   };
 
   const removeSection = (index: number) => {
+    const sectionToRemove = sections[index];
+    if (!sectionToRemove.isNew && courseId) {
+      setDeletedSections([...deletedSections, { course_id: Number(courseId), section_order: sectionToRemove.original_section_order! }]);
+    }
     setSections(sections.filter((_, i) => i !== index));
   };
 
   const removeLesson = (sectionIndex: number, lessonIndex: number) => {
+    const lessonToRemove = sections[sectionIndex].lessons[lessonIndex];
+    if (!lessonToRemove.isNew && courseId) {
+      setDeletedLessons([...deletedLessons, { 
+        course_id: Number(courseId), 
+        section_order: sections[sectionIndex].original_section_order!, 
+        lesson_order: lessonToRemove.original_lesson_order! 
+      }]);
+    }
     const updated = [...sections];
     updated[sectionIndex].lessons = updated[sectionIndex].lessons.filter((_, i) => i !== lessonIndex);
     setSections(updated);
@@ -101,7 +134,7 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
   };
 
   const handlePublish = async () => {
-    if (!title || !description || !categoryId || !level || !originalPrice) {
+    if (!title.trim() || !description.trim() || !categoryId || !level || originalPrice === "") {
       toast({
         title: "Validation Error",
         description: "Please fill in all required basic information",
@@ -117,6 +150,59 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
         variant: "destructive",
       });
       return;
+    }
+
+    if (!isEditMode) {
+      if (sections.length === 0) {
+        toast({
+          title: "Validation Error",
+          description: "Please add at least one section to your course",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      for (let si = 0; si < sections.length; si++) {
+        const section = sections[si];
+        if (!section.title.trim()) {
+          toast({
+            title: "Validation Error",
+            description: `Section ${si + 1} is missing a title`,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (section.lessons.length === 0) {
+          toast({
+            title: "Validation Error",
+            description: `Section "${section.title}" must have at least one lesson`,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        for (let li = 0; li < section.lessons.length; li++) {
+          const lesson = section.lessons[li];
+          if (!lesson.title.trim()) {
+            toast({
+              title: "Validation Error",
+              description: `Lesson ${li + 1} in section "${section.title}" is missing a title`,
+              variant: "destructive",
+            });
+            return;
+          }
+
+          if (!lesson.video && !lesson.video_url) {
+            toast({
+              title: "Validation Error",
+              description: `Please upload a video for lesson "${lesson.title}" in section "${section.title}"`,
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+      }
     }
 
     setPublishing(true);
@@ -142,7 +228,61 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
         publishedCourseId = newCourse.course_id;
       }
 
-      if (!isEditMode) {
+      if (isEditMode) {
+        for (const dl of deletedLessons) {
+          setPublishProgress(`Deleting lesson...`);
+          await lessonsApi.delete(dl.course_id, dl.section_order, dl.lesson_order).catch(console.error);
+        }
+
+        for (const ds of deletedSections) {
+          setPublishProgress(`Deleting section...`);
+          await sectionsApi.delete(ds.course_id, ds.section_order).catch(console.error);
+        }
+
+        for (let si = 0; si < sections.length; si++) {
+          const section = sections[si];
+          const newSectionOrder = si + 1;
+
+          if (section.isNew) {
+            setPublishProgress(`Adding section: ${section.title}...`);
+            await sectionsApi.create({
+              course_id: publishedCourseId,
+              section_order: newSectionOrder,
+              title: section.title
+            });
+          } else {
+            setPublishProgress(`Updating section: ${section.title}...`);
+            await sectionsApi.update(publishedCourseId, section.original_section_order!, section.title);
+          }
+
+          for (let li = 0; li < section.lessons.length; li++) {
+            const lesson = section.lessons[li];
+            const newLessonOrder = li + 1;
+
+            if (lesson.isNew) {
+              setPublishProgress(`Uploading new lesson: ${lesson.title}...`);
+              const lessonFormData = new FormData();
+              lessonFormData.append("course_id", publishedCourseId.toString());
+              lessonFormData.append("section_order", newSectionOrder.toString());
+              lessonFormData.append("lesson_order", newLessonOrder.toString());
+              lessonFormData.append("title", lesson.title);
+              lessonFormData.append("description", lesson.description);
+              if (lesson.video) lessonFormData.append("video", lesson.video);
+              await lessonsApi.create(lessonFormData);
+            } else {
+              setPublishProgress(`Updating lesson: ${lesson.title}...`);
+              const lessonFormData = new FormData();
+              lessonFormData.append("title", lesson.title);
+              lessonFormData.append("description", lesson.description);
+              lessonFormData.append("section_order", newSectionOrder.toString());
+              lessonFormData.append("lesson_order", newLessonOrder.toString());
+              if (lesson.video) lessonFormData.append("video", lesson.video);
+
+              await lessonsApi.update(publishedCourseId, section.original_section_order!, lesson.original_lesson_order!, lessonFormData);
+            }
+          }
+        }
+      } else {
         for (let si = 0; si < sections.length; si++) {
           const section = sections[si];
           setPublishProgress(`Creating section ${si + 1}: ${section.title}...`);
@@ -320,105 +460,106 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
             </div>
           </div>
 
-          {!isEditMode && (
-            <div className="bg-card rounded-card card-shadow p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300 fill-mode-both">
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-h3 text-card-foreground">Course Content</h2>
-                <Button variant="outline" size="sm" className="rounded-button hover:bg-primary/5 transition-colors" onClick={addSection}>
-                  <Plus size={14} className="mr-1" /> Add Section
-                </Button>
-              </div>
-              <div className="space-y-4">
-                {sections.map((section, si) => (
-                  <div key={si} className="border border-border rounded-lg p-4 bg-muted/20 transition-all hover:bg-muted/30">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
-                        {si + 1}
-                      </div>
-                      <input
-                        type="text"
-                        value={section.title}
-                        onChange={(e) => {
-                          const u = [...sections];
-                          u[si].title = e.target.value;
-                          setSections(u);
-                        }}
-                        placeholder="Section title"
-                        className="flex-1 px-3 py-1.5 text-small bg-background rounded-button border border-border outline-none focus:ring-2 focus:ring-primary/20 font-medium transition-all"
-                      />
-                      <button onClick={() => removeSection(si)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
-                        <X size={16} />
-                      </button>
+          <div className="bg-card rounded-card card-shadow p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300 fill-mode-both">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-h3 text-card-foreground">Course Content</h2>
+              <Button variant="outline" size="sm" className="rounded-button hover:bg-primary/5 transition-colors" onClick={addSection}>
+                <Plus size={14} className="mr-1" /> Add Section
+              </Button>
+            </div>
+            <div className="space-y-4">
+              {sections.map((section, si) => (
+                <div key={si} className="border border-border rounded-lg p-4 bg-muted/20 transition-all hover:bg-muted/30">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
+                      {si + 1}
                     </div>
-                    
-                    <div className="space-y-3 ml-6">
-                      {section.lessons.map((lesson, li) => (
-                        <div key={li} className="bg-background border border-border rounded-md p-3 space-y-3 transition-all hover:shadow-sm">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-muted-foreground">L{li + 1}</span>
-                            <input
-                              type="text"
-                              value={lesson.title}
-                              onChange={(e) => {
-                                const u = [...sections];
-                                u[si].lessons[li].title = e.target.value;
-                                setSections(u);
-                              }}
-                              placeholder="Lesson title"
-                              className="flex-1 px-3 py-1 text-small bg-muted/50 rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                            />
-                            <button onClick={() => removeLesson(si, li)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
-                              <X size={14} />
-                            </button>
-                          </div>
-                          
-                          <textarea
-                            value={lesson.description}
+                    <input
+                      type="text"
+                      value={section.title}
+                      onChange={(e) => {
+                        const u = [...sections];
+                        u[si].title = e.target.value;
+                        setSections(u);
+                      }}
+                      placeholder="Section title"
+                      className="flex-1 px-3 py-1.5 text-small bg-background rounded-button border border-border outline-none focus:ring-2 focus:ring-primary/20 font-medium transition-all"
+                    />
+                    <button onClick={() => removeSection(si)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
+                      <X size={16} />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3 ml-6">
+                    {section.lessons.map((lesson, li) => (
+                      <div key={li} className="bg-background border border-border rounded-md p-3 space-y-3 transition-all hover:shadow-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-muted-foreground">L{li + 1}</span>
+                          <input
+                            type="text"
+                            value={lesson.title}
                             onChange={(e) => {
                               const u = [...sections];
-                              u[si].lessons[li].description = e.target.value;
+                              u[si].lessons[li].title = e.target.value;
                               setSections(u);
                             }}
-                            placeholder="Lesson description (optional)"
-                            rows={2}
-                            className="w-full px-3 py-1.5 text-xs bg-muted/30 rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"
+                            placeholder="Lesson title"
+                            className="flex-1 px-3 py-1 text-small bg-muted/50 rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                           />
-                          
-                          <div className="flex items-center gap-3">
-                            <div className="flex-1">
-                              <input
-                                type="file"
-                                accept="video/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) handleLessonVideoChange(si, li, file);
-                                }}
-                                className="hidden"
-                                id={`video-${si}-${li}`}
-                              />
-                              <label 
-                                htmlFor={`video-${si}-${li}`}
-                                className="flex items-center gap-2 px-3 py-1.5 text-xs bg-primary/10 text-primary rounded-button border border-primary/20 cursor-pointer hover:bg-primary/20 transition-all w-fit"
-                              >
-                                <Video size={14} />
-                                {lesson.video ? lesson.video.name : "Upload Lesson Video"}
-                              </label>
-                            </div>
+                          <button onClick={() => removeLesson(si, li)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
+                            <X size={14} />
+                          </button>
+                        </div>
+                        
+                        <textarea
+                          value={lesson.description}
+                          onChange={(e) => {
+                            const u = [...sections];
+                            u[si].lessons[li].description = e.target.value;
+                            setSections(u);
+                          }}
+                          placeholder="Lesson description (optional)"
+                          rows={2}
+                          className="w-full px-3 py-1.5 text-xs bg-muted/30 rounded-button border-0 outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"
+                        />
+                        
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1">
+                            <input
+                              type="file"
+                              accept="video/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleLessonVideoChange(si, li, file);
+                              }}
+                              className="hidden"
+                              id={`video-${si}-${li}`}
+                            />
+                            <label 
+                              htmlFor={`video-${si}-${li}`}
+                              className="flex items-center gap-2 px-3 py-1.5 text-xs bg-primary/10 text-primary rounded-button border border-primary/20 cursor-pointer hover:bg-primary/20 transition-all w-fit"
+                            >
+                              <Video size={14} />
+                              {lesson.video ? lesson.video.name : (lesson.video_url ? "Change Lesson Video" : "Upload Lesson Video")}
+                            </label>
+                            {lesson.video_url && !lesson.video && (
+                              <span className="ml-2 text-[10px] text-emerald-600 font-medium">Video Uploaded</span>
+                            )}
                           </div>
                         </div>
-                      ))}
-                      <button
-                        onClick={() => addLesson(si)}
-                        className="text-xs text-primary font-medium hover:underline flex items-center gap-1 mt-1 transition-all hover:pl-1"
-                      >
-                        <Plus size={12} /> Add Lesson
-                      </button>
-                    </div>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => addLesson(si)}
+                      className="text-xs text-primary font-medium hover:underline flex items-center gap-1 mt-1 transition-all hover:pl-1"
+                    >
+                      <Plus size={12} /> Add Lesson
+                    </button>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Sidebar */}

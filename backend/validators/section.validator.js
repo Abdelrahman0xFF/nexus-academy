@@ -7,7 +7,8 @@ const sectionSchema = Joi.object({
 });
 
 const updateSectionSchema = Joi.object({
-    title: Joi.string().max(255).required(),
+    section_order: Joi.number().integer(),
+    title: Joi.string().max(255),
 });
 
 export { sectionSchema, updateSectionSchema };

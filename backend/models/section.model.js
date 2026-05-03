@@ -60,7 +60,7 @@ class Section {
             const pool = await poolPromise;
             const request = pool.request();
             request.input("course_id", sql.Int, course_id);
-            request.input("section_order", sql.Int, section_order);
+            request.input("old_section_order", sql.Int, section_order);
 
             let query = "UPDATE sections SET ";
             const updates = [];
@@ -69,10 +69,15 @@ class Section {
                 updates.push("title = @title");
             }
             
+            if (updatedSection.section_order) {
+                request.input("new_section_order", sql.Int, updatedSection.section_order);
+                updates.push("section_order = @new_section_order");
+            }
+            
             if (updates.length === 0) return null;
 
             query += updates.join(", ");
-            query += " WHERE course_id = @course_id AND section_order = @section_order";
+            query += " WHERE course_id = @course_id AND section_order = @old_section_order";
 
             const result = await request.query(query);
             return result.rowsAffected[0] > 0;

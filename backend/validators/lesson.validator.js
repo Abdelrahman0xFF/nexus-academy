@@ -9,6 +9,8 @@ const lessonSchema = Joi.object({
 });
 
 const updateLessonSchema = Joi.object({
+    section_order: Joi.number().integer(),
+    lesson_order: Joi.number().integer(),
     title: Joi.string().max(255),
     description: Joi.string().allow(""),
 });

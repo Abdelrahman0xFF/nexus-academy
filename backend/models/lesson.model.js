@@ -85,36 +85,65 @@ class Lesson {
     }
 
     static async update(course_id, section_order, lesson_order, updatedLesson) {
+        const pool = await poolPromise;
+        const transaction = new sql.Transaction(pool);
         try {
-            const pool = await poolPromise;
-            const request = pool.request();
+            await transaction.begin();
+            const request = new sql.Request(transaction);
             request.input("course_id", sql.Int, course_id);
-            request.input("section_order", sql.Int, section_order);
-            request.input("lesson_order", sql.Int, lesson_order);
+            request.input("old_section_order", sql.Int, section_order);
+            request.input("old_lesson_order", sql.Int, lesson_order);
 
             let query = "UPDATE lessons SET ";
             const updates = [];
-            for (const [key, value] of Object.entries(updatedLesson)) {
-                if (
-                    value !== undefined &&
-                    !["course_id", "section_order", "lesson_order"].includes(
-                        key,
-                    )
-                ) {
-                    request.input(key, value);
-                    updates.push(`${key} = @${key}`);
-                }
+            
+            if (updatedLesson.title !== undefined) {
+                request.input("title", sql.NVarChar, updatedLesson.title);
+                updates.push("title = @title");
+            }
+            if (updatedLesson.description !== undefined) {
+                request.input("description", sql.NVarChar, updatedLesson.description);
+                updates.push("description = @description");
+            }
+            if (updatedLesson.video_url !== undefined) {
+                request.input("video_url", sql.VarChar, updatedLesson.video_url);
+                updates.push("video_url = @video_url");
+            }
+            if (updatedLesson.duration !== undefined) {
+                request.input("duration", sql.Int, updatedLesson.duration);
+                updates.push("duration = @duration");
             }
 
-            if (updates.length === 0) return null;
+            const new_section_order = updatedLesson.section_order !== undefined ? updatedLesson.section_order : section_order;
+            const new_lesson_order = updatedLesson.lesson_order !== undefined ? updatedLesson.lesson_order : lesson_order;
+
+            if (new_section_order !== section_order || new_lesson_order !== lesson_order) {
+                request.input("new_section_order", sql.Int, new_section_order);
+                request.input("new_lesson_order", sql.Int, new_lesson_order);
+                updates.push("section_order = @new_section_order");
+                updates.push("lesson_order = @new_lesson_order");
+
+                await request.query(`
+                    UPDATE user_lessons 
+                    SET section_order = @new_section_order, lesson_order = @new_lesson_order 
+                    WHERE course_id = @course_id AND section_order = @old_section_order AND lesson_order = @old_lesson_order
+                `);
+            }
+
+            if (updates.length === 0) {
+                await transaction.rollback();
+                return null;
+            }
 
             query += updates.join(", ");
             query +=
-                " WHERE course_id = @course_id AND section_order = @section_order AND lesson_order = @lesson_order";
+                " WHERE course_id = @course_id AND section_order = @old_section_order AND lesson_order = @old_lesson_order";
 
             const result = await request.query(query);
-            return result.rowsAffected[0] > 0;
+            await transaction.commit();
+            return result.rowsAffected[result.rowsAffected.length - 1] > 0;
         } catch (err) {
+            await transaction.rollback();
             console.error("Error updating lesson: ", err);
             throw err;
         }

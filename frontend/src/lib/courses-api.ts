@@ -61,11 +61,16 @@ export interface LessonForm {
   title: string;
   description: string;
   video: File | null;
+  isNew?: boolean;
+  video_url?: string;
+  original_lesson_order?: number;
 }
 
 export interface SectionForm {
   title: string;
   lessons: LessonForm[];
+  isNew?: boolean;
+  original_section_order?: number;
 }
 
 export const coursesApi = {
