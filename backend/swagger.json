@@ -59,6 +59,10 @@
         {
             "name": "Media",
             "description": "Endpoints for handling file uploads (images/videos) and secure streaming."
+        },
+        {
+            "name": "Payments",
+            "description": "Endpoints for handling Stripe payments and webhooks."
         }
     ],
     "components": {
@@ -500,7 +504,12 @@
                         "application/json": {
                             "schema": {
                                 "type": "object",
-                                "required": ["email", "otp", "new_password", "confirm_password"],
+                                "required": [
+                                    "email",
+                                    "otp",
+                                    "new_password",
+                                    "confirm_password"
+                                ],
                                 "properties": {
                                     "email": { "type": "string" },
                                     "otp": { "type": "string" },
@@ -1878,6 +1887,77 @@
                 "tags": ["Earnings"],
                 "summary": "Get earnings analytics (Instructor/Admin)",
                 "responses": { "200": { "description": "Analytics" } }
+            }
+        },
+        "/payments/create-checkout-session": {
+            "post": {
+                "tags": ["Payments"],
+                "summary": "Create a Stripe Checkout session",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["course_id"],
+                                "properties": {
+                                    "course_id": {
+                                        "type": "integer",
+                                        "example": 101
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Session created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "sessionId": {
+                                                    "type": "string"
+                                                },
+                                                "url": { "type": "string" }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": { "$ref": "#/components/responses/BadRequest" },
+                    "404": { "$ref": "#/components/responses/NotFound" }
+                }
+            }
+        },
+        "/payments/webhook": {
+            "post": {
+                "tags": ["Payments"],
+                "summary": "Stripe Webhook handler",
+                "security": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": { "type": "object" }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Webhook received" },
+                    "400": { "description": "Webhook error" }
+                }
             }
         },
         "/media": {
