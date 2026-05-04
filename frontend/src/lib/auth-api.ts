@@ -1,102 +1,48 @@
-import { api, ApiResponse } from "./api-client";
-export interface User {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  role: "user" | "instructor" | "admin";
-  avatar_url?: string;
-  title?: string;
-  bio?: string;
-  is_verified: boolean;
-  created_at: string;
-}
-
-export interface SignupForm {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  confirm: string;
-}
-
-export interface LoginForm {
-  email: string;
-  password: string;
-}
-
-export interface InstructorSettingsForm {
-  firstName: string;
-  lastName: string;
-  email: string;
-  bio: string;
-  title: string;
-  website: string;
-  avatar: File | null;
-  avatarPreview: string;
-}
-
-export interface AuthCredentials {
-  email: string;
-  password?: string;
-}
-
-export interface ChangePasswordData {
-  old_password: string;
-  new_password: string;
-  confirm_password: string;
-}
+import { request } from "./api-client";
+import { User, LoginForm, AuthCredentials, ChangePasswordData } from "../types";
 
 export const authApi = {
-  login: async (credentials: AuthCredentials): Promise<ApiResponse<User>> => {
-    return api.post<AuthCredentials, ApiResponse<User>>("/auth/login", credentials);
+  login: async (credentials: AuthCredentials): Promise<User> => {
+    return request.post<User>("/auth/login", credentials);
   },
 
-  register: async (formData: FormData): Promise<ApiResponse<null>> => {
-    return api.post<FormData, ApiResponse<null>>("/auth/register", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+  register: async (formData: FormData): Promise<null> => {
+    return request.post<null>("/auth/register", formData);
   },
 
-  verifyOtp: async (data: { email: string; otp: string }): Promise<ApiResponse<null>> => {
-    return api.post<{ email: string; otp: string }, ApiResponse<null>>("/auth/verify-otp", data);
+  verifyOtp: async (data: { email: string; otp: string }): Promise<null> => {
+    return request.post<null>("/auth/verify-otp", data);
   },
 
-  resendOtp: async (email: string): Promise<ApiResponse<null>> => {
-    return api.post<{ email: string }, ApiResponse<null>>("/auth/resend-otp", { email });
+  resendOtp: async (email: string): Promise<null> => {
+    return request.post<null>("/auth/resend-otp", { email });
   },
   
-  me: async (): Promise<ApiResponse<User>> => {
-    return api.get<never, ApiResponse<User>>("/auth/me");
+  me: async (): Promise<User> => {
+    return request.get<User>("/auth/me");
   },
 
-  updateProfile: async (userId: number, formData: FormData): Promise<ApiResponse<null>> => {
-    return api.put<FormData, ApiResponse<null>>(`/users/${userId}`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+  updateProfile: async (userId: number, formData: FormData): Promise<null> => {
+    return request.put<null>(`/users/${userId}`, formData);
   },
 
-  changePassword: async (data: ChangePasswordData): Promise<ApiResponse<null>> => {
-    return api.put<ChangePasswordData, ApiResponse<null>>("/auth/change-password", data);
+  changePassword: async (data: ChangePasswordData): Promise<null> => {
+    return request.put<null>("/auth/change-password", data);
   },
 
-  logout: async (): Promise<ApiResponse<null>> => {
-    return api.post<never, ApiResponse<null>>("/auth/logout");
+  logout: async (): Promise<null> => {
+    return request.post<null>("/auth/logout");
   },
 
-  forgotPassword: async (email: string): Promise<ApiResponse<null>> => {
-    return api.post<{ email: string }, ApiResponse<null>>("/auth/forgot-password", { email });
+  forgotPassword: async (email: string): Promise<null> => {
+    return request.post<null>("/auth/forgot-password", { email });
   },
 
-  resetPassword: async (data: any): Promise<ApiResponse<null>> => {
-    return api.post<any, ApiResponse<null>>("/auth/reset-password", data);
+  resetPassword: async (data: any): Promise<null> => {
+    return request.post<null>("/auth/reset-password", data);
   },
 
   getGoogleAuthUrl: () => {
-    return `${api.defaults.baseURL}/auth/google`;
+    return `http://localhost:4000/api/auth/google`;
   }
 };

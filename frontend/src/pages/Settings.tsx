@@ -56,7 +56,7 @@ const Settings = () => {
   }, [user]);
 
   const updateProfileMutation = useMutation({
-    mutationFn: (data: FormData) => authApi.updateProfile(user!.id, data),
+    mutationFn: (data: FormData) => authApi.updateProfile(user?.id, data),
     onSuccess: async () => {
       await refreshUser();
       queryClient.invalidateQueries({ queryKey: ["auth-user"] });
@@ -66,7 +66,7 @@ const Settings = () => {
       });
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || "Something went wrong while updating your profile.";
+      const message = error.message || "Something went wrong while updating your profile.";
       toast({
         title: "Update failed",
         description: message,
@@ -85,7 +85,7 @@ const Settings = () => {
       });
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || "Something went wrong while changing your password.";
+      const message = error.message || "Something went wrong while changing your password.";
       toast({
         title: "Update failed",
         description: message,

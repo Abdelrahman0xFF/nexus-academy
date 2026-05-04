@@ -14,12 +14,10 @@ import CourseCard from "@/components/CourseCard";
 import InstructorCard from "@/components/InstructorCard";
 import CategoryCard from "@/components/CategoryCard";
 import ReviewCard from "@/components/ReviewCard";
-import RatingStars from "@/components/RatingStars";
 import ScrollReveal from "@/components/ScrollReveal";
-import { testimonials } from "@/lib/data";
 import { categoryApi } from "@/lib/categories-api";
 import { reviewApi } from "@/lib/reviews-api";
-import { coursesApi, type Course } from "@/lib/courses-api";
+import { coursesApi  } from "@/lib/courses-api";
 import heroImage from "@/assets/landing-img.svg";
 import Marquee from "@/components/Marquee";
 import { usersApi } from "@/lib/users-api";
@@ -27,7 +25,7 @@ import { usersApi } from "@/lib/users-api";
 const Landing = () => {
     const [categories, setCategories] = useState<any[]>([]);
     const [instructors, setInstructors] = useState<any[]>([]);
-    const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
+    const [featuredCourses, setFeaturedCourses] = useState<any[]>([]);
     const [bestReviews, setBestReviews] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 

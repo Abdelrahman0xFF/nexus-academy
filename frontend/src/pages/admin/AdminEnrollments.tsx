@@ -53,7 +53,7 @@ const AdminEnrollments = () => {
                 search: debouncedSearch || undefined,
                 course_id: courseFilter === "all" ? undefined : Number(courseFilter),
                 payment_status: statusFilter === "all" ? undefined : statusFilter,
-            }).then(res => res.data),
+            }),
     });
 
     const { data: coursesData } = useQuery({

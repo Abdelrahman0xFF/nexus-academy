@@ -34,8 +34,8 @@ const InstructorRevenue = () => {
             enrollmentApi.getInstructorEnrollments(enrollmentPage, limit),
     });
 
-    const transactions = recentRes?.data?.enrollments || [];
-    const totalEnrollments = recentRes?.data?.total || 0;
+    const transactions = recentRes?.enrollments || [];
+    const totalEnrollments = recentRes?.total || 0;
     const totalEnrollmentPages = Math.ceil(totalEnrollments / limit);
 
     const courseEarningsData = (summary?.details || []).map((c) => ({

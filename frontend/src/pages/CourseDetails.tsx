@@ -35,7 +35,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { coursesApi } from "@/lib/courses-api";
 import { enrollmentApi } from "@/lib/enrollment-api";
 import { paymentApi } from "@/lib/payment-api";
-import { reviewApi, Review } from "@/lib/reviews-api";
+import { reviewApi } from "@/lib/reviews-api";
 import { useAuth } from "@/hooks/use-auth";
 
 const CourseDetails = () => {
@@ -72,7 +72,7 @@ const CourseDetails = () => {
 
     const reviews = reviewsData?.reviews || [];
 
-    const { data: userReviewRes } = useQuery({
+    const { data: userReview } = useQuery({
         queryKey: ["user-review", courseId],
         queryFn: () => reviewApi.getUserReview(courseId),
         enabled:
@@ -82,8 +82,6 @@ const CourseDetails = () => {
             !!course?.is_enrolled,
         retry: false,
     });
-
-    const userReview = userReviewRes?.data;
 
     useEffect(() => {
         if (userReview) {
@@ -107,7 +105,7 @@ const CourseDetails = () => {
             navigate(`/payment-success?session_id=free&course_id=${courseId}`);
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || "Enrollment failed");
+            toast.error(error.message || "Enrollment failed");
         },
         onSettled: () => {
             setIsEnrolling(false);
@@ -116,16 +114,16 @@ const CourseDetails = () => {
 
     const checkoutMutation = useMutation({
         mutationFn: () => paymentApi.createCheckoutSession(courseId),
-        onSuccess: (response: any) => {
-            if (response.data?.url) {
+        onSuccess: (data: { url: string }) => {
+            if (data?.url) {
                 // If it's a Stripe URL or a direct success redirect
-                window.location.href = response.data.url;
+                window.location.href = data.url;
             } else {
                 toast.error("Failed to process enrollment");
             }
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || "Enrollment failed");
+            toast.error(error.message || "Enrollment failed");
         },
         onSettled: () => {
             setIsEnrolling(false);
@@ -154,7 +152,7 @@ const CourseDetails = () => {
         },
         onError: (error: any) => {
             toast.error(
-                error.response?.data?.message || "Failed to submit review",
+                error.message || "Failed to submit review",
             );
         },
     });

@@ -1,9 +1,6 @@
-export interface Category {
-  category_id: number,
-  name: string,
-  course_count?: number
-}
-export interface Course {
+import { Category, Testimonial } from "@/types";
+
+export interface MockCourse {
   id: string;
   title: string;
   instructor: string;
@@ -22,31 +19,7 @@ export interface Course {
   progress?: number;
 }
 
-export interface Instructor {
-  avatar_url:string;
-  first_name:string;
-  last_name:string;
-  title:string;
-  course_count:number;
-  average_rating:number;
-}
-
-export interface Category {
-  category_id: number;
-  name: string;
-  course_count?: number;
-}
-
-export interface Testimonial {
-  id: string;
-  name: string;
-  avatar: string;
-  role: string;
-  content: string;
-  rating: number;
-}
-
-export const courses: Course[] = [
+export const courses: MockCourse[] = [
   {
     id: "1",
     title: "Complete Web Development Bootcamp 2025",
@@ -215,7 +188,7 @@ export const testimonials: Testimonial[] = [
   },
 ];
 
-export const studentCourses: (Course & { progress: number; lastAccessed: string })[] = [
+export const studentCourses: (MockCourse & { progress: number; lastAccessed: string })[] = [
   { ...courses[0], progress: 68, lastAccessed: "2 hours ago" },
   { ...courses[1], progress: 42, lastAccessed: "1 day ago" },
   { ...courses[2], progress: 89, lastAccessed: "3 hours ago" },
@@ -259,7 +232,7 @@ export const curriculum = [
   },
 ];
 
-export interface Review {
+export interface MockReview {
   id: string;
   courseId: string;
   userName: string;
@@ -269,7 +242,7 @@ export interface Review {
   date: string;
 }
 
-export const initialReviews: Review[] = [
+export const initialReviews: MockReview[] = [
   {
     id: "r1",
     courseId: "1",

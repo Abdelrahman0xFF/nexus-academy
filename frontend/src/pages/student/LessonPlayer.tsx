@@ -24,9 +24,8 @@ import {
 } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { coursesApi, lessonsApi } from "@/lib/courses-api";
-import { reviewApi, Review } from "@/lib/reviews-api";
+import { reviewApi } from "@/lib/reviews-api";
 import { getMediaUrl } from "@/lib/utils";
-import { api, ApiResponse } from "@/lib/api-client";
 import { useAuth } from "@/hooks/use-auth";
 import VideoPlayer from "@/components/VideoPlayer";
 
@@ -58,13 +57,11 @@ const LessonPlayer = () => {
     const [reviewComment, setReviewComment] = useState("");
     const [isEditingReview, setIsEditingReview] = useState(false);
 
-    const { data: userReviewRes } = useQuery({
+    const { data: userReview } = useQuery({
         queryKey: ["user-review", courseId],
-        queryFn: () => api.get<any, ApiResponse<Review>>(`/reviews/${courseId}/me`),
+        queryFn: () => reviewApi.getUserReview(courseId),
         enabled: !!courseId && user?.role === "user",
     });
-
-    const userReview = userReviewRes?.data;
 
     useEffect(() => {
         if (userReview) {
@@ -100,7 +97,7 @@ const LessonPlayer = () => {
             queryClient.invalidateQueries({ queryKey: ["user-review", courseId] });
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || "Failed to submit review");
+            toast.error(error.message || "Failed to submit review");
         }
     });
 

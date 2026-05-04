@@ -37,18 +37,18 @@ const StudentDashboard = () => {
     queryFn: () => coursesApi.getAll({ limit: 3, sortBy: "Rating", order: "DESC" }),
   });
 
-  const enrollmentData = enrollmentsRes?.data?.enrollments || [];
+  const enrollmentData = enrollmentsRes?.enrollments || [];
   const recommendedCourses = (recommendedRes?.courses || []).filter(
-    (rc) => !enrollmentData.some((e) => e.course_id === rc.course_id)
+    (rc) => !enrollmentData.some((e: any) => e.course_id === rc.course_id)
   );
-  const certificatesCount = certificatesRes?.data?.length || 0;
-  const completedCount = enrollmentData.filter(e => e.progress >= 95).length;
+  const certificatesCount = certificatesRes?.length || 0;
+  const completedCount = enrollmentData.filter((e: any) => e.progress >= 95).length;
   const totalProgress = enrollmentData.length > 0 
-    ? Math.round(enrollmentData.reduce((a, c) => a + (c.progress || 0), 0) / enrollmentData.length)
+    ? Math.round(enrollmentData.reduce((a: number, c: any) => a + (c.progress || 0), 0) / enrollmentData.length)
     : 0;
 
   const stats = [
-    { icon: BookOpen, label: "Enrolled Courses", value: (enrollmentsRes?.data?.total || 0).toString(), color: "bg-primary/10 text-primary" },
+    { icon: BookOpen, label: "Enrolled Courses", value: (enrollmentsRes?.total || 0).toString(), color: "bg-primary/10 text-primary" },
     { icon: TrendingUp, label: "Overall Progress", value: `${totalProgress}%`, color: "bg-secondary/10 text-secondary" },
     { icon: Trophy, label: "Completed", value: completedCount.toString(), color: "bg-amber-500/10 text-amber-600" },
     { icon: Award, label: "Certificates", value: certificatesCount.toString(), color: "bg-emerald-500/10 text-emerald-600" },

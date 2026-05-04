@@ -1,7 +1,8 @@
 import { DollarSign, Users, TrendingUp, Loader2 } from "lucide-react";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { useQuery } from "@tanstack/react-query";
-import { earningsApi, AdminEarningDetail } from "@/lib/earnings-api";
+import { earningsApi } from "@/lib/earnings-api";
+import { AdminEarningDetail } from "@/types";
 import { AppPagination } from "@/components/ui/app-pagination";
 import { useState } from "react";
 import MonthlyRevenueChart from "@/components/MonthlyRevenueChart";

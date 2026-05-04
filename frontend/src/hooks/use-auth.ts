@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { authApi, User } from "@/lib/auth-api";
+import { authApi } from "@/lib/auth-api";
+import { User } from "@/types";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "./use-toast";
 
@@ -8,14 +9,17 @@ export const useAuth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { data: user, isLoading, isError, error, refetch: refreshUser } = useQuery<User>({
+  const { data: user, isLoading, isError, error, refetch: refreshUser } = useQuery<User | null>({
     queryKey: ["auth-user"],
     queryFn: async () => {
-      const response = await authApi.me();
-      return response.data;
+      try {
+        return await authApi.me();
+      } catch (error) {
+        return null;
+      }
     },
     retry: false,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5, 
   });
 
   const logoutMutation = useMutation({

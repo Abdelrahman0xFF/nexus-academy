@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { authApi, SignupForm } from "@/lib/auth-api";
+import { authApi } from "@/lib/auth-api";
+import { SignupForm } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 
 const Signup = () => {

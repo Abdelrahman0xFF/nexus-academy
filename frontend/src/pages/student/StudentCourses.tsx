@@ -35,8 +35,8 @@ const StudentCourses = () => {
             }),
     });
 
-    const enrollmentData = enrollmentsRes?.data?.enrollments || [];
-    const total = enrollmentsRes?.data?.total || 0;
+    const enrollmentData = enrollmentsRes?.enrollments || [];
+    const total = enrollmentsRes?.total || 0;
     const totalPages = Math.ceil(total / limit);
 
     const filteredEnrollments = enrollmentData;

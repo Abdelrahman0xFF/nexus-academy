@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import CategoryCard from "@/components/CategoryCard";
 import { useState, useEffect } from "react";
 import { categoryApi } from "@/lib/categories-api";
-import type { Category } from "@/lib/data";
+import { Category } from "@/types";
 import {
   Dialog,
   DialogContent,

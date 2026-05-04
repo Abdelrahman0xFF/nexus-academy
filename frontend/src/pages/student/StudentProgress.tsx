@@ -10,9 +10,9 @@ const StudentProgress = () => {
     queryFn: () => enrollmentApi.getMyEnrollments(1, 100),
   });
 
-  const enrollmentData = enrollmentsRes?.data?.enrollments || [];
+  const enrollmentData = enrollmentsRes?.enrollments || [];
   const totalProgress = enrollmentData.length > 0 
-    ? Math.round(enrollmentData.reduce((a, c) => a + (c.progress || 0), 0) / enrollmentData.length)
+    ? Math.round(enrollmentData.reduce((a: number, c: any) => a + (c.progress || 0), 0) / enrollmentData.length)
     : 0;
   const completed = enrollmentData.filter((c) => (c.progress || 0) >= 95).length;
 

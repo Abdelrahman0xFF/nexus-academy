@@ -2,8 +2,9 @@ import { Award, Download, Eye, Loader2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { useEffect, useState } from "react";
-import { Certificate, certificatesApi } from "@/lib/certificates-api";
-import { Enrollment, enrollmentApi } from "@/lib/enrollment-api";
+import { Certificate, Enrollment } from "@/types";
+import { certificatesApi } from "@/lib/certificates-api";
+import { enrollmentApi } from "@/lib/enrollment-api";
 import { toast } from "@/hooks/use-toast";
 import {
     Dialog,
@@ -25,22 +26,18 @@ const StudentCertificates = () => {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                const [certsRes, enrollmentsRes] = await Promise.all([
+                const [certs, enrollmentsRes] = await Promise.all([
                     certificatesApi.getMyCertificates(),
                     enrollmentApi.getMyEnrollments(1, 100),
                 ]);
 
-                if (certsRes.success) {
-                    setCertificates(certsRes.data || []);
-                }
+                setCertificates(certs || []);
 
-                if (enrollmentsRes.success) {
-                    const enrollments = enrollmentsRes.data.enrollments || [];
-                    const inProgressCourses = enrollments.filter(
-                        (e) => e.progress > 0 && e.progress < 95,
-                    );
-                    setInProgress(inProgressCourses);
-                }
+                const enrollments = enrollmentsRes.enrollments || [];
+                const inProgressCourses = enrollments.filter(
+                    (e: any) => e.progress > 0 && e.progress < 95,
+                );
+                setInProgress(inProgressCourses);
             } catch (error) {
                 console.error("Error fetching certificates:", error);
                 toast({

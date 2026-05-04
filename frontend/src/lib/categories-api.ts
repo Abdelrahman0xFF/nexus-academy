@@ -1,24 +1,20 @@
-import { api, ApiResponse } from "./api-client";
-import { Category } from './data'
+import { request } from "./api-client";
+import { Category } from '../types';
 
 export const categoryApi = {
   getAll: async (): Promise<Category[]> => {
-    const response = await api.get<Category, ApiResponse<Category[]>>("/categories");
-    return response.data;
+    return request.get<Category[]>("/categories");
   },
 
   create: async (name: string): Promise<Category> => {
-    const response = await api.post<Category, ApiResponse<Category>>("/categories", { name });
-    return response.data;
+    return request.post<Category>("/categories", { name });
   },
 
-  update: async (id: number, name: string): Promise<{ message: string }> => {
-    const response = await api.put<Category, ApiResponse<null>>(`/categories/${id}`, { name });
-    return { message: response.message };
+  update: async (id: number, name: string): Promise<void> => {
+    return request.put<void>(`/categories/${id}`, { name });
   },
 
-  delete: async (id: number): Promise<boolean> => {
-    const response = await api.delete<Category, ApiResponse<null>>(`/categories/${id}`);
-    return response.success;
+  delete: async (id: number): Promise<void> => {
+    return request.delete<void>(`/categories/${id}`);
   },
 };

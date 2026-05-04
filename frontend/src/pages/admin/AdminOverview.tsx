@@ -14,7 +14,8 @@ import { useQuery } from "@tanstack/react-query";
 import { coursesApi } from "@/lib/courses-api";
 import { categoryApi } from "@/lib/categories-api";
 import { enrollmentApi } from "@/lib/enrollment-api";
-import { earningsApi, AdminEarningDetail } from "@/lib/earnings-api";
+import { earningsApi } from "@/lib/earnings-api";
+import { AdminEarningDetail } from "@/types";
 import { getMediaUrl } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -54,7 +55,7 @@ const AdminOverview = () => {
     });
 
     const latestCourses = coursesData?.courses || [];
-    const recentEnrollments = recentEnrollmentsRes?.data?.enrollments || [];
+    const recentEnrollments = recentEnrollmentsRes?.enrollments || [];
     const allCourses = coursesStatsData?.courses || [];
 
     const totalStudents = allCourses.reduce(

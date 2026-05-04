@@ -42,7 +42,7 @@ const ForgotPassword = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to send OTP",
+        description: error.message || "Failed to send OTP",
         variant: "destructive",
       });
     } finally {

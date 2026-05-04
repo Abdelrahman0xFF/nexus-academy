@@ -250,7 +250,7 @@ const InstructorDashboard = () => {
             </div>
 
             {/* Course Management Table */}
-            <div className="bg-card rounded-card card-shadow transition-all duration-300 hover:shadow-md animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-400 fill-mode-both">
+            <div className="bg-card rounded-card card-shadow transition-all  hover:shadow-md animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-400 fill-mode-both">
                 <div className="flex items-center justify-between p-6 border-b border-border">
                     <h2 className="text-h3 text-card-foreground">
                         Recent Courses

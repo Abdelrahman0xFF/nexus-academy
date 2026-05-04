@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { authApi, LoginForm } from "@/lib/auth-api";
+import { authApi } from "@/lib/auth-api";
+import { LoginForm } from "@/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -59,18 +60,18 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const response = await authApi.login(form);
-      
-      // Update the auth-user query data
-      queryClient.setQueryData(["auth-user"], response.data);
+      const user = await authApi.login(form);
 
-      toast({ 
-        title: "Login successful", 
-        description: `Welcome back, ${response.data.first_name}!` 
+      // Update the auth-user query data
+      queryClient.setQueryData(["auth-user"], user);
+
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${user.first_name}!`
       });
-      
+
       // Redirect to 'from' location or based on role
-      const role = response.data.role;
+      const role = user.role;
       if (from) {
         navigate(from, { replace: true });
       } else if (role === "admin") {
@@ -81,9 +82,9 @@ const Login = () => {
         navigate("/dashboard", { replace: true });
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Something went wrong while updating your profile.";
+      const message = error instanceof Error ? error.message : "Something went wrong during login.";
       toast({
-        title: "Update failed",
+        title: "Login failed",
         description: message,
         variant: "destructive",
       });
@@ -176,7 +177,7 @@ const Login = () => {
                 </button>
               </div>
               <div className="flex justify-end">
-                <Link to="/forgot-password" size="sm" className="text-[10px] font-bold text-primary hover:underline underline-offset-2 uppercase tracking-widest transition-all">
+                <Link to="/forgot-password" className="text-[10px] font-bold text-primary hover:underline underline-offset-2 uppercase tracking-widest transition-all">
                   Forgot password?
                 </Link>
               </div>

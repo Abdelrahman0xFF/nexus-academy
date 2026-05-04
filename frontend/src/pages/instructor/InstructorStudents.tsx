@@ -1,5 +1,4 @@
 import {
-    Users,
     Search,
     Mail,
     Eye,
@@ -10,7 +9,8 @@ import {
 } from "lucide-react";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { useQuery } from "@tanstack/react-query";
-import { enrollmentApi, InstructorStudent } from "@/lib/enrollment-api";
+import { enrollmentApi } from "@/lib/enrollment-api";
+import { InstructorStudent } from "@/types";
 import { useState, useEffect } from "react";
 import { coursesApi } from "@/lib/courses-api";
 import { getMediaUrl } from "@/lib/utils";
@@ -63,8 +63,8 @@ const InstructorStudents = () => {
             ),
     });
 
-    const students = studentsRes?.data?.students || [];
-    const total = studentsRes?.data?.total || 0;
+    const students = studentsRes?.students || [];
+    const total = studentsRes?.total || 0;
     const totalPages = Math.ceil(total / limit);
     const courseOptions = [
         { label: "All Courses", value: "all" },

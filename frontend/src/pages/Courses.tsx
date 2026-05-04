@@ -11,7 +11,6 @@ import { AppSelect } from "@/components/ui/app-select";
 import { coursesApi } from "@/lib/courses-api";
 import { categoryApi } from "@/lib/categories-api";
 import { useQuery } from "@tanstack/react-query";
-import { ApiResponse } from "@/lib/api-client";
 import { AppPagination } from "@/components/ui/app-pagination";
 
 const levels = ["All Levels", "Beginner", "Intermediate", "Advanced"];

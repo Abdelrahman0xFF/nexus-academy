@@ -1,13 +1,7 @@
-import axios from "axios";
-import Cookies from "js-cookie";
+import axios, { AxiosRequestConfig } from "axios";
+import { ApiResponse } from "../types/api";
 
 const API_BASE_URL = "http://localhost:4000/api";
-
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-}
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -17,21 +11,58 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-api.interceptors.request.use(
-  (config) => {
-    // With credentials: true, the browser automatically sends HttpOnly cookies.
-    // Manual extraction is not needed and doesn't work for HttpOnly cookies.
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
 api.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    // If the response follows our ApiResponse structure, return the data part
+    if (response.data && Object.prototype.hasOwnProperty.call(response.data, 'success')) {
+      return response.data.data;
+    }
+    return response.data;
+  },
   (error) => {
     const message = error.response?.data?.message || error.message || "An unexpected error occurred";
     return Promise.reject(new Error(message));
   }
 );
+
+/**
+ * Clean API request helper
+ */
+export const request = {
+  get: <T>(url: string, config?: AxiosRequestConfig) => api.get<any, T>(url, config),
+  
+  post: <T>(url: string, data?: any, config?: AxiosRequestConfig) => {
+    const isFormData = data instanceof FormData;
+    return api.post<any, T>(url, data, {
+      ...config,
+      headers: {
+        ...(isFormData ? { "Content-Type": "multipart/form-data" } : {}),
+        ...config?.headers,
+      },
+    });
+  },
+
+  put: <T>(url: string, data?: any, config?: AxiosRequestConfig) => {
+    const isFormData = data instanceof FormData;
+    return api.put<any, T>(url, data, {
+      ...config,
+      headers: {
+        ...(isFormData ? { "Content-Type": "multipart/form-data" } : {}),
+        ...config?.headers,
+      },
+    });
+  },
+
+  patch: <T>(url: string, data?: any, config?: AxiosRequestConfig) => {
+    const isFormData = data instanceof FormData;
+    return api.patch<any, T>(url, data, {
+      ...config,
+      headers: {
+        ...(isFormData ? { "Content-Type": "multipart/form-data" } : {}),
+        ...config?.headers,
+      },
+    });
+  },
+
+  delete: <T>(url: string, config?: AxiosRequestConfig) => api.delete<any, T>(url, config),
+};
