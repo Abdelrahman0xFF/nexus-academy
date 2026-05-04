@@ -8,6 +8,9 @@ import { successResponse, errorResponse } from "../utils/response.js";
 import fs from "fs";
 import asyncHandler from "../utils/asyncHandler.js";
 import { deleteFile } from "../utils/file.js";
+import Lesson from "../models/lesson.model.js";
+import Enrollment from "../models/enrollment.model.js";
+import Course from "../models/course.model.js";
 
 export const uploadMedia = asyncHandler(async (req, res, next) => {
     req.setTimeout(0);
@@ -23,6 +26,32 @@ export const uploadMedia = asyncHandler(async (req, res, next) => {
 
 export const streamMedia = asyncHandler(async (req, res, next) => {
     const { fileId } = req.params;
+
+    const lesson = await Lesson.findByVideoUrl(fileId);
+
+    if (lesson) {
+        if (!req.user) {
+            return errorResponse(res, "Authentication required to stream this content", 401);
+        }
+
+        const isAdmin = req.user.role === "admin";
+        const isInstructor = req.user.role === "instructor";
+        
+        let isCourseOwner = false;
+        if (isInstructor) {
+            const course = await Course.findById(lesson.course_id, req.user.user_id, false);
+            if (course && Number(course.instructor_id) === Number(req.user.user_id)) {
+                isCourseOwner = true;
+            }
+        }
+
+        const isEnrolled = await Enrollment.isEnrolled(req.user.user_id, lesson.course_id);
+
+        if (!isAdmin && !isCourseOwner && !isEnrolled) {
+            return errorResponse(res, "Forbidden: You are not enrolled in this course", 403);
+        }
+    }
+
     const rangeHeader = req.headers.range;
 
     const { streamConfig, options, requestConfig } = await getDriveStream(

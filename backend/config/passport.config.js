@@ -21,24 +21,27 @@ passport.use(
                 const email = profile.emails[0].value;
                 const userByEmail = await User.findByEmail(email);
 
-                let avatarUrl = profile.photos[0]?.value;
-
-                if (avatarUrl) {
-                    try {
-                        const uploadResult = await uploadUrlToDrive(
-                            avatarUrl,
-                            `google_avatar_${profile.id}.jpg`,
-                        );
-                        avatarUrl = uploadResult.fileId;
-                    } catch (driveErr) {
-                        console.error(
-                            "Failed to upload Google avatar to Drive:",
-                            driveErr,
-                        );
-                    }
-                }
+                let avatarUrl = null;
+                const googlePhotoUrl = profile.photos[0]?.value;
 
                 if (userByEmail) {
+                    avatarUrl = userByEmail.avatar_url;
+
+                    if (!avatarUrl && googlePhotoUrl) {
+                        try {
+                            const uploadResult = await uploadUrlToDrive(
+                                googlePhotoUrl,
+                                `google_avatar_${profile.id}.jpg`,
+                            );
+                            avatarUrl = uploadResult.fileId;
+                        } catch (driveErr) {
+                            console.error(
+                                "Failed to upload Google avatar to Drive:",
+                                driveErr,
+                            );
+                        }
+                    }
+
                     await User.update(userByEmail.user_id, {
                         google_id: profile.id,
                         avatar_url: avatarUrl,
@@ -48,6 +51,21 @@ passport.use(
                         userByEmail.user_id,
                     );
                     return done(null, updatedUser);
+                }
+
+                if (googlePhotoUrl) {
+                    try {
+                        const uploadResult = await uploadUrlToDrive(
+                            googlePhotoUrl,
+                            `google_avatar_${profile.id}.jpg`,
+                        );
+                        avatarUrl = uploadResult.fileId;
+                    } catch (driveErr) {
+                        console.error(
+                            "Failed to upload Google avatar to Drive:",
+                            driveErr,
+                        );
+                    }
                 }
 
                 const newUser = await User.create({

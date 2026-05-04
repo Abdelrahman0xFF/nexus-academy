@@ -214,6 +214,7 @@ class User {
                 "hashed_password",
                 "otp",
                 "otp_expires",
+                "google_id",
             ];
 
             let query = "UPDATE users SET ";

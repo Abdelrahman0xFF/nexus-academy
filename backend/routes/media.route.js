@@ -5,7 +5,7 @@ import {
 } from "../controllers/media.controller.js";
 import { Router } from "express";
 import upload, { fileCleanup } from "../middleware/multer.js";
-import { authenticate, authorize } from "../middleware/auth.middleware.js";
+import { authenticate, authorize, optionalAuthenticate } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
@@ -17,7 +17,7 @@ router.post(
     fileCleanup,
     uploadMedia,
 );
-router.get("/:fileId", streamMedia);
+router.get("/:fileId", optionalAuthenticate, streamMedia);
 router.delete(
     "/:fileId",
     authenticate,

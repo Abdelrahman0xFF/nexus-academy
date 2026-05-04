@@ -84,6 +84,20 @@ class Lesson {
         }
     }
 
+    static async findByVideoUrl(video_url) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool
+                .request()
+                .input("video_url", sql.VarChar, video_url)
+                .query("SELECT * FROM lessons WHERE video_url = @video_url");
+            return result.recordset[0];
+        } catch (err) {
+            console.error("Error finding lesson by video URL: ", err);
+            throw err;
+        }
+    }
+
     static async update(course_id, section_order, lesson_order, updatedLesson) {
         const pool = await poolPromise;
         const transaction = new sql.Transaction(pool);
