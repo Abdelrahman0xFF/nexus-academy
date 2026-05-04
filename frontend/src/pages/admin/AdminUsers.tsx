@@ -16,6 +16,14 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+    DialogDescription,
+} from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import { usersApi } from "@/lib/users-api";
 import { getMediaUrl } from "@/lib/utils";
@@ -33,6 +41,11 @@ const AdminUsers = () => {
     const limit = 10;
     const { toast } = useToast();
     const queryClient = useQueryClient();
+
+    const [selectedUser, setSelectedUser] = useState<any | null>(null);
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [isRoleOpen, setIsRoleOpen] = useState(false);
+    const [pendingRole, setPendingRole] = useState<string | null>(null);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -61,6 +74,8 @@ const AdminUsers = () => {
                 title: "Success",
                 description: "User deleted successfully",
             });
+            setIsDeleteOpen(false);
+            setSelectedUser(null);
         },
         onError: (error: any) => {
             toast({
@@ -85,6 +100,9 @@ const AdminUsers = () => {
                 title: "Success",
                 description: "User role updated successfully",
             });
+            setIsRoleOpen(false);
+            setSelectedUser(null);
+            setPendingRole(null);
         },
         onError: (error: any) => {
             toast({
@@ -106,17 +124,18 @@ const AdminUsers = () => {
         { label: "User", value: "user" },
     ];
 
-    const handleDeleteUser = (userId: number) => {
-        if (confirm("Are you sure you want to delete this user?")) {
-            deleteMutation.mutate(userId);
-        }
+    const handleDeleteUser = (user: any) => {
+        setSelectedUser(user);
+        setIsDeleteOpen(true);
     };
 
     const handleRoleChange = (
-        userId: number,
+        user: any,
         newRole: "admin" | "instructor" | "user",
     ) => {
-        roleMutation.mutate({ userId, newRole });
+        setSelectedUser(user);
+        setPendingRole(newRole);
+        setIsRoleOpen(true);
     };
 
     return (
@@ -280,7 +299,7 @@ const AdminUsers = () => {
                                                         <DropdownMenuItem
                                                             onClick={() =>
                                                                 handleRoleChange(
-                                                                    user.user_id,
+                                                                    user,
                                                                     "admin",
                                                                 )
                                                             }
@@ -298,7 +317,7 @@ const AdminUsers = () => {
                                                         <DropdownMenuItem
                                                             onClick={() =>
                                                                 handleRoleChange(
-                                                                    user.user_id,
+                                                                    user,
                                                                     "instructor",
                                                                 )
                                                             }
@@ -315,7 +334,7 @@ const AdminUsers = () => {
                                                         <DropdownMenuItem
                                                             onClick={() =>
                                                                 handleRoleChange(
-                                                                    user.user_id,
+                                                                    user,
                                                                     "user",
                                                                 )
                                                             }
@@ -332,7 +351,7 @@ const AdminUsers = () => {
                                                     <DropdownMenuItem
                                                         onClick={() =>
                                                             handleDeleteUser(
-                                                                user.user_id,
+                                                                user,
                                                             )
                                                         }
                                                         className="gap-3 cursor-pointer rounded-lg py-2.5 font-medium text-destructive focus:text-white focus:bg-destructive"
@@ -360,6 +379,84 @@ const AdminUsers = () => {
                     />
                 </div>
             )}
+
+            {/* Delete User Dialog */}
+            <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+                <DialogContent className="rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Delete User</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete{" "}
+                            <span className="font-bold text-foreground">
+                                {selectedUser?.first_name} {selectedUser?.last_name}
+                            </span>
+                            ? This action cannot be undone and will remove all associated data.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsDeleteOpen(false)}
+                            className="rounded-xl"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={() =>
+                                deleteMutation.mutate(selectedUser?.user_id)
+                            }
+                            disabled={deleteMutation.isPending}
+                            className="rounded-xl"
+                        >
+                            {deleteMutation.isPending && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
+                            Delete User
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Role Change Dialog */}
+            <Dialog open={isRoleOpen} onOpenChange={setIsRoleOpen}>
+                <DialogContent className="rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Change User Role</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to change the role of{" "}
+                            <span className="font-bold text-foreground">
+                                {selectedUser?.first_name} {selectedUser?.last_name}
+                            </span>{" "}
+                            to <span className="font-bold text-primary capitalize">{pendingRole}</span>?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsRoleOpen(false)}
+                            className="rounded-xl"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={() =>
+                                roleMutation.mutate({
+                                    userId: selectedUser?.user_id,
+                                    newRole: pendingRole!,
+                                })
+                            }
+                            disabled={roleMutation.isPending}
+                            className="rounded-xl"
+                        >
+                            {roleMutation.isPending && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
+                            Confirm Change
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </DashboardLayout>
     );
 };

@@ -171,7 +171,7 @@ const AdminCategories = () => {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-7 w-7 rounded-md text-muted-foreground hover:text-white"
+                    className="h-7 w-7 rounded-md text-destructive focus:text-white focus:bg-destructive hover:bg-destructive"
                     onClick={() => {
                       setSelectedCategory(cat);
                       setIsDeleteOpen(true);
