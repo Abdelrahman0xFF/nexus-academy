@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { BACKEND_BASE_URL } from "./api-client";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -7,9 +8,13 @@ export function cn(...inputs: ClassValue[]) {
 
 export function getMediaUrl(fileId: string | undefined) {
   if (!fileId) return "";
-  // If it's already a full URL or a relative path that doesn't look like a fileId, return as is
-  if (fileId.startsWith("http") || fileId.startsWith("/") || fileId.includes(".")) {
+  if (
+    fileId.startsWith("http") ||
+    fileId.startsWith("/") ||
+    fileId.includes(".") ||
+    fileId.includes("base64")
+  ) {
     return fileId;
   }
-  return `http://localhost:4000/api/media/${fileId}`;
+  return `${BACKEND_BASE_URL}/media/${fileId}`;
 }

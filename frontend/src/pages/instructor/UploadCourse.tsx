@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useQuery } from "@tanstack/react-query";
 import { DropResult } from "@hello-pangea/dnd";
 import CourseContentEditor from "@/components/CourseContentEditor";
+import { getMediaUrl } from "@/lib/utils";
 
 const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) => {
   const { id: paramId } = useParams();
@@ -396,7 +397,7 @@ const UploadCourse = ({ isEditOverride = false }: { isEditOverride?: boolean }) 
           <div className="bg-card rounded-card card-shadow p-6">
             <h2 className="text-h3 text-card-foreground mb-5">Course Media</h2>
             <div onClick={() => thumbnailInputRef.current?.click()} className="border-2 border-dashed border-border rounded-card p-8 flex flex-col items-center justify-center text-center hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer relative overflow-hidden h-48 group">
-              {thumbnailPreview ? <img src={thumbnailPreview.startsWith("http") ? thumbnailPreview : (thumbnailPreview.includes("base64") ? thumbnailPreview : `http://localhost:4000/api/media/${thumbnailPreview}`)} alt="Thumbnail preview" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" /> : <><Image size={32} className="text-muted-foreground mb-3 transition-transform group-hover:scale-110" /><p className="text-small font-medium text-foreground">Course Thumbnail</p><p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p></>}
+              {thumbnailPreview ? <img src={getMediaUrl(thumbnailPreview)} alt="Thumbnail preview" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" /> : <><Image size={32} className="text-muted-foreground mb-3 transition-transform group-hover:scale-110" /><p className="text-small font-medium text-foreground">Course Thumbnail</p><p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p></>}
               <input type="file" ref={thumbnailInputRef} className="hidden" accept="image/*" onChange={handleThumbnailChange} />
             </div>
           </div>

@@ -1,5 +1,5 @@
-import { request } from "./api-client";
-import { User, LoginForm, AuthCredentials, ChangePasswordData } from "../types";
+import { request, BACKEND_BASE_URL } from "./api-client";
+import { User, AuthCredentials, ChangePasswordData } from "../types";
 
 export const authApi = {
   login: async (credentials: AuthCredentials): Promise<User> => {
@@ -43,6 +43,6 @@ export const authApi = {
   },
 
   getGoogleAuthUrl: () => {
-    return `http://localhost:4000/api/auth/google`;
+    return `${BACKEND_BASE_URL}/auth/google`;
   }
 };

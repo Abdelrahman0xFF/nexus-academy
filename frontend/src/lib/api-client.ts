@@ -1,10 +1,10 @@
 import axios, { AxiosRequestConfig } from "axios";
-import { ApiResponse } from "../types/api";
 
-const API_BASE_URL = "http://localhost:4000/api";
+export const BACKEND_BASE_URL = 
+  import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:4000/api";
 
 export const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: BACKEND_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
