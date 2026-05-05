@@ -674,9 +674,11 @@ const CourseDetails = () => {
                                     )}
                             </div>
 
-                            {course.is_enrolled ||
-                            user.role === "instructor" ||
-                            user.role === "admin" ? (
+                            {
+                            (user?.role === "instructor" && user?.id == course?.instructor_id) ||
+                            user?.role === "admin" ||
+                            course.is_enrolled ?
+                            (
                                 <Button
                                     onClick={() =>
                                         navigate(`/learn/${courseId}`)
