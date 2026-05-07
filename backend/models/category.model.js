@@ -53,6 +53,7 @@ class Category {
                 SELECT *, 
                 (SELECT COUNT(*) FROM courses WHERE category_id = categories.category_id) AS course_count
                 FROM categories
+                ORDER BY course_count DESC
             `);
             return result.recordset;
         } catch (err) {
