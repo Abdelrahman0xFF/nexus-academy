@@ -42,7 +42,7 @@ export const getAllReviews = asyncHandler(async (req, res) => {
 });
 
 export const getBestReviews = asyncHandler(async (req, res) => {
-    const { limit = 4 } = req.query;
+    const { limit = 3 } = req.query;
 
     const reviews = await Review.findBestReviews(Number(limit));
     return successResponse(res, { reviews });

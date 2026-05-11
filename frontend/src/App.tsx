@@ -41,6 +41,7 @@ import VerifyCertificate from "./pages/VerifyCertificate";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
 import ProtectedRoute from "./components/ProtectedRoute";
+import About from "./pages/About";
 
 const queryClient = new QueryClient();
 
@@ -89,6 +90,7 @@ const App = () => (
                     <Route path="/verify-certificate" element={<VerifyCertificate />} />
                     <Route path="/courses" element={<Courses />} />
                     <Route path="/courses/:id" element={<CourseDetails />} />
+                    <Route path="/about" element={<About />} />
                     <Route path="/payment-success" element={<PaymentSuccess />} />
                     <Route path="/payment-failed" element={<PaymentFailed />} />
                     <Route

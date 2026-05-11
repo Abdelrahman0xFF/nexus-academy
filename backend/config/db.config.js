@@ -1,14 +1,18 @@
-import sql from "mssql/msnodesqlv8.js";
+import sql from "mssql";
 
 const config = {
-    server: process.env.DB_SERVER,
-    database: process.env.DB_NAME,
-    driver: "ODBC Driver 17 for SQL Server",
+    server: process.env.SOMEE_SERVER,
+    user: process.env.SOMEE_USER,
+    password: process.env.SOMEE_PASSWORD,
     options: {
-        instanceName: process.env.DB_INSTANCE,
-        trustedConnection: true,
-        encrypt: false,
+        encrypt: true,
         trustServerCertificate: true,
+        enableArithAbort: true,
+    },
+    pool: {
+        max: 10,
+        min: 0,
+        idleTimeoutMillis: 30000,
     },
 };
 
