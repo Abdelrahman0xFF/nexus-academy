@@ -46,7 +46,7 @@ app.use("/api", router);
 
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 7860;
+app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT}`);
 });

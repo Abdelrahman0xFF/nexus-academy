@@ -19,6 +19,8 @@ COPY . .
 
 RUN mkdir -p public/uploads/images public/uploads/videos
 
-EXPOSE 4000
+EXPOSE 7860
+
+ENV PORT=7860
 
 CMD ["node", "server.js"]
