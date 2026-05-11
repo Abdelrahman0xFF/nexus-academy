@@ -25,14 +25,17 @@ app.use("/api/payments/webhook", express.raw({ type: "application/json" }), (req
 app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
+const allowedOrigins = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost:8081",
+    "http://127.0.0.1:8081",
+    process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(
     cors({
-        origin: [
-            "http://localhost:8080",
-            "http://127.0.0.1:8080",
-            "http://localhost:8081",
-            "http://127.0.0.1:8081",
-        ],
+        origin: allowedOrigins,
         credentials: true,
     }),
 );
