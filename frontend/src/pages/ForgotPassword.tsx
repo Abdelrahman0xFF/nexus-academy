@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { authApi } from "@/lib/auth-api";
-import { AlertCircle } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import EmailDeliveryError from "@/components/EmailDeliveryError";
 
 const ForgotPassword = () => {
     const { toast } = useToast();
@@ -81,23 +80,9 @@ const ForgotPassword = () => {
                         </p>
                     </div>
 
+                    <EmailDeliveryError />
                     <div className="space-y-5 bg-card border border-border rounded-xl p-6 shadow-xl relative overflow-hidden group">
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <Alert
-                                variant="destructive"
-                                className="bg-destructive/10 border-destructive/20"
-                            >
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertTitle className="font-bold">
-                                    Email delivery is temporarily unavailable
-                                </AlertTitle>
-                                <AlertDescription>
-                                    Features like signup verification and
-                                    password reset are currently disabled. You
-                                    can still browse and use the platform —
-                                    we're working on a fix.
-                                </AlertDescription>
-                            </Alert>
                             <div className="space-y-2">
                                 <Label
                                     htmlFor="email"
