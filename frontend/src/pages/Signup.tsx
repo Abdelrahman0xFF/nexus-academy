@@ -7,10 +7,12 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { authApi } from "@/lib/auth-api";
 import { SignupForm } from "@/types";
@@ -151,6 +153,14 @@ const Signup = () => {
             Start your learning journey today
           </p>
         </div>
+
+        <Alert variant="destructive" className="bg-destructive/10 border-destructive/20">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle className="font-bold">Email delivery is temporarily unavailable</AlertTitle>
+          <AlertDescription>
+            Features like signup verification and password reset are currently disabled. You can still browse and use the platform — we're working on a fix.
+          </AlertDescription>
+        </Alert>
 
         <div className="space-y-5 bg-card border border-border rounded-xl p-6 shadow-xl relative overflow-hidden group">
           <Button
