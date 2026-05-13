@@ -48,7 +48,7 @@ const DashboardLayout = ({ children, type }: DashboardLayoutProps) => {
       <DashboardSidebar type={type} />
 
       {/* Main Content */}
-      <main className="flex-1 h-full overflow-y-auto">
+      <main className="flex-1 h-full overflow-y-auto pb-10">
         <PageTransition>
           <div className="p-6 lg:p-8 max-w-7xl mx-auto">{children}</div>
         </PageTransition>

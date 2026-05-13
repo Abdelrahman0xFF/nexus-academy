@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
+  House,
   LayoutDashboard,
   BookOpen,
   Trophy,
@@ -26,6 +27,7 @@ interface DashboardSidebarProps {
 }
 
 const studentLinks = [
+  { label: "Home", path: "/", icon: House },
   { label: "Overview", path: "/dashboard", icon: LayoutDashboard },
   { label: "My Courses", path: "/dashboard/courses", icon: BookOpen },
   { label: "Progress", path: "/dashboard/progress", icon: Trophy },
@@ -34,6 +36,7 @@ const studentLinks = [
 ];
 
 const instructorLinks = [
+  { label: "Home", path: "/", icon: House },
   { label: "Overview", path: "/instructor", icon: LayoutDashboard },
   { label: "My Courses", path: "/instructor/courses", icon: BookOpen },
   { label: "Upload Course", path: "/instructor/upload", icon: Upload },
@@ -45,6 +48,7 @@ const instructorLinks = [
 ];
 
 const adminLinks = [
+  { label: "Home", path: "/", icon: House },
   { label: "Overview", path: "/admin", icon: LayoutDashboard },
   { label: "Courses", path: "/admin/courses", icon: BookOpen },
   { label: "Users", path: "/admin/users", icon: Users },
