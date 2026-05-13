@@ -17,7 +17,7 @@ const InstructorCard = ({ instructor }: { instructor: Instructor }) => {
       <h3 className="text-body font-semibold text-card-foreground group-hover:text-primary transition-colors">
         {instructor.first_name} {instructor.last_name}
       </h3>
-      <p className="text-small text-muted-foreground mt-1 mb-4">{instructor.title}</p>
+      <p className="text-small text-muted-foreground mt-1 mb-4">{instructor.title || 'Instructor'}</p>
       <div className="flex items-center justify-center gap-4 text-small text-muted-foreground">
         <span className="flex items-center gap-1">
           {instructor.average_rating ? (
