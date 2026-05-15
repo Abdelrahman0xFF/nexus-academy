@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { authApi } from "@/lib/auth-api";
-import EmailDeliveryError from "@/components/EmailDeliveryError";
 
 const ForgotPassword = () => {
     const { toast } = useToast();
@@ -80,7 +79,6 @@ const ForgotPassword = () => {
                         </p>
                     </div>
 
-                    <EmailDeliveryError />
                     <div className="space-y-5 bg-card border border-border rounded-xl p-6 shadow-xl relative overflow-hidden group">
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-2">

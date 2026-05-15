@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";import { useToast } from "@/hooks/
 import { authApi } from "@/lib/auth-api";
 import { SignupForm } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
-import EmailDeliveryError from "@/components/EmailDeliveryError";
 
 const Signup = () => {
   const { toast } = useToast();
@@ -151,8 +150,6 @@ const Signup = () => {
             Start your learning journey today
           </p>
         </div>
-
-        <EmailDeliveryError />
 
         <div className="space-y-5 bg-card border border-border rounded-xl p-6 shadow-xl relative overflow-hidden group">
           <Button
