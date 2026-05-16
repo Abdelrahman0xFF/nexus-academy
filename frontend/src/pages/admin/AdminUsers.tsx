@@ -63,6 +63,8 @@ const AdminUsers = () => {
                 limit,
                 search: debouncedSearch || undefined,
                 role: roleFilter === "all" ? undefined : roleFilter,
+                filter: "Time",
+                order: "DESC",
             }),
     });
 
@@ -236,7 +238,9 @@ const AdminUsers = () => {
                                             <div className="flex items-center gap-3">
                                                 {user.avatar_url ? (
                                                     <img
-                                                        src={getMediaUrl(user.avatar_url)}
+                                                        src={getMediaUrl(
+                                                            user.avatar_url,
+                                                        )}
                                                         alt={user.first_name}
                                                         className="w-10 h-10 rounded-xl object-cover"
                                                     />
@@ -388,9 +392,11 @@ const AdminUsers = () => {
                         <DialogDescription>
                             Are you sure you want to delete{" "}
                             <span className="font-bold text-foreground">
-                                {selectedUser?.first_name} {selectedUser?.last_name}
+                                {selectedUser?.first_name}{" "}
+                                {selectedUser?.last_name}
                             </span>
-                            ? This action cannot be undone and will remove all associated data.
+                            ? This action cannot be undone and will remove all
+                            associated data.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="gap-2 sm:gap-0">
@@ -426,9 +432,14 @@ const AdminUsers = () => {
                         <DialogDescription>
                             Are you sure you want to change the role of{" "}
                             <span className="font-bold text-foreground">
-                                {selectedUser?.first_name} {selectedUser?.last_name}
+                                {selectedUser?.first_name}{" "}
+                                {selectedUser?.last_name}
                             </span>{" "}
-                            to <span className="font-bold text-primary capitalize">{pendingRole}</span>?
+                            to{" "}
+                            <span className="font-bold text-primary capitalize">
+                                {pendingRole}
+                            </span>
+                            ?
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="gap-2 sm:gap-0">

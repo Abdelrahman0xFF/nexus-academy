@@ -2,7 +2,7 @@ import { request } from "./api-client";
 import { User, UsersResponse, BestInstructor } from "../types";
 
 export const usersApi = {
-  getUsers: async (params?: { page?: number; limit?: number; search?: string; role?: string }): Promise<UsersResponse> => {
+  getUsers: async (params?: { page?: number; limit?: number; search?: string; role?: string; filter?: string, order?: string }): Promise<UsersResponse> => {
     return request.get<UsersResponse>("/users", { params });
   },
 
