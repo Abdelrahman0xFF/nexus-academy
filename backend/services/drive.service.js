@@ -32,11 +32,6 @@ export const uploadUrlToDrive = async (url, fileName, retries = 3) => {
             const { id: fileId, size, mimeType: driveMimeType } = response.data;
             metadataCache.set(fileId, { size: parseInt(size, 10), mimeType: driveMimeType });
 
-            await driveConfig.permissions.create({
-                fileId,
-                requestBody: { role: "reader", type: "anyone" },
-            });
-
             return { fileId };
         } catch (error) {
             lastError = error;
@@ -67,11 +62,6 @@ export const uploadToDrive = async (file, retries = 3) => {
 
             const { id: fileId, size, mimeType: driveMimeType } = response.data;
             metadataCache.set(fileId, { size: parseInt(size, 10), mimeType: driveMimeType });
-
-            await driveConfig.permissions.create({
-                fileId,
-                requestBody: { role: "reader", type: "anyone" },
-            });
 
             await deleteFile(file.path);
 

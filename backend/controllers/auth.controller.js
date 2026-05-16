@@ -131,15 +131,20 @@ const login = asyncHandler(async (req, res) => {
         role: user.role,
     });
 
+    // Only use secure cookies if we are on HTTPS or in a production environment
+    const isSecure = req.secure || req.headers["x-forwarded-proto"] === "https" || process.env.NODE_ENV === "production";
+
     res.cookie("token", token, {
         httpOnly: true,
-        secure: false,
-        sameSite: "Lax",
+        secure: isSecure,
+        sameSite: isSecure ? "None" : "Lax",
+        maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days
     });
 
     return successResponse(
         res,
         {
+            token, // Included for clients that prefer headers
             id: user.user_id,
             first_name: user.first_name,
             last_name: user.last_name,
@@ -180,7 +185,12 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 
 const logout = asyncHandler(async (req, res) => {
-    res.clearCookie("token");
+    const isSecure = req.secure || req.headers["x-forwarded-proto"] === "https" || process.env.NODE_ENV === "production";
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: isSecure,
+        sameSite: isSecure ? "None" : "Lax",
+    });
     return successResponse(res, null, "Logged out successfully");
 });
 
@@ -189,13 +199,21 @@ const forgotPassword = asyncHandler(async (req, res) => {
     const user = await User.findByEmail(email);
 
     if (!user) {
-        return successResponse(res, null, "If an account exists for this email, an OTP has been sent.");
+        return successResponse(
+            res,
+            null,
+            "If an account exists for this email, an OTP has been sent.",
+        );
     }
 
     const { hashedOtp, otpExpires } = await generateAndSendOTP(email);
     await User.updateOTP(email, hashedOtp, otpExpires);
 
-    return successResponse(res, null, "If an account exists for this email, an OTP has been sent.");
+    return successResponse(
+        res,
+        null,
+        "If an account exists for this email, an OTP has been sent.",
+    );
 });
 
 const resetPassword = asyncHandler(async (req, res) => {
@@ -212,13 +230,17 @@ const resetPassword = asyncHandler(async (req, res) => {
     if (!isOtpValid) return errorResponse(res, "Invalid OTP", 400);
 
     const hashedPassword = await hashPassword(new_password);
-    await User.update(user.user_id, { 
+    await User.update(user.user_id, {
         hashed_password: hashedPassword,
         otp: null,
-        otp_expires: null 
+        otp_expires: null,
     });
 
-    return successResponse(res, null, "Password reset successfully. You can now log in.");
+    return successResponse(
+        res,
+        null,
+        "Password reset successfully. You can now log in.",
+    );
 });
 
 const googleAuthCallback = asyncHandler(async (req, res) => {
@@ -229,10 +251,13 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
         role: user.role,
     });
 
+    const isSecure = req.secure || req.headers["x-forwarded-proto"] === "https" || process.env.NODE_ENV === "production";
+
     res.cookie("token", token, {
         httpOnly: true,
-        secure: false,
-        sameSite: "Lax",
+        secure: isSecure,
+        sameSite: isSecure ? "None" : "Lax",
+        maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days
     });
 
     res.redirect(process.env.FRONTEND_URL);

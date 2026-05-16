@@ -30,10 +30,10 @@
         "jsonwebtoken": "^9.0.3",
         "mssql": "^12.5.0",
         "multer": "^2.1.1",
-        "nodemailer": "^8.0.5",
         "passport": "^0.7.0",
         "passport-google-oauth20": "^2.0.0",
         "puppeteer": "^24.41.0",
+        "resend": "^6.12.3",
         "stripe": "^22.1.0",
         "swagger-ui-express": "^5.0.1"
     }

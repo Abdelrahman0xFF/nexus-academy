@@ -131,7 +131,6 @@ export const getAllUserCertificates = asyncHandler(async (req, res) => {
                     await sendCertificateEmail(
                         user_id,
                         enrollment.course_id,
-                        downloadBaseUrl,
                     );
                 } catch (emailError) {
                     console.error(

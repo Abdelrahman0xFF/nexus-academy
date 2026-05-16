@@ -48,7 +48,7 @@ export const generateCertificatePdfBuffer = async (html) => {
     }
 };
 
-export const sendCertificateEmail = async (userId, courseId, downloadBaseUrl) => {
+export const sendCertificateEmail = async (userId, courseId) => {
     try {
         const cert = await Certificate.getByStudentAndCourse(userId, courseId);
         if (!cert) {
@@ -74,7 +74,7 @@ export const sendCertificateEmail = async (userId, courseId, downloadBaseUrl) =>
         const attachments = [
             {
                 filename: `certificate-${courseId}.pdf`,
-                content: pdfBuffer,
+                content: Buffer.from(pdfBuffer).toString("base64"),
                 contentType: "application/pdf",
             },
         ];
