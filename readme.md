@@ -100,7 +100,7 @@ The backend relies on an `.env` file for configuration. Key variables include:
 ## 📖 API Documentation
 
 Once the backend server is running, you can explore the interactive API documentation at:
-[http://localhost:4000/api-docs](http://localhost:4000/api-docs)
+[http://localhost:4000/api-docs](http://localhost:7860/api-docs)
 
 ---
 
